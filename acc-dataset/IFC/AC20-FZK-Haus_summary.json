@@ -1,0 +1,48 @@
+{
+  "schema": "IFC4",
+  "counts": {
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 2,
+    "IfcSpace": 7,
+    "IfcWall": 13,
+    "IfcWallStandardCase": 13,
+    "IfcDoor": 5,
+    "IfcDoorType": 5,
+    "IfcWindow": 11,
+    "IfcSlab": 4,
+    "IfcOpeningElement": 17,
+    "IfcRelFillsElement": 16
+  },
+  "storey_summary": [
+    {
+      "storey_id": "2eyxpyOx95m90jmsXLOuR0",
+      "storey_name": "Erdgeschoss",
+      "elevation": 0.0,
+      "counts": {
+        "walls": 9,
+        "windows": 9,
+        "slabs": 1,
+        "spaces": 6,
+        "doors": 5,
+        "openings": 0,
+        "total_elements": 44
+      }
+    },
+    {
+      "storey_id": "273g3wqLzDtfYIl7qqkgcO",
+      "storey_name": "Dachgeschoss",
+      "elevation": 2.7,
+      "counts": {
+        "walls": 4,
+        "windows": 2,
+        "slabs": 3,
+        "spaces": 1,
+        "doors": 0,
+        "openings": 0,
+        "total_elements": 59
+      }
+    }
+  ]
+}

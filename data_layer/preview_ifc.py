@@ -23,6 +23,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Preview IFC metadata and element counts.")
     ap.add_argument("--ifc", default=r"acc-dataset/IFC/AC20-FZK-Haus.ifc", help="Path to the IFC file to preview")
     ap.add_argument("--summary", help="Optional path to write the preview summary JSON")
+    ap.add_argument("--export-rules", action="store_true", help="Extract rules from the IFC and write rules_manifest JSON")
+    ap.add_argument("--rules-out", help="Optional path to write extracted rules manifest JSON")
     ap.add_argument("--log-level", default="INFO", help="Logging level (default: INFO)")
     args = ap.parse_args()
 
@@ -43,3 +45,20 @@ if __name__ == "__main__":
 
     summary = service.preview(ifc_path, save_path=summary_path)
     print(json.dumps(summary, indent=2))
+
+    # Optionally export extracted rules manifest
+    if args.export_rules:
+        # Build graph with rules embedded and write manifest to a separate file
+        graph = service.build_graph(ifc_path, include_rules=True)
+        manifest = graph.get("meta", {}).get("rules_manifest")
+        if manifest is None:
+            print("No rules manifest found in graph (no rule-like property sets detected).")
+        else:
+            if args.rules_out:
+                rules_path = Path(args.rules_out)
+            else:
+                out_dir = ROOT / "acc-dataset" / "IFC"
+                rules_path = out_dir / f"{ifc_path.stem}_rules_manifest.json"
+            rules_path.parent.mkdir(parents=True, exist_ok=True)
+            rules_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            print(f"Rules manifest written to {rules_path}")

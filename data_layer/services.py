@@ -12,6 +12,7 @@ from .exceptions import IFCLoadError
 from .extract_core import extract_doors, extract_spaces
 from .load_ifc import load_ifc, preview_ifc
 from .models import DoorElement, SpaceElement
+from .extract_rules import extract_rules_from_graph
 
 
 class DataLayerService:
@@ -38,7 +39,7 @@ class DataLayerService:
         )
         return spaces, doors
 
-    def build_graph(self, ifc_path: str | Path) -> Dict[str, Any]:
+    def build_graph(self, ifc_path: str | Path, include_rules: bool = False) -> Dict[str, Any]:
         model = self.load_model(ifc_path)
         if model is None:  # pragma: no cover - defensive; load_ifc raises
             raise IFCLoadError(ifc_path)
@@ -68,10 +69,20 @@ class DataLayerService:
                 "coverage": coverage,
             },
         }
+        # Optionally extract rules from the generated graph and embed the
+        # manifest into the graph meta. Extraction is heuristic and
+        # conservative; callers should enable this explicitly.
+        if include_rules:
+            try:
+                manifest = extract_rules_from_graph(graph)
+                graph.setdefault("meta", {})["rules_manifest"] = manifest
+                self._log.info("Embedded rules manifest with %s rules into graph meta", len(manifest.get("rules", [])))
+            except Exception as exc:  # pragma: no cover - defensive
+                self._log.exception("Failed to extract rules for graph: %s", exc)
         return graph
 
-    def save_graph(self, ifc_path: str | Path, out_path: Optional[str | Path] = None) -> Path:
-        graph = self.build_graph(ifc_path)
+    def save_graph(self, ifc_path: str | Path, out_path: Optional[str | Path] = None, include_rules: bool = False) -> Path:
+        graph = self.build_graph(ifc_path, include_rules=include_rules)
         ifc_path = Path(ifc_path)
 
         if out_path is None:
