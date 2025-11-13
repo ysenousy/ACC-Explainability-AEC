@@ -1,0 +1,264 @@
+{
+  "building_id": "AC20-FZK-Haus",
+  "graph_file": "C:\\Research Work\\ACC-Explainability-AEC\\acc-dataset\\IFC\\AC20-FZK-Haus_dataLayer.json",
+  "generated_at": "2025-11-13T16:44:18.208782+00:00",
+  "ruleset_id": "default_ruleset_v1",
+  "summary": {
+    "R1_MIN_DOOR_WIDTH": {
+      "rule_name": "Minimum door width requirement",
+      "PASS": 0,
+      "FAIL": 5,
+      "NOT_APPLICABLE": 0
+    },
+    "R2_MIN_SPACE_AREA": {
+      "rule_name": "Minimum space area requirement",
+      "PASS": 7,
+      "FAIL": 0,
+      "NOT_APPLICABLE": 0
+    },
+    "R3_MAX_OCCUPANCY_PER_STOREY": {
+      "rule_name": "Maximum occupancy per storey",
+      "PASS": 0,
+      "FAIL": 0,
+      "NOT_APPLICABLE": 1
+    }
+  },
+  "results": [
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "1Oms875aH3Wg$9l65H2ZGw",
+      "status": "FAIL",
+      "message": "Door 'Innentuer-1' (1Oms875aH3Wg$9l65H2ZGw) width 0.9 mm is less than required 900.0 mm.",
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 0.885,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innentuer-1",
+        "connected_space_ids": [
+          "347jFE2yX7IhCEIALmupEH",
+          "3$f2p7VyLB7eox67SA_zKE"
+        ]
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "0pGAjlJMP3ifYPATVF5xAR",
+      "status": "FAIL",
+      "message": "Door 'Innentuer-2' (0pGAjlJMP3ifYPATVF5xAR) width 0.9 mm is less than required 900.0 mm.",
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 0.885,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innentuer-2",
+        "connected_space_ids": [
+          "0e_hbkIQ5DMQlIJ$2V3j_m",
+          "3$f2p7VyLB7eox67SA_zKE"
+        ]
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2qiPPF3FrF8OIqfrKiSUqm",
+      "status": "FAIL",
+      "message": "Door 'Innentuer-3' (2qiPPF3FrF8OIqfrKiSUqm) width 0.9 mm is less than required 900.0 mm.",
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 0.885,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innentuer-3",
+        "connected_space_ids": [
+          "2RSCzLOBz4FAK$_wE8VckM",
+          "3$f2p7VyLB7eox67SA_zKE"
+        ]
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2jTRqchjf7oB0yhQ6462T0",
+      "status": "FAIL",
+      "message": "Door 'Haustuer' (2jTRqchjf7oB0yhQ6462T0) width 1.0 mm is less than required 900.0 mm.",
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 1.01,
+        "min_required_width_mm": 900.0,
+        "door_name": "Haustuer",
+        "connected_space_ids": [
+          "3$f2p7VyLB7eox67SA_zKE"
+        ]
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "1M$gxUrX1Fiwe3P64ww7U5",
+      "status": "FAIL",
+      "message": "Door 'Terrassentuer' (1M$gxUrX1Fiwe3P64ww7U5) width 2.0 mm is less than required 900.0 mm.",
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 2.01,
+        "min_required_width_mm": 900.0,
+        "door_name": "Terrassentuer",
+        "connected_space_ids": [
+          "0Lt8gR_E9ESeGH5uY_g9e9"
+        ]
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "347jFE2yX7IhCEIALmupEH",
+      "status": "PASS",
+      "message": "Space '4' (347jFE2yX7IhCEIALmupEH) area 21.41 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 21.410325,
+        "min_required_area_m2": 6.0,
+        "space_name": "4",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "0e_hbkIQ5DMQlIJ$2V3j_m",
+      "status": "PASS",
+      "message": "Space '3' (0e_hbkIQ5DMQlIJ$2V3j_m) area 12.13 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 12.127619,
+        "min_required_area_m2": 6.0,
+        "space_name": "3",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "2RSCzLOBz4FAK$_wE8VckM",
+      "status": "PASS",
+      "message": "Space '2' (2RSCzLOBz4FAK$_wE8VckM) area 12.60 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 12.59545,
+        "min_required_area_m2": 6.0,
+        "space_name": "2",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "0Lt8gR_E9ESeGH5uY_g9e9",
+      "status": "PASS",
+      "message": "Space '5' (0Lt8gR_E9ESeGH5uY_g9e9) area 25.21 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 25.2088935,
+        "min_required_area_m2": 6.0,
+        "space_name": "5",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "3$f2p7VyLB7eox67SA_zKE",
+      "status": "PASS",
+      "message": "Space '1' (3$f2p7VyLB7eox67SA_zKE) area 11.19 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 11.185458,
+        "min_required_area_m2": 6.0,
+        "space_name": "1",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "17JZcMFrf5tOftUTidA0d3",
+      "status": "PASS",
+      "message": "Space '6' (17JZcMFrf5tOftUTidA0d3) area 16.31 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 16.30545,
+        "min_required_area_m2": 6.0,
+        "space_name": "6",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R2_MIN_SPACE_AREA",
+      "rule_name": "Minimum space area requirement",
+      "target_type": "space",
+      "target_id": "2dQFggKBb1fOc1CqZDIDlx",
+      "status": "PASS",
+      "message": "Space '7' (2dQFggKBb1fOc1CqZDIDlx) area 74.51 m\u00b2 meets minimum 6.00 m\u00b2.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71204.2",
+      "details": {
+        "area_m2": 74.5092415823,
+        "min_required_area_m2": 6.0,
+        "space_name": "7",
+        "storey": "UNKNOWN_STOREY"
+      }
+    },
+    {
+      "rule_id": "R3_MAX_OCCUPANCY_PER_STOREY",
+      "rule_name": "Maximum occupancy per storey",
+      "target_type": "storey",
+      "target_id": "UNKNOWN_STOREY",
+      "status": "NOT_APPLICABLE",
+      "message": "Storey 'UNKNOWN_STOREY' has no occupancy data; cannot evaluate maximum occupancy requirement.",
+      "severity": "WARNING",
+      "code_reference": "IBC 2018 \u00a71004",
+      "details": {
+        "spaces_missing_occupancy": [
+          "347jFE2yX7IhCEIALmupEH",
+          "0e_hbkIQ5DMQlIJ$2V3j_m",
+          "2RSCzLOBz4FAK$_wE8VckM",
+          "0Lt8gR_E9ESeGH5uY_g9e9",
+          "3$f2p7VyLB7eox67SA_zKE",
+          "17JZcMFrf5tOftUTidA0d3",
+          "2dQFggKBb1fOc1CqZDIDlx"
+        ],
+        "max_occupancy": 50
+      }
+    }
+  ],
+  "graph_meta": {
+    "schema": "IFC4",
+    "coverage": {
+      "num_spaces": 7,
+      "num_doors": 5,
+      "spaces_with_area": 7,
+      "doors_with_width": 5
+    }
+  }
+}

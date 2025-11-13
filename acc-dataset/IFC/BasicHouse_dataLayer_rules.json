@@ -1,0 +1,153 @@
+{
+  "building_id": "BasicHouse",
+  "graph_file": "C:\\Research Work\\ACC-Explainability-AEC\\acc-dataset\\IFC\\BasicHouse_dataLayer.json",
+  "generated_at": "2025-11-13T16:36:40.335410+00:00",
+  "ruleset_id": "default_ruleset_v1",
+  "summary": {
+    "R1_MIN_DOOR_WIDTH": {
+      "rule_name": "Minimum door width requirement",
+      "PASS": 8,
+      "FAIL": 0,
+      "NOT_APPLICABLE": 0
+    }
+  },
+  "results": [
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_qBb",
+      "status": "PASS",
+      "message": "Door 'Innerd\u00f6rr - standard:D9:1298042' (2DedXznHnDaeAWsrTB_qBb) width 910.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 910.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innerd\u00f6rr - standard:D9:1298042",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_qBa",
+      "status": "PASS",
+      "message": "Door 'Innerd\u00f6rr - standard:D9:1298043' (2DedXznHnDaeAWsrTB_qBa) width 910.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 910.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innerd\u00f6rr - standard:D9:1298043",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_qBZ",
+      "status": "PASS",
+      "message": "Door 'Innerd\u00f6rr - standard:D9:1298044' (2DedXznHnDaeAWsrTB_qBZ) width 910.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 910.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innerd\u00f6rr - standard:D9:1298044",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_qBY",
+      "status": "PASS",
+      "message": "Door 'Innerd\u00f6rr - standard:D9:1298045' (2DedXznHnDaeAWsrTB_qBY) width 910.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 910.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innerd\u00f6rr - standard:D9:1298045",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_qBX",
+      "status": "PASS",
+      "message": "Door 'Innerd\u00f6rr - standard:D9:1298046' (2DedXznHnDaeAWsrTB_qBX) width 910.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 910.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innerd\u00f6rr - standard:D9:1298046",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_q8y",
+      "status": "PASS",
+      "message": "Door 'Ytterd\u00f6rr - standard:D10:1298083' (2DedXznHnDaeAWsrTB_q8y) width 1010.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 1010.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Ytterd\u00f6rr - standard:D10:1298083",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_q8x",
+      "status": "PASS",
+      "message": "Door 'Ytterd\u00f6rr - standard:D10:1298084' (2DedXznHnDaeAWsrTB_q8x) width 1010.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 1010.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Ytterd\u00f6rr - standard:D10:1298084",
+        "connected_space_ids": []
+      }
+    },
+    {
+      "rule_id": "R1_MIN_DOOR_WIDTH",
+      "rule_name": "Minimum door width requirement",
+      "target_type": "door",
+      "target_id": "2DedXznHnDaeAWsrTB_q9D",
+      "status": "PASS",
+      "message": "Door 'Innerd\u00f6rr - standard:D9:1298130' (2DedXznHnDaeAWsrTB_q9D) width 910.0 mm meets minimum requirement 900.0 mm.",
+      "severity": "INFO",
+      "code_reference": "IBC 2018 \u00a71010.1.1",
+      "details": {
+        "width_mm": 910.0,
+        "min_required_width_mm": 900.0,
+        "door_name": "Innerd\u00f6rr - standard:D9:1298130",
+        "connected_space_ids": []
+      }
+    }
+  ],
+  "graph_meta": {
+    "schema": "IFC2X3",
+    "coverage": {
+      "num_spaces": 0,
+      "num_doors": 8,
+      "spaces_with_area": 0,
+      "doors_with_width": 8
+    }
+  }
+}

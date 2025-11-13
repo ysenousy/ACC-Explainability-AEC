@@ -1,0 +1,1143 @@
+{
+  "building_id": "BasicHouse",
+  "source_file": "C:\\Research Work\\ACC-Explainability-AEC\\acc-dataset\\IFC\\BasicHouse.ifc",
+  "generated_at": "2025-11-13T15:04:19.720891+00:00",
+  "elements": {
+    "spaces": [],
+    "doors": [
+      {
+        "id": "2DedXznHnDaeAWsrTB_qBb",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_qBb",
+        "name": "Innerd\u00f6rr - standard:D9:1298042",
+        "width_mm": 910.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Innerd\u00f6rr - standard:D9:1298042": {
+              "id": 3718,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Analytical Properties": {
+              "Analytic Construction": "<None>",
+              "Define Thermal Properties by": "Schematic Type",
+              "id": 3923
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 3925
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 119.6,
+              "Smygdjup": 45.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 910.0,
+              "id": 3898,
+              "Area": 3.05785000001149,
+              "Volume": 0.134484500000629
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "id": 3929
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Code Name": "",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D9",
+              "URL": "Door: URL",
+              "id": 3903,
+              "Mark": "137"
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 785.0,
+              "Family Name": "Innerd\u00f6rr - standard",
+              "id": 3913,
+              "Family": "Innerd\u00f6rr - standard: D9",
+              "Family and Type": "Innerd\u00f6rr - standard: D9",
+              "Head Height": 2110.0,
+              "Host Id": "Basic Wall: Innerv\u00e4gg 170mm Paroc",
+              "Type": "Innerd\u00f6rr - standard: D9",
+              "Type Id": "Innerd\u00f6rr - standard: D9"
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 3787
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D9",
+              "FireRating": "Door: Fire Rating",
+              "id": 3791
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 3794
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 3797
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D9",
+              "id": 3799
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 910.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 3807,
+              "D\u00f6rrtyp": "Innerd\u00f6rr - standard: D9",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Hyperlink": "Door: URL",
+              "id": 3819,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.05785000001149,
+              "SillHeight": 0.0
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Area": 3.05785000001149,
+              "id": 3846
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 3893
+            },
+            "Materials and Finishes": {
+              "D\u00f6rrblad": "D\u00f6rrar - d\u00f6rrblad",
+              "id": 3908
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 3918
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_qBa",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_qBa",
+        "name": "Innerd\u00f6rr - standard:D9:1298043",
+        "width_mm": 910.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Innerd\u00f6rr - standard:D9:1298042": {
+              "id": 3718,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Analytical Properties": {
+              "Analytic Construction": "<None>",
+              "Define Thermal Properties by": "Schematic Type",
+              "id": 3923
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 3925
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 119.6,
+              "Smygdjup": 45.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 910.0,
+              "id": 4064,
+              "Area": 3.05785000001149,
+              "Volume": 0.134484500000629
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "id": 3929
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Code Name": "",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D9",
+              "URL": "Door: URL",
+              "id": 4069,
+              "Mark": "138"
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 785.0,
+              "Family Name": "Innerd\u00f6rr - standard",
+              "id": 4079,
+              "Family": "Innerd\u00f6rr - standard: D9",
+              "Family and Type": "Innerd\u00f6rr - standard: D9",
+              "Host Id": "Basic Wall: Innerv\u00e4gg 170mm Paroc",
+              "Type": "Innerd\u00f6rr - standard: D9",
+              "Type Id": "Innerd\u00f6rr - standard: D9",
+              "Head Height": 2110.0
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 3992
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D9",
+              "FireRating": "Door: Fire Rating",
+              "id": 3995
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 3998
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 4001
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D9",
+              "id": 4003
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 910.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 4011,
+              "D\u00f6rrtyp": "Innerd\u00f6rr - standard: D9",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Hyperlink": "Door: URL",
+              "id": 4022,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.05785000001149
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Area": 3.05785000001149,
+              "id": 4049
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 4059
+            },
+            "Materials and Finishes": {
+              "D\u00f6rrblad": "D\u00f6rrar - d\u00f6rrblad",
+              "id": 4074
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 4084
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_qBZ",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_qBZ",
+        "name": "Innerd\u00f6rr - standard:D9:1298044",
+        "width_mm": 910.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Analytical Properties": {
+              "Analytic Construction": "<None>",
+              "Define Thermal Properties by": "Schematic Type",
+              "id": 3923
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 3925
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 119.6,
+              "Smygdjup": 45.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 910.0,
+              "id": 5937,
+              "Area": 3.05785000001149,
+              "Volume": 0.134484500000629
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "id": 3929
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Code Name": "",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D9",
+              "URL": "Door: URL",
+              "id": 5942,
+              "Mark": "139"
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 785.0,
+              "Family Name": "Innerd\u00f6rr - standard",
+              "id": 5952,
+              "Family": "Innerd\u00f6rr - standard: D9",
+              "Family and Type": "Innerd\u00f6rr - standard: D9",
+              "Host Id": "Basic Wall: Innerv\u00e4gg 170mm Paroc",
+              "Type": "Innerd\u00f6rr - standard: D9",
+              "Type Id": "Innerd\u00f6rr - standard: D9",
+              "Head Height": 2110.0
+            },
+            "Innerd\u00f6rr - standard:D9:1298044": {
+              "id": 5840,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 5865
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D9",
+              "FireRating": "Door: Fire Rating",
+              "id": 5868
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 5871
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 5874
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D9",
+              "id": 5876
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 910.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 5884,
+              "D\u00f6rrtyp": "Innerd\u00f6rr - standard: D9",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Hyperlink": "Door: URL",
+              "id": 5895,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.05785000001149
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Area": 3.05785000001149,
+              "id": 5922
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 5932
+            },
+            "Materials and Finishes": {
+              "D\u00f6rrblad": "D\u00f6rrar - d\u00f6rrblad",
+              "id": 5947
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 5957
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_qBY",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_qBY",
+        "name": "Innerd\u00f6rr - standard:D9:1298045",
+        "width_mm": 910.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Innerd\u00f6rr - standard:D9:1298042": {
+              "id": 3718,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Analytical Properties": {
+              "Analytic Construction": "<None>",
+              "Define Thermal Properties by": "Schematic Type",
+              "id": 3923
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 3925
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 119.6,
+              "Smygdjup": 45.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 910.0,
+              "id": 6085,
+              "Area": 3.05785000001149,
+              "Volume": 0.134484500000629
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "id": 3929
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Code Name": "",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D9",
+              "URL": "Door: URL",
+              "id": 6090,
+              "Mark": "140"
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 785.0,
+              "Family Name": "Innerd\u00f6rr - standard",
+              "id": 6100,
+              "Family": "Innerd\u00f6rr - standard: D9",
+              "Family and Type": "Innerd\u00f6rr - standard: D9",
+              "Host Id": "Basic Wall: Innerv\u00e4gg 170mm Paroc",
+              "Type": "Innerd\u00f6rr - standard: D9",
+              "Type Id": "Innerd\u00f6rr - standard: D9",
+              "Head Height": 2110.0
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 6013
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D9",
+              "FireRating": "Door: Fire Rating",
+              "id": 6016
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 6019
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 6022
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D9",
+              "id": 6024
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 910.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 6032,
+              "D\u00f6rrtyp": "Innerd\u00f6rr - standard: D9",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Hyperlink": "Door: URL",
+              "id": 6043,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.05785000001149
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Area": 3.05785000001149,
+              "id": 6070
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 6080
+            },
+            "Materials and Finishes": {
+              "D\u00f6rrblad": "D\u00f6rrar - d\u00f6rrblad",
+              "id": 6095
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 6105
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_qBX",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_qBX",
+        "name": "Innerd\u00f6rr - standard:D9:1298046",
+        "width_mm": 910.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Innerd\u00f6rr - standard:D9:1298042": {
+              "id": 3718,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Analytical Properties": {
+              "Analytic Construction": "<None>",
+              "Define Thermal Properties by": "Schematic Type",
+              "id": 3923
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 3925
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 119.6,
+              "Smygdjup": 45.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 910.0,
+              "id": 6197,
+              "Area": 3.05785000001149,
+              "Volume": 0.134484500000629
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "id": 3929
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Code Name": "",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D9",
+              "URL": "Door: URL",
+              "id": 6202,
+              "Mark": "141"
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 785.0,
+              "Family Name": "Innerd\u00f6rr - standard",
+              "id": 6212,
+              "Family": "Innerd\u00f6rr - standard: D9",
+              "Family and Type": "Innerd\u00f6rr - standard: D9",
+              "Host Id": "Basic Wall: Innerv\u00e4gg 170mm Paroc",
+              "Type": "Innerd\u00f6rr - standard: D9",
+              "Type Id": "Innerd\u00f6rr - standard: D9",
+              "Head Height": 2110.0
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 6125
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D9",
+              "FireRating": "Door: Fire Rating",
+              "id": 6128
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 6131
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 6134
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D9",
+              "id": 6136
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 910.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 6144,
+              "D\u00f6rrtyp": "Innerd\u00f6rr - standard: D9",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Hyperlink": "Door: URL",
+              "id": 6155,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.05785000001149
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Area": 3.05785000001149,
+              "id": 6182
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 6192
+            },
+            "Materials and Finishes": {
+              "D\u00f6rrblad": "D\u00f6rrar - d\u00f6rrblad",
+              "id": 6207
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 6217
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_q8y",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_q8y",
+        "name": "Ytterd\u00f6rr - standard:D10:1298083",
+        "width_mm": 1010.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Ytterd\u00f6rr - standard:D10:1298083": {
+              "id": 1116832,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Analytical Properties": {
+              "Define Thermal Properties by": "Schematic Type",
+              "Analytic Construction": "<None>",
+              "id": 1116986
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 1116988
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 120.0,
+              "Smygdjup": 22.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 1010.0,
+              "id": 1116966,
+              "Area": 3.00472500000082,
+              "Volume": 0.129508875000006
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "Typ av handtag": "Handtag ytterd\u00f6rr std",
+              "id": 1116992
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Code Name": "",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D10",
+              "URL": "Door: URL",
+              "id": 1116971,
+              "Mark": "142"
+            },
+            "Materials and Finishes": {
+              "Handtag_material": "St\u00e5l, rostfritt",
+              "id": 1116996
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 885.0,
+              "Family Name": "Ytterd\u00f6rr - standard",
+              "id": 1116976,
+              "Host Id": "Basic Wall: Ytterv\u00e4gg Paroc",
+              "Family": "Ytterd\u00f6rr - standard: D10",
+              "Family and Type": "Ytterd\u00f6rr - standard: D10",
+              "Head Height": 2110.0,
+              "Type": "Ytterd\u00f6rr - standard: D10",
+              "Type Id": "Ytterd\u00f6rr - standard: D10"
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 1116865
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D10",
+              "FireRating": "Door: Fire Rating",
+              "id": 1116869
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 1116872
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 1116875
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D10",
+              "id": 1116877
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 1010.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 1116885,
+              "D\u00f6rrtyp": "Ytterd\u00f6rr - standard: D10",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 1010.0,
+              "Hyperlink": "Door: URL",
+              "id": 1116896,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.00472500000082
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 1010.0,
+              "Area": 3.00472500000082,
+              "id": 1116923
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 1116961
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 1116981
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_q8x",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_q8x",
+        "name": "Ytterd\u00f6rr - standard:D10:1298084",
+        "width_mm": 1010.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Ytterd\u00f6rr - standard:D10:1298083": {
+              "id": 1116832,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Analytical Properties": {
+              "Define Thermal Properties by": "Schematic Type",
+              "Analytic Construction": "<None>",
+              "id": 1116986
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 1116988
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 120.0,
+              "Smygdjup": 22.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 1010.0,
+              "id": 1117130,
+              "Area": 3.00472500000082,
+              "Volume": 0.129508875000006
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "Typ av handtag": "Handtag ytterd\u00f6rr std",
+              "id": 1116992
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Code Name": "",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D10",
+              "URL": "Door: URL",
+              "id": 1117135,
+              "Mark": "143"
+            },
+            "Materials and Finishes": {
+              "Handtag_material": "St\u00e5l, rostfritt",
+              "id": 1116996
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 885.0,
+              "Family Name": "Ytterd\u00f6rr - standard",
+              "id": 1117140,
+              "Host Id": "Basic Wall: Ytterv\u00e4gg Paroc",
+              "Family": "Ytterd\u00f6rr - standard: D10",
+              "Family and Type": "Ytterd\u00f6rr - standard: D10",
+              "Type": "Ytterd\u00f6rr - standard: D10",
+              "Type Id": "Ytterd\u00f6rr - standard: D10",
+              "Head Height": 2110.0
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 1117058
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D10",
+              "FireRating": "Door: Fire Rating",
+              "id": 1117061
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 1117064
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 1117067
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D10",
+              "id": 1117069
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 1010.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 1117077,
+              "D\u00f6rrtyp": "Ytterd\u00f6rr - standard: D10",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 1010.0,
+              "Hyperlink": "Door: URL",
+              "id": 1117088,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.00472500000082
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 1010.0,
+              "Area": 3.00472500000082,
+              "id": 1117115
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 1117125
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 1117145
+            }
+          }
+        }
+      },
+      {
+        "id": "2DedXznHnDaeAWsrTB_q9D",
+        "ifc_guid": "2DedXznHnDaeAWsrTB_q9D",
+        "name": "Innerd\u00f6rr - standard:D9:1298130",
+        "width_mm": 910.0,
+        "height_mm": 2110.0,
+        "fire_rating": "Door: Fire Rating",
+        "provenance": "IFC:IfcDoor",
+        "connected_spaces": [],
+        "attributes": {
+          "property_sets": {
+            "Analytical Properties": {
+              "Analytic Construction": "<None>",
+              "Define Thermal Properties by": "Schematic Type",
+              "id": 3923
+            },
+            "Construction": {
+              "Function": "Interior",
+              "Wall Closure": "By host",
+              "id": 3925
+            },
+            "Dimensions": {
+              "Drevm\u00e5n": 12.5,
+              "Height": 2110.0,
+              "Karmbredd": 50.0,
+              "Karmdjup": 119.6,
+              "Smygdjup": 45.0,
+              "Tr\u00f6skel_h\u00f6jd": 10.0,
+              "Width": 910.0,
+              "id": 1653524,
+              "Area": 3.05785000001149,
+              "Volume": 0.134484500000629
+            },
+            "Graphics": {
+              "Tr\u00f6skel": true,
+              "id": 3929
+            },
+            "Identity Data": {
+              "Assembly Description": "",
+              "Assembly Code": "Door: Assembly Code",
+              "Code Name": "",
+              "Description": "Door: Description",
+              "Fire Rating": "Door: Fire Rating",
+              "Keynote": "Door: Keynote",
+              "Littera": "Door: Littera",
+              "Ljudreduktion [dB]": "Door: Ljudreduktion",
+              "Manufacturer": "Door: Manufacturer",
+              "Model": "Door:  Model",
+              "OmniClass Number": "",
+              "OmniClass Title": "",
+              "Type Comments": "Door: Type Comments",
+              "Type Mark": "Door: Type Mark",
+              "Type Name": "D9",
+              "URL": "Door: URL",
+              "id": 1653529,
+              "Mark": "144"
+            },
+            "Other": {
+              "Category": "Doors",
+              "D\u00f6rrblad_bredd": 785.0,
+              "Family Name": "Innerd\u00f6rr - standard",
+              "id": 1653539,
+              "Family": "Innerd\u00f6rr - standard: D9",
+              "Family and Type": "Innerd\u00f6rr - standard: D9",
+              "Host Id": "Basic Wall: Innerv\u00e4gg 170mm Paroc",
+              "Type": "Innerd\u00f6rr - standard: D9",
+              "Type Id": "Innerd\u00f6rr - standard: D9",
+              "Head Height": 2110.0
+            },
+            "Innerd\u00f6rr - standard:D9:1298044": {
+              "id": 5840,
+              "PanelOperation": "SWINGING",
+              "PanelPosition": "NOTDEFINED"
+            },
+            "Pset_ConcreteElementGeneral": {
+              "FireRating": "Door: Fire Rating",
+              "id": 1653452
+            },
+            "Pset_DoorCommon": {
+              "IsExternal": false,
+              "Reference": "D9",
+              "FireRating": "Door: Fire Rating",
+              "id": 1653455
+            },
+            "Pset_ManufacturerTypeInformation": {
+              "Manufacturer": "Door: Manufacturer",
+              "id": 1653458
+            },
+            "Pset_ProductRequirements": {
+              "Category": "Doors",
+              "id": 1653461
+            },
+            "Pset_QuantityTakeOff": {
+              "Reference": "D9",
+              "id": 1653463
+            },
+            "D\u00f6rrf\u00f6rteckning": {
+              "Bredd": 910.0,
+              "H\u00f6jd": 2110.0,
+              "Tillverkare": "Door: Manufacturer",
+              "Littera": "Door: Littera",
+              "id": 1653471,
+              "D\u00f6rrtyp": "Innerd\u00f6rr - standard: D9",
+              "V\u00e5ning": "Level: Floor 0"
+            },
+            "Custom_Pset": {
+              "TypeMark": "Door: Type Mark",
+              "Keynote": "Door: Keynote",
+              "TypeDescription": "Door: Description",
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Hyperlink": "Door: URL",
+              "id": 1653482,
+              "SillHeight": 0.0,
+              "StoreyName": "Level: Floor 0",
+              "StatusConstruction": "Nytt",
+              "NetArea": 3.05785000001149
+            },
+            "BaseQuantities": {
+              "Height": 2110.0,
+              "Width": 910.0,
+              "Area": 3.05785000001149,
+              "id": 1653509
+            },
+            "Constraints": {
+              "Level": "Level: Floor 0",
+              "Sill Height": 0.0,
+              "id": 1653519
+            },
+            "Materials and Finishes": {
+              "D\u00f6rrblad": "D\u00f6rrar - d\u00f6rrblad",
+              "id": 1653534
+            },
+            "Phasing": {
+              "Phase Created": "Nytt",
+              "id": 1653544
+            }
+          }
+        }
+      }
+    ]
+  },
+  "meta": {
+    "schema": "IFC2X3",
+    "schema_version": "data-layer-v1.0",
+    "generated_by": "data-layer-service",
+    "coverage": {
+      "num_spaces": 0,
+      "num_doors": 8,
+      "spaces_with_area": 0,
+      "doors_with_width": 8
+    }
+  }
+}

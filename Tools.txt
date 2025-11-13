@@ -1,0 +1,29 @@
+Core Tools
+
+Python 3.10 — implementation language
+
+IfcOpenShell — IFC parsing & geometry extraction
+
+Rule Definition
+
+SHACL (via pySHACL) — declarative, auditable rules
+
+Python rule scripts — procedural checks
+
+Reasoning & Explanation
+
+Custom Python inference module
+
+GPT-5 API (optional) — natural-language explanations
+
+Provenance
+
+Python PROV library — generate W3C PROV-JSON records
+
+Human-in-the-Loop
+
+JSON/CSV annotation logs — inspector review
+
+Visualization
+
+Matplotlib / SVG frames — diagrams for results
