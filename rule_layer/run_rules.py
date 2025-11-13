@@ -29,7 +29,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run rule layer checks against a data-layer JSON graph.")
     parser.add_argument(
         "--graph",
-        default=str(PROJECT_ROOT / "acc-dataset" / "IFC" / "AC20-FZK-Haus_dataLayer.json"),
+        default=str(PROJECT_ROOT / "acc-dataset" / "IFC" / "BasicHouse_dataLayer.json"),
         help="Path to the data-layer JSON file.",
     )
     parser.add_argument(
