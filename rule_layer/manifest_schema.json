@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IFC Rules Manifest Schema",
+  "description": "Schema for extracted rules manifests from IFC property sets. Manifests describe parameterized rules suitable for execution by ParametricRule.",
+  "type": "object",
+  "properties": {
+    "manifest_id": {
+      "type": "string",
+      "description": "Unique manifest identifier, e.g. 'ifc_rules_manifest_BuildingName'"
+    },
+    "source": {
+      "type": "string",
+      "description": "Source of manifest, e.g. 'data-layer-pset-extraction'"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when manifest was generated"
+    },
+    "rules": {
+      "type": "array",
+      "description": "List of extracted rule entries",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique rule identifier within manifest"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable rule name"
+          },
+          "target_type": {
+            "type": "string",
+            "enum": ["door", "space", "building", "wall", "window", "element"],
+            "description": "Target element type that rule applies to"
+          },
+          "selector": {
+            "type": "object",
+            "description": "Selects which targets to evaluate",
+            "properties": {
+              "by": {
+                "type": "string",
+                "enum": ["type", "id", "pset", "attribute", "query"],
+                "description": "Selection method"
+              },
+              "value": {
+                "description": "Selection criterion (type name, element ID, PSet name, attribute key, or JSONPath)"
+              }
+            },
+            "required": ["by"]
+          },
+          "condition": {
+            "type": "object",
+            "description": "Predicate condition: if true, rule produces result based on polarity",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": ["<", "<=", ">", ">=", "==", "!="],
+                "description": "Comparison operator"
+              },
+              "lhs": {
+                "type": "object",
+                "description": "Left-hand side: attribute reference or expression",
+                "properties": {
+                  "attr": { "type": "string" },
+                  "expr": { "type": "string" }
+                }
+              },
+              "rhs": {
+                "type": "object",
+                "description": "Right-hand side: parameter reference or literal",
+                "properties": {
+                  "param": { "type": "string" },
+                  "value": {}
+                }
+              }
+            }
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Named parameters for the rule"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["INFO", "WARNING", "ERROR"],
+            "description": "Severity level for results"
+          },
+          "polarity": {
+            "type": "string",
+            "enum": ["violation", "predicate"],
+            "default": "violation",
+            "description": "Polarity: 'violation' means condition true => FAIL; 'predicate' means condition true => PASS"
+          },
+          "code_reference": {
+            "type": ["string", "null"],
+            "description": "Reference to code section, standard, or regulation"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "default": "medium",
+            "description": "Confidence in extraction (low: may be false positive; high: high likelihood correct)"
+          },
+          "provenance": {
+            "type": "object",
+            "description": "Metadata about where rule came from in IFC",
+            "properties": {
+              "pset_name": { "type": "string" },
+              "pset": { "type": "string" },
+              "element_id": { "type": "string" },
+              "element_type": { "type": "string" }
+            }
+          }
+        },
+        "required": ["id", "name", "target_type", "selector", "condition"]
+      }
+    }
+  },
+  "required": ["manifest_id", "source", "generated_at", "rules"]
+}

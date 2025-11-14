@@ -1,0 +1,28 @@
+{
+  "ifc_folder": "C:\\Research Work\\ACC-Explainability-AEC\\acc-dataset\\IFC",
+  "out_folder": "C:\\Research Work\\ACC-Explainability-AEC\\acc-dataset\\IFC",
+  "generated_at": "2025-11-14T10:04:19.469633+00:00",
+  "files": [
+    {
+      "ifc_file": "AC20-FZK-Haus.ifc",
+      "status": "success",
+      "rules_count": 7,
+      "manifest_file": "AC20-FZK-Haus_rules_manifest.json"
+    },
+    {
+      "ifc_file": "AC20-Institute-Var-2.ifc",
+      "status": "success",
+      "rules_count": 82,
+      "manifest_file": "AC20-Institute-Var-2_rules_manifest.json"
+    },
+    {
+      "ifc_file": "BasicHouse.ifc",
+      "status": "success",
+      "rules_count": 0,
+      "manifest_file": "BasicHouse_rules_manifest.json"
+    }
+  ],
+  "total_ifcs": 3,
+  "total_rules": 89,
+  "validation_errors": []
+}

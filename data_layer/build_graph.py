@@ -33,7 +33,7 @@ def save_data_graph(
 if __name__ == "__main__":
     # Optional: quick manual test if you run this file directly in VS Code.
     # 👉 Adjust this path to point to a real IFC file on your machine.
-    default_ifc = PROJECT_ROOT / "acc-dataset" / "IFC" / "BasicHouse.ifc"
+    default_ifc = PROJECT_ROOT / "acc-dataset" / "IFC" / "AC20-Institute-Var-2.ifc"
     if default_ifc.exists():
         save_data_graph(default_ifc)
     else:

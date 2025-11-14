@@ -16,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from rule_layer import get_all_rules, get_ruleset_metadata, load_rule_config  # noqa: E402
 from rule_layer.engine import RuleEngine  # noqa: E402
 from rule_layer.io import save_results  # noqa: E402
+from rule_layer.loader import load_rules_from_manifest  # noqa: E402
 
 
 def _configure_logging(level: str) -> None:
@@ -29,7 +30,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run rule layer checks against a data-layer JSON graph.")
     parser.add_argument(
         "--graph",
-        default=str(PROJECT_ROOT / "acc-dataset" / "IFC" / "BasicHouse_dataLayer.json"),
+        default=str(PROJECT_ROOT / "acc-dataset" / "IFC" / "AC20-Institute-Var-2_dataLayer.json"),
         help="Path to the data-layer JSON file.",
     )
     parser.add_argument(
@@ -40,6 +41,11 @@ def main() -> None:
         "--config",
         help="Optional path to a rule configuration JSON file. "
              "Overrides RULE_LAYER_CONFIG environment variable when provided.",
+    )
+    parser.add_argument(
+        "--include-manifest",
+        action="store_true",
+        help="Include manifest-driven ParametricRule instances if present in graph.",
     )
     parser.add_argument(
         "--strict",
@@ -61,10 +67,27 @@ def main() -> None:
         raise FileNotFoundError(f"Data-layer JSON not found: {graph_path}")
 
     cfg = load_rule_config(args.config)
-    rules = get_all_rules(cfg)
-    engine = RuleEngine(rules, strict=args.strict, logger=log)
 
-    graph = engine.load_graph(graph_path)
+    # Load data-layer graph early so we can detect embedded manifests and
+    # optionally include manifest-driven ParametricRule instances.
+    with graph_path.open(encoding="utf-8") as fh:
+        graph = json.load(fh)
+
+    rules = get_all_rules(cfg)
+
+    # If the data-layer graph includes a rules manifest and --include-manifest is set,
+    # convert each manifest rule into a ParametricRule and append it to the rule list.
+    if args.include_manifest:
+        manifest = graph.get("meta", {}).get("rules_manifest") or {}
+        if manifest and isinstance(manifest, dict):
+            manifest_rules = load_rules_from_manifest(manifest, validate=True, strict=False)
+            for mr in manifest_rules:
+                log.info("Loaded parametric manifest rule %s", mr.id)
+            rules.extend(manifest_rules)
+        else:
+            log.debug("No manifest found in graph or manifest is empty")
+
+    engine = RuleEngine(rules, strict=args.strict, logger=log)
     results = engine.run(graph)
 
     ruleset_meta = get_ruleset_metadata(cfg)

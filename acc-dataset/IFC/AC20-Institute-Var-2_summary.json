@@ -1,0 +1,90 @@
+{
+  "schema": "IFC4",
+  "counts": {
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 5,
+    "IfcSpace": 82,
+    "IfcWall": 121,
+    "IfcWallStandardCase": 121,
+    "IfcDoor": 77,
+    "IfcDoorType": 8,
+    "IfcWindow": 206,
+    "IfcSlab": 26,
+    "IfcOpeningElement": 287,
+    "IfcRelFillsElement": 283
+  },
+  "storey_summary": [
+    {
+      "storey_id": "3krrpJBfL2SBWSONoQ68Xx",
+      "storey_name": "Keller",
+      "elevation": -3.0,
+      "counts": {
+        "spaces": 17,
+        "windows": 44,
+        "openings": 0,
+        "doors": 16,
+        "walls": 24,
+        "slabs": 1,
+        "total_elements": 204
+      }
+    },
+    {
+      "storey_id": "0jrZ4kmNLEyeIrSAFW8xw8",
+      "storey_name": "Erdgeschoss",
+      "elevation": 0.0,
+      "counts": {
+        "spaces": 18,
+        "windows": 54,
+        "openings": 0,
+        "doors": 18,
+        "walls": 29,
+        "slabs": 1,
+        "total_elements": 223
+      }
+    },
+    {
+      "storey_id": "3wES2XYi17$hrBr7mbDuyg",
+      "storey_name": "1. Obergeschoss",
+      "elevation": 3.0,
+      "counts": {
+        "spaces": 22,
+        "windows": 54,
+        "openings": 0,
+        "doors": 22,
+        "walls": 29,
+        "slabs": 1,
+        "total_elements": 203
+      }
+    },
+    {
+      "storey_id": "2SZ5lnBQD2u9lFVZFen_5J",
+      "storey_name": "2. Obergeschoss",
+      "elevation": 6.0,
+      "counts": {
+        "spaces": 22,
+        "windows": 54,
+        "openings": 0,
+        "doors": 21,
+        "walls": 29,
+        "slabs": 1,
+        "total_elements": 203
+      }
+    },
+    {
+      "storey_id": "3P_7taSfTB1uu5RSuYEGO1",
+      "storey_name": "Dachgeschoss",
+      "elevation": 9.0,
+      "counts": {
+        "spaces": 3,
+        "windows": 0,
+        "openings": 0,
+        "doors": 0,
+        "walls": 10,
+        "slabs": 22,
+        "total_elements": 63
+      }
+    }
+  ]
+}

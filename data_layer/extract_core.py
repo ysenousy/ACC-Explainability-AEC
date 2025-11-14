@@ -62,6 +62,26 @@ def _coerce_float(value: Any) -> Optional[float]:
         return None
 
 
+def _normalize_length_to_mm(value: Optional[float]) -> Optional[float]:
+    """Normalize a length value to millimetres using a heuristic.
+
+    Heuristic:
+    - If value is None -> return None
+    - If value <= 10 -> assume the value is in metres and convert to mm (x1000)
+    - Else assume the value is already in millimetres and return as-is
+    """
+    if value is None:
+        return None
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    # Values <= 10 are likely metres (e.g. 0.9, 1.8, 2.0)
+    if v <= 10:
+        return v * 1000.0
+    return v
+
+
 def _extract_storey_index(model) -> Dict[str, Tuple[Optional[str], Optional[str]]]:
     storey_index: Dict[str, Tuple[Optional[str], Optional[str]]] = {}
     try:
@@ -195,6 +215,12 @@ def extract_doors(model, space_lookup: Optional[Mapping[str, SpaceElement]] = No
             pset_door.get("ClearHeight")
             or getattr(door, "OverallHeight", None)
         )
+
+        # Normalize lengths to millimetres using a conservative heuristic so
+        # that downstream rules which expect mm (e.g. MinDoorWidthRule) get
+        # consistent units.
+        width_mm = _normalize_length_to_mm(width_mm)
+        height_mm = _normalize_length_to_mm(height_mm)
 
         element = DoorElement(
             guid=guid,
