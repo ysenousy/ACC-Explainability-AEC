@@ -124,7 +124,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--out-folder",
-        help="Output folder for manifests (defaults to input folder)",
+        help="Output folder for manifests (defaults to acc-dataset/Rules)",
     )
     parser.add_argument(
         "--no-validate",
@@ -133,7 +133,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--summary-file",
-        help="Write summary JSON to this file (defaults to <folder>/manifests_summary.json)",
+        help="Write summary JSON to this file (defaults to <out-folder>/manifests_summary.json)",
     )
     args = parser.parse_args()
     
@@ -142,8 +142,14 @@ def main() -> None:
         print(f"Error: {ifc_folder} is not a directory", file=sys.stderr)
         sys.exit(1)
     
-    out_folder = Path(args.out_folder).resolve() if args.out_folder else ifc_folder
-    summary_file = args.summary_file or str(ifc_folder / "manifests_summary.json")
+    # Default output folder: acc-dataset/Rules (relative to project root)
+    if args.out_folder:
+        out_folder = Path(args.out_folder).resolve()
+    else:
+        project_root = Path(__file__).resolve().parent.parent
+        out_folder = project_root / "acc-dataset" / "Rules"
+    
+    summary_file = args.summary_file or str(out_folder / "manifests_summary.json")
     
     log.info("Extracting manifests from %s", ifc_folder)
     summary = extract_manifests_from_folder(

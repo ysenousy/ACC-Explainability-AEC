@@ -1,0 +1,210 @@
+{
+  "manifest_id": "ifc_rules_manifest_AC20-FZK-Haus",
+  "source": "data-layer-pset-extraction",
+  "generated_at": "2025-11-17T14:16:55.772230+00:00",
+  "rules": [
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_347jFE2yX7IhCEIALmupEH",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 22.0725
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "347jFE2yX7IhCEIALmupEH",
+        "element_type": "spaces"
+      }
+    },
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_0e_hbkIQ5DMQlIJ$2V3j_m",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 12.5027
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "0e_hbkIQ5DMQlIJ$2V3j_m",
+        "element_type": "spaces"
+      }
+    },
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_2RSCzLOBz4FAK$_wE8VckM",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 12.985
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "2RSCzLOBz4FAK$_wE8VckM",
+        "element_type": "spaces"
+      }
+    },
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_0Lt8gR_E9ESeGH5uY_g9e9",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 25.98855
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "0Lt8gR_E9ESeGH5uY_g9e9",
+        "element_type": "spaces"
+      }
+    },
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_3$f2p7VyLB7eox67SA_zKE",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 11.5314
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "3$f2p7VyLB7eox67SA_zKE",
+        "element_type": "spaces"
+      }
+    },
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_17JZcMFrf5tOftUTidA0d3",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 16.30545
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "17JZcMFrf5tOftUTidA0d3",
+        "element_type": "spaces"
+      }
+    },
+    {
+      "id": "IFC_PARAM_SPACE_MIN_AREA_2dQFggKBb1fOc1CqZDIDlx",
+      "name": "Space minimum area (extracted from IFC)",
+      "target_type": "space",
+      "selector": {
+        "by": "type",
+        "value": "space"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_area_m2"
+        }
+      },
+      "parameters": {
+        "min_area_m2": 107.16
+      },
+      "severity": "ERROR",
+      "code_reference": null,
+      "provenance": {
+        "pset": "GrossFloorArea",
+        "pset_name": "BaseQuantities",
+        "element_id": "2dQFggKBb1fOc1CqZDIDlx",
+        "element_type": "spaces"
+      }
+    }
+  ]
+}

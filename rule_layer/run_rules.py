@@ -109,3 +109,52 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def run_with_graph(graph_json_path: str, *, include_manifest: bool = True, include_builtin: bool = True,
+                   out_path: str | None = None, config: str | None = None, strict: bool = False,
+                   log_level: str = "INFO") -> str:
+    """Programmatic wrapper to run the rule engine against a data-layer JSON file.
+
+    Returns the path to the saved results JSON file.
+    """
+    _configure_logging(log_level)
+    log = logging.getLogger("rule_layer.run_with_graph")
+
+    graph_path = Path(graph_json_path).resolve()
+    if not graph_path.exists():
+        raise FileNotFoundError(f"Data-layer JSON not found: {graph_path}")
+
+    cfg = load_rule_config(config)
+
+    with graph_path.open(encoding="utf-8") as fh:
+        graph = json.load(fh)
+
+    rules = []
+    if include_builtin:
+        rules = get_all_rules(cfg)
+
+    if include_manifest:
+        manifest = graph.get("meta", {}).get("rules_manifest") or {}
+        if manifest and isinstance(manifest, dict):
+            manifest_rules = load_rules_from_manifest(manifest, validate=True, strict=False)
+            for mr in manifest_rules:
+                log.info("Loaded parametric manifest rule %s", mr.id)
+            rules.extend(manifest_rules)
+        else:
+            log.debug("No manifest found in graph or manifest is empty")
+
+    engine = RuleEngine(rules, strict=strict, logger=log)
+    results = engine.run(graph)
+
+    ruleset_meta = get_ruleset_metadata(cfg)
+
+    out_file = save_results(
+        results,
+        graph_path,
+        out_path=out_path,
+        ruleset_id=ruleset_meta["ruleset_id"],
+        graph_metadata=graph,
+    )
+
+    return str(out_file)

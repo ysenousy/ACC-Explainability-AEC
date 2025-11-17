@@ -21,7 +21,7 @@ except Exception:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Preview IFC metadata and element counts.")
-    ap.add_argument("--ifc", default=r"acc-dataset/IFC/AC20-FZK-Haus.ifc", help="Path to the IFC file to preview")
+    ap.add_argument("--ifc", default=r"acc-dataset/IFC/AC20-Institute-Var-2.ifc", help="Path to the IFC file to preview")
     ap.add_argument("--summary", help="Optional path to write the preview summary JSON")
     ap.add_argument("--export-rules", action="store_true", help="Extract rules from the IFC and write rules_manifest JSON")
     ap.add_argument("--rules-out", help="Optional path to write extracted rules manifest JSON")
