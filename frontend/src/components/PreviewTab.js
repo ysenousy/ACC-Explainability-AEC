@@ -15,26 +15,6 @@ function PreviewTab({ preview, summary }) {
 
   return (
     <div className="preview-tab">
-      {/* Summary Stats */}
-      <div className="grid">
-        <div className="stat-card">
-          <div className="stat-card-label">Total Spaces</div>
-          <div className="stat-card-value">{summary.num_spaces}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-label">Total Doors</div>
-          <div className="stat-card-value">{summary.num_doors}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-label">Spaces with Area</div>
-          <div className="stat-card-value">{summary.spaces_with_area}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-label">Doors with Width</div>
-          <div className="stat-card-value">{summary.doors_with_width}</div>
-        </div>
-      </div>
-
       {/* Schema Info */}
       <div className="card">
         <div className="card-title">IFC Schema</div>

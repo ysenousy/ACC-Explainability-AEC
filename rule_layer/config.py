@@ -115,17 +115,26 @@ def load_rule_config(source: Optional[str | Path | Mapping[str, Any]] = None) ->
     Load rule configuration from a JSON file, mapping, or environment variable.
 
     If `source` is None, looks for `RULE_LAYER_CONFIG` environment variable,
+    then checks for rules.json in rules_config directory,
     falling back to defaults defined in `RuleConfig`.
     """
     if isinstance(source, RuleConfig):
         return source
 
     if source is None:
+        # Try environment variable first
         env_path = os.environ.get("RULE_LAYER_CONFIG")
         if env_path:
             source = Path(env_path)
         else:
-            return RuleConfig()
+            # Look for rules.json in rules_config directory
+            project_root = Path(__file__).resolve().parent.parent
+            default_config_path = project_root / "rules_config" / "rules.json"
+            if default_config_path.exists():
+                source = default_config_path
+            else:
+                # Fall back to defaults
+                return RuleConfig()
 
     if isinstance(source, Mapping):
         return RuleConfig.from_mapping(source)

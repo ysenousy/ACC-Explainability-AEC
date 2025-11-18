@@ -1,0 +1,43 @@
+{
+  "ruleset_id": "building_code_2024",
+  "ruleset_name": "Building Code 2024",
+  "description": "Standard building code compliance rules",
+  "rules": [
+    {
+      "id": "min_door_width",
+      "name": "Minimum Door Width",
+      "type": "door",
+      "description": "Doors must have a minimum clear width for accessibility",
+      "enabled": true,
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 §1010.1.1",
+      "parameters": {
+        "min_width_mm": 900.0
+      }
+    },
+    {
+      "id": "min_space_area",
+      "name": "Minimum Space Area",
+      "type": "space",
+      "description": "Spaces must meet minimum area requirements",
+      "enabled": true,
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 §1204.2",
+      "parameters": {
+        "min_area_m2": 6.0
+      }
+    },
+    {
+      "id": "max_occupancy_per_storey",
+      "name": "Maximum Occupancy Per Storey",
+      "type": "building",
+      "description": "Each storey must not exceed maximum occupancy",
+      "enabled": true,
+      "severity": "WARNING",
+      "code_reference": "IBC 2018 §1004",
+      "parameters": {
+        "max_occupancy_per_storey": 50
+      }
+    }
+  ]
+}

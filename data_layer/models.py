@@ -58,6 +58,8 @@ class DoorElement:
     width_mm: Optional[float]
     height_mm: Optional[float]
     fire_rating: Optional[str]
+    storey_id: Optional[str] = None
+    storey_name: Optional[str] = None
     connections: List[DoorSpaceConnection] = field(default_factory=list)
     provenance: str = "IFC:IfcDoor"
     attributes: Dict[str, Any] = field(default_factory=dict)
@@ -70,8 +72,32 @@ class DoorElement:
             "width_mm": self.width_mm,
             "height_mm": self.height_mm,
             "fire_rating": self.fire_rating,
+            "storey_id": self.storey_id,
+            "storey_name": self.storey_name,
             "provenance": self.provenance,
             "connected_spaces": [c.to_dict() for c in self.connections],
+        }
+        if self.attributes:
+            data["attributes"] = self.attributes
+        return data
+
+
+@dataclass(slots=True)
+class GenericElement:
+    """Generic IFC element for all other entity types."""
+    guid: str
+    ifc_type: str  # e.g., 'IfcWall', 'IfcWindow', 'IfcSlab'
+    name: Optional[str]
+    provenance: str = ""
+    attributes: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        data: Dict[str, Any] = {
+            "id": self.guid,
+            "ifc_guid": self.guid,
+            "ifc_type": self.ifc_type,
+            "name": self.name,
+            "provenance": self.provenance or f"IFC:{self.ifc_type}",
         }
         if self.attributes:
             data["attributes"] = self.attributes

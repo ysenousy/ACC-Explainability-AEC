@@ -1,7 +1,7 @@
 import React from 'react';
 import { Database } from 'lucide-react';
 
-function DataLayerView({ graph }) {
+function DataLayerView({ graph, summary }) {
   if (!graph) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -11,27 +11,105 @@ function DataLayerView({ graph }) {
   }
 
   const meta = graph.meta || {};
-  const coverage = meta.coverage || {};
+  const coverage = summary || {};
 
   return (
     <div className="layer-view">
       <div className="layer-header">
         <Database size={24} />
-        <h2>Data Layer</h2>
+        <h2>Model Summary</h2>
       </div>
 
       <div className="layer-content">
+        {/* Summary Statistics */}
+        <div className="info-section">
+          <h3>IFC Entity Summary</h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: '0.75rem',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>{coverage.ifc_building || 0}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.95 }}>IfcBuilding</div>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>{coverage.ifc_building_storey || 0}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.95 }}>IfcBuildingStorey</div>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>{coverage.ifc_space || 0}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.95 }}>IfcSpace</div>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>{coverage.ifc_door || 0}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.95 }}>IfcDoor</div>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>{coverage.ifc_wall || 0}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.95 }}>IfcWall</div>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '1rem',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)'
+            }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.25rem' }}>{coverage.ifc_window || 0}</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.95 }}>IfcWindow</div>
+            </div>
+          </div>
+        </div>
+
         <div className="info-section">
           <h3>Schema Information</h3>
           <table className="info-table">
             <tbody>
               <tr>
-                <td><strong>Schema:</strong></td>
-                <td>{meta.schema || 'Unknown'}</td>
+                <td><strong>File Name:</strong></td>
+                <td style={{ wordBreak: 'break-all' }}>{graph.source_file || 'Unknown'}</td>
               </tr>
               <tr>
-                <td><strong>Version:</strong></td>
-                <td>{meta.schema_version || 'N/A'}</td>
+                <td><strong>Schema Type:</strong></td>
+                <td>{meta.schema || 'Unknown'}</td>
               </tr>
               <tr>
                 <td><strong>Generated:</strong></td>
@@ -39,37 +117,6 @@ function DataLayerView({ graph }) {
               </tr>
             </tbody>
           </table>
-        </div>
-
-        <div className="info-section">
-          <h3>Coverage</h3>
-          <table className="info-table">
-            <tbody>
-              <tr>
-                <td><strong>Total Spaces:</strong></td>
-                <td>{coverage.num_spaces || 0}</td>
-              </tr>
-              <tr>
-                <td><strong>Spaces with Area:</strong></td>
-                <td>{coverage.spaces_with_area || 0}</td>
-              </tr>
-              <tr>
-                <td><strong>Total Doors:</strong></td>
-                <td>{coverage.num_doors || 0}</td>
-              </tr>
-              <tr>
-                <td><strong>Doors with Width:</strong></td>
-                <td>{coverage.doors_with_width || 0}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className="info-section">
-          <h3>Source</h3>
-          <p style={{ fontSize: '0.9rem', wordBreak: 'break-all', color: '#666' }}>
-            {graph.source_file || 'N/A'}
-          </p>
         </div>
       </div>
     </div>

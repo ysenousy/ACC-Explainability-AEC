@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 from .exceptions import IFCLoadError
-from .extract_core import extract_doors, extract_spaces
+from .extract_core import extract_doors, extract_spaces, extract_all_elements
 from .load_ifc import load_ifc, preview_ifc
 from .models import DoorElement, SpaceElement
 from .extract_rules import extract_rules_from_graph
@@ -45,7 +45,9 @@ class DataLayerService:
             raise IFCLoadError(ifc_path)
 
         spaces, doors = self.extract_elements(model)
+        all_elements = extract_all_elements(model)
         schema = getattr(model, "schema", None)
+        schema_version = getattr(model, "schema", "Unknown")
 
         coverage = {
             "num_spaces": len(spaces),
@@ -54,17 +56,27 @@ class DataLayerService:
             "doors_with_width": sum(1 for d in doors if d.width_mm is not None),
         }
 
+        # Build elements dict with spaces, doors, and all other types
+        elements_dict: Dict[str, Any] = {
+            "spaces": [space.to_dict() for space in spaces],
+            "doors": [door.to_dict() for door in doors],
+        }
+        
+        # Add all other element types
+        for ifc_type, elements in all_elements.items():
+            # Skip if already added (spaces and doors are primary)
+            if ifc_type not in ("IfcSpace", "IfcDoor"):
+                key = ifc_type.replace("Ifc", "").lower()  # e.g., IfcWall -> wall
+                elements_dict[key] = [elem.to_dict() for elem in elements]
+
         graph: Dict[str, Any] = {
             "building_id": Path(ifc_path).stem,
             "source_file": str(Path(ifc_path)),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "elements": {
-                "spaces": [space.to_dict() for space in spaces],
-                "doors": [door.to_dict() for door in doors],
-            },
+            "elements": elements_dict,
             "meta": {
                 "schema": schema,
-                "schema_version": "data-layer-v1.0",
+                "schema_version": schema_version,
                 "generated_by": "data-layer-service",
                 "coverage": coverage,
             },

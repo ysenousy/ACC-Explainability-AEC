@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Database, CheckCircle, Zap, Network, FileText, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Database, CheckCircle, Zap, Network, FileText, AlertCircle, Download } from 'lucide-react';
 
 function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
   const [expandedGroups, setExpandedGroups] = useState({
-    model: true,
-    compliance: true,
+    dataLayer: true,
+    ruleLayer: true,
+    reasoningLayer: true,
   });
 
   const toggleGroup = (group) => {
@@ -15,20 +16,26 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
   };
 
   const layers = {
-    model: [
-      { id: 'data-layer', label: 'Data Layer', icon: Database, description: 'IFC structure & elements' },
-      { id: 'elements', label: 'Elements', icon: FileText, description: 'Spaces & Doors' },
+    dataLayer: [
+      { id: 'data-layer', label: 'Model Summary', icon: Database, description: 'IFC structure & elements' },
+      { id: 'elements', label: 'Model Elements', icon: FileText, description: 'Spaces & Doors' },
+      { id: 'export', label: 'Export JSON Graph', icon: Download, description: 'Export JSON graph' },
     ],
-    compliance: [
-      { id: 'rule-layer', label: 'Rule Layer', icon: CheckCircle, description: 'Compliance rules' },
-      { id: 'reasoning', label: 'Reasoning', icon: Zap, description: 'Rule logic & inference' },
-      { id: 'results', label: 'Results', icon: AlertCircle, description: 'Rule evaluation outcomes' },
+    ruleLayer: [
+      { id: 'rule-layer', label: 'Rules', icon: CheckCircle, description: 'Compliance rules' },
+      { id: 'rule-generate', label: 'Generate Rule', icon: Zap, description: 'Generate new rules' },
+      { id: 'rule-check', label: 'Check Rules', icon: CheckCircle, description: 'Check rule compliance' },
+    ],
+    reasoningLayer: [
+      { id: 'reasoning', label: 'Reasoning Logic', icon: Network, description: 'Rule logic & inference' },
+      { id: 'results', label: 'Analysis Results', icon: AlertCircle, description: 'Rule evaluation outcomes' },
     ],
   };
 
   const groups = [
-    { key: 'model', label: '📊 Model', color: 'sidebar-model' },
-    { key: 'compliance', label: '✅ Compliance', color: 'sidebar-compliance' },
+    { key: 'dataLayer', label: '📊 Data Layer', color: 'sidebar-model' },
+    { key: 'ruleLayer', label: '✅ Rule Layer', color: 'sidebar-compliance' },
+    { key: 'reasoningLayer', label: '🧠 Reasoning & Analysis', color: 'sidebar-reasoning' },
   ];
 
   const handleLayerClick = (layerId) => {
@@ -81,16 +88,6 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
           </div>
         ))}
       </nav>
-
-      {/* Footer Info */}
-      {currentGraph && (
-        <div className="sidebar-footer">
-          <div className="sidebar-info">
-            <p className="info-label">Loaded:</p>
-            <p className="info-value">{currentGraph.building_id || 'Unknown'}</p>
-          </div>
-        </div>
-      )}
     </aside>
   );
 }

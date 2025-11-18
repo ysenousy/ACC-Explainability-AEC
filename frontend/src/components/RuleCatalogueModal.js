@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, ChevronRight, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ChevronDown, ChevronRight, AlertCircle, AlertTriangle, Info, Upload, Edit2, Save, XCircle, Trash2, Download } from 'lucide-react';
 
 function RuleCatalogueModal({ isOpen, onClose }) {
   const [rules, setRules] = useState([]);
@@ -7,6 +7,15 @@ function RuleCatalogueModal({ isOpen, onClose }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedRules, setExpandedRules] = useState({});
+  const [importLoading, setImportLoading] = useState(false);
+  const [importMessage, setImportMessage] = useState(null);
+  const [importMessageType, setImportMessageType] = useState(null);
+  const [editingRuleId, setEditingRuleId] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  const [deletingRuleId, setDeletingRuleId] = useState(null);
+  const [appendMode, setAppendMode] = useState(false);
+  const fileInputRef = useRef(null);
+  const appendFileInputRef = useRef(null);
 
   // Fetch rules catalogue on mount or when modal opens
   useEffect(() => {
@@ -38,6 +47,174 @@ function RuleCatalogueModal({ isOpen, onClose }) {
       ...prev,
       [ruleId]: !prev[ruleId]
     }));
+  };
+
+  const handleImportCatalogue = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImportLoading(true);
+    setImportMessage(null);
+    setAppendMode(false);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('mode', 'replace'); // Fresh import replaces current rules
+      
+      const response = await fetch('/api/rules/import-catalogue', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setImportMessage(`✓ Successfully imported ${data.status?.added || 0} rules`);
+        setImportMessageType('success');
+        const catalogueResponse = await fetch('/api/rules/catalogue');
+        const catalogueData = await catalogueResponse.json();
+        if (catalogueData.success) {
+          setRules(catalogueData.rules || []);
+        }
+        setTimeout(() => setImportMessage(null), 3000);
+      } else {
+        setImportMessage(`✗ Import failed: ${data.error}`);
+        setImportMessageType('error');
+        setTimeout(() => setImportMessage(null), 5000);
+      }
+    } catch (err) {
+      setImportMessage(`✗ Error: ${err.message}`);
+      setImportMessageType('error');
+      setTimeout(() => setImportMessage(null), 5000);
+    } finally {
+      setImportLoading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleAppendCatalogue = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImportLoading(true);
+    setImportMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('mode', 'append'); // Append adds to existing rules
+      
+      const response = await fetch('/api/rules/import-catalogue', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setImportMessage(`✓ Successfully appended ${data.status?.added || 0} rules`);
+        setImportMessageType('success');
+        const catalogueResponse = await fetch('/api/rules/catalogue');
+        const catalogueData = await catalogueResponse.json();
+        if (catalogueData.success) {
+          setRules(catalogueData.rules || []);
+        }
+        setTimeout(() => setImportMessage(null), 3000);
+      } else {
+        setImportMessage(`✗ Append failed: ${data.error}`);
+        setImportMessageType('error');
+        setTimeout(() => setImportMessage(null), 5000);
+      }
+    } catch (err) {
+      setImportMessage(`✗ Error: ${err.message}`);
+      setImportMessageType('error');
+      setTimeout(() => setImportMessage(null), 5000);
+    } finally {
+      setImportLoading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleSaveRules = async () => {
+    try {
+      const dataStr = JSON.stringify({ rules: rules, version: 1 }, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `rules-catalogue-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setImportMessage('✓ Rules exported successfully');
+      setImportMessageType('success');
+      setTimeout(() => setImportMessage(null), 3000);
+    } catch (err) {
+      setImportMessage(`✗ Error saving rules: ${err.message}`);
+      setImportMessageType('error');
+      setTimeout(() => setImportMessage(null), 5000);
+    }
+  };
+
+  const startEditingRule = (rule) => {
+    setEditingRuleId(rule.id);
+    setEditFormData(JSON.parse(JSON.stringify(rule)));
+  };
+
+  const cancelEditing = () => {
+    setEditingRuleId(null);
+    setEditFormData({});
+  };
+
+  const saveEditedRule = async () => {
+    try {
+      const params = editFormData.parameters;
+      if (typeof params === 'string') {
+        JSON.parse(params); // Validate JSON
+      }
+      
+      const response = await fetch('/api/rules/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editFormData),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setRules(data.rules || []);
+        setEditingRuleId(null);
+        setEditFormData({});
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (err) {
+      alert(`Error saving rule: ${err.message}`);
+    }
+  };
+
+  const deleteRule = async (ruleId) => {
+    if (!window.confirm('Are you sure you want to delete this rule?')) {
+      return;
+    }
+    
+    setDeletingRuleId(ruleId);
+    try {
+      const response = await fetch(`/api/rules/delete/${ruleId}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setRules(data.rules || []);
+        setImportMessage('✓ Rule deleted successfully');
+        setImportMessageType('success');
+        setTimeout(() => setImportMessage(null), 3000);
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (err) {
+      alert(`Error deleting rule: ${err.message}`);
+    } finally {
+      setDeletingRuleId(null);
+    }
   };
 
   const filteredRules = rules.filter(rule =>
@@ -74,8 +251,20 @@ function RuleCatalogueModal({ isOpen, onClose }) {
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '900px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <div className="modal-header">
-          <h2>Rules Catalogue</h2>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h2 style={{ margin: 0 }}>Rules Catalogue</h2>
+            <span style={{
+              backgroundColor: '#e0f2fe',
+              color: '#0369a1',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '9999px',
+              fontSize: '0.875rem',
+              fontWeight: '600'
+            }}>
+              {rules.length} {rules.length === 1 ? 'rule' : 'rules'}
+            </span>
+          </div>
           <button onClick={onClose} className="close-button">
             <X size={24} />
           </button>
@@ -96,6 +285,18 @@ function RuleCatalogueModal({ isOpen, onClose }) {
               fontSize: '0.875rem',
             }}
           />
+          {importMessage && (
+            <div style={{
+              marginTop: '0.5rem',
+              padding: '0.5rem 0.75rem',
+              backgroundColor: importMessageType === 'success' ? '#dcfce7' : '#fee2e2',
+              color: importMessageType === 'success' ? '#166534' : '#991b1b',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem'
+            }}>
+              {importMessage}
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -135,7 +336,7 @@ function RuleCatalogueModal({ isOpen, onClose }) {
               }}
             >
               {/* Rule Header - Expandable */}
-              <button
+              <div
                 onClick={() => toggleExpanded(rule.id)}
                 style={{
                   width: '100%',
@@ -151,8 +352,8 @@ function RuleCatalogueModal({ isOpen, onClose }) {
                   fontWeight: '500',
                   transition: 'background-color 0.2s'
                 }}
-                onMouseEnter={(e) => e.target.parentElement.style.backgroundColor = '#e5e7eb'}
-                onMouseLeave={(e) => e.target.parentElement.style.backgroundColor = '#f3f4f6'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
               >
                 {expandedRules[rule.id] ? (
                   <ChevronDown size={18} />
@@ -180,7 +381,34 @@ function RuleCatalogueModal({ isOpen, onClose }) {
                     </span>
                   )}
                 </span>
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteRule(rule.id);
+                  }}
+                  disabled={deletingRuleId === rule.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: '#ef4444',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: deletingRuleId === rule.id ? 'not-allowed' : 'pointer',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    opacity: deletingRuleId === rule.id ? 0.5 : 1,
+                    transition: 'background-color 0.2s',
+                    marginLeft: 'auto'
+                  }}
+                  onMouseEnter={(e) => !deletingRuleId && (e.target.style.backgroundColor = '#dc2626')}
+                  onMouseLeave={(e) => !deletingRuleId && (e.target.style.backgroundColor = '#ef4444')}
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              </div>
 
               {/* Rule Details - Expandable */}
               {expandedRules[rule.id] && (
@@ -189,6 +417,181 @@ function RuleCatalogueModal({ isOpen, onClose }) {
                   backgroundColor: '#fafafa',
                   borderTop: '1px solid #e5e7eb'
                 }}>
+                  {/* Edit Form */}
+                  {editingRuleId === rule.id ? (
+                    <div style={{
+                      backgroundColor: '#fff',
+                      padding: '1rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid #e5e7eb',
+                      marginBottom: '1rem'
+                    }}>
+                      <h4 style={{ marginTop: 0, marginBottom: '0.75rem' }}>Edit Rule</h4>
+                      
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Name</label>
+                        <input
+                          type="text"
+                          value={editFormData.name || ''}
+                          onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Description</label>
+                        <textarea
+                          value={editFormData.description || ''}
+                          onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            boxSizing: 'border-box',
+                            minHeight: '60px',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Severity</label>
+                        <select
+                          value={editFormData.severity || ''}
+                          onChange={(e) => setEditFormData({...editFormData, severity: e.target.value})}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <option value="ERROR">ERROR</option>
+                          <option value="WARNING">WARNING</option>
+                          <option value="INFO">INFO</option>
+                        </select>
+                      </div>
+
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Code Reference</label>
+                        <input
+                          type="text"
+                          value={editFormData.code_reference || ''}
+                          onChange={(e) => setEditFormData({...editFormData, code_reference: e.target.value})}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', fontWeight: '500', gap: '0.5rem' }}>
+                          <input
+                            type="checkbox"
+                            checked={editFormData.enabled !== false}
+                            onChange={(e) => setEditFormData({...editFormData, enabled: e.target.checked})}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          Enabled
+                        </label>
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Parameters (JSON)</label>
+                        <textarea
+                          value={typeof editFormData.parameters === 'string' ? editFormData.parameters : JSON.stringify(editFormData.parameters || {})}
+                          onChange={(e) => setEditFormData({...editFormData, parameters: e.target.value})}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            boxSizing: 'border-box',
+                            minHeight: '80px',
+                            fontFamily: 'monospace'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={saveEditedRule}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#10b981',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}
+                        >
+                          <Save size={16} /> Save
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#ef4444',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}
+                        >
+                          <XCircle size={16} /> Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                  {/* Edit Button */}
+                  <button
+                    onClick={() => startEditingRule(rule)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#3b82f6',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '1rem'
+                    }}
+                  >
+                    <Edit2 size={16} /> Edit Rule
+                  </button>
+                  
                   {rule.description && (
                     <div style={{ marginBottom: '0.75rem' }}>
                       <p style={{ color: '#4b5563', fontSize: '0.875rem', lineHeight: '1.5' }}>
@@ -247,6 +650,8 @@ function RuleCatalogueModal({ isOpen, onClose }) {
                       </div>
                     </div>
                   )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -258,27 +663,121 @@ function RuleCatalogueModal({ isOpen, onClose }) {
           padding: '1rem',
           borderTop: '1px solid #e5e7eb',
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           gap: '0.75rem',
           backgroundColor: '#f9fafb'
         }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#e5e7eb',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-              fontWeight: '500',
-              fontSize: '0.875rem',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#d1d5db'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#e5e7eb'}
-          >
-            Close
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImportCatalogue}
+              style={{ display: 'none' }}
+            />
+            <input
+              ref={appendFileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleAppendCatalogue}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importLoading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#06b6d4',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: importLoading ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                opacity: importLoading ? 0.5 : 1,
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => !importLoading && (e.target.style.backgroundColor = '#0891b2')}
+              onMouseLeave={(e) => !importLoading && (e.target.style.backgroundColor = '#06b6d4')}
+              title="Import rules (replaces current)"
+            >
+              <Upload size={16} /> Import
+            </button>
+
+            <button
+              onClick={() => appendFileInputRef.current?.click()}
+              disabled={importLoading || rules.length === 0}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: rules.length === 0 ? '#9ca3af' : '#8b5cf6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: (importLoading || rules.length === 0) ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                opacity: (importLoading || rules.length === 0) ? 0.5 : 1,
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => rules.length > 0 && !importLoading && (e.target.style.backgroundColor = '#7c3aed')}
+              onMouseLeave={(e) => rules.length > 0 && !importLoading && (e.target.style.backgroundColor = '#8b5cf6')}
+              title={rules.length === 0 ? 'Import rules first to append' : 'Append more rules to existing'}
+            >
+              <Upload size={16} /> Append
+            </button>
+
+            <button
+              onClick={handleSaveRules}
+              disabled={rules.length === 0}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: rules.length === 0 ? '#9ca3af' : '#10b981',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: rules.length === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                opacity: rules.length === 0 ? 0.5 : 1,
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => rules.length > 0 && (e.target.style.backgroundColor = '#059669')}
+              onMouseLeave={(e) => rules.length > 0 && (e.target.style.backgroundColor = '#10b981')}
+              title={rules.length === 0 ? 'Add rules first to save' : 'Save rules to JSON file'}
+            >
+              <Download size={16} /> Save
+            </button>
+
+            <button
+              onClick={onClose}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#e5e7eb',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#d1d5db'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#e5e7eb'}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

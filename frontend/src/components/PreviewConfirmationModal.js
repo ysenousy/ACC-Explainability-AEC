@@ -1,8 +1,8 @@
 import React from 'react';
 import { X, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 
-function PreviewConfirmationModal({ preview, summary, fileName, onConfirm, onCancel, loading }) {
-  if (!preview || !summary) {
+function PreviewConfirmationModal({ preview, summary = {}, fileName, onConfirm, onCancel, loading }) {
+  if (!preview) {
     return null;
   }
 
@@ -19,7 +19,7 @@ function PreviewConfirmationModal({ preview, summary, fileName, onConfirm, onCan
           </button>
         </div>
 
-        <div className="modal-content">
+        <div className="preview-sections-container">
           {/* File Info */}
           <div className="preview-section">
             <h3>File Information</h3>
@@ -42,20 +42,28 @@ function PreviewConfirmationModal({ preview, summary, fileName, onConfirm, onCan
             <h3>Summary Statistics</h3>
             <div className="preview-grid">
               <div className="preview-stat">
-                <div className="stat-value">{summary.num_spaces}</div>
-                <div className="stat-label">Spaces</div>
+                <div className="stat-value">{summary.ifc_building || 0}</div>
+                <div className="stat-label">IfcBuilding</div>
               </div>
               <div className="preview-stat">
-                <div className="stat-value">{summary.num_doors}</div>
-                <div className="stat-label">Doors</div>
+                <div className="stat-value">{summary.ifc_building_storey || 0}</div>
+                <div className="stat-label">IfcBuildingStorey</div>
               </div>
               <div className="preview-stat">
-                <div className="stat-value">{summary.spaces_with_area}</div>
-                <div className="stat-label">Spaces with Area</div>
+                <div className="stat-value">{summary.ifc_space || 0}</div>
+                <div className="stat-label">IfcSpace</div>
               </div>
               <div className="preview-stat">
-                <div className="stat-value">{summary.doors_with_width}</div>
-                <div className="stat-label">Doors with Width</div>
+                <div className="stat-value">{summary.ifc_door || 0}</div>
+                <div className="stat-label">IfcDoor</div>
+              </div>
+              <div className="preview-stat">
+                <div className="stat-value">{summary.ifc_wall || 0}</div>
+                <div className="stat-label">IfcWall</div>
+              </div>
+              <div className="preview-stat">
+                <div className="stat-value">{summary.ifc_window || 0}</div>
+                <div className="stat-label">IfcWindow</div>
               </div>
             </div>
           </div>
@@ -144,7 +152,7 @@ function PreviewConfirmationModal({ preview, summary, fileName, onConfirm, onCan
             ) : (
               <>
                 <CheckCircle size={18} />
-                Confirm & Build Graph
+                Confirm & Build
               </>
             )}
           </button>

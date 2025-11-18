@@ -1,0 +1,332 @@
+# How to Use Rule Extraction Strategies - Complete Guide
+
+## Overview
+
+You can now extract rules from IFC files using three different strategies. Here's how to use them in the GUI:
+
+---
+
+## GUI Usage
+
+### 1. **Where to Find It**
+
+In the **Rule Layer** view, look for three buttons:
+
+```
+┌─────────────────────────────────────────────────┐
+│  Rule Layer                                     │
+├─────────────────────────────────────────────────┤
+│ [View Catalogue]  [Manage Rules]  [Extraction Settings] │
+└─────────────────────────────────────────────────┘
+```
+
+Click **"Extraction Settings"** (purple button with gear icon)
+
+### 2. **Extraction Settings Modal**
+
+When you click "Extraction Settings", a modal appears with three options:
+
+#### **Option 1: Property Set Heuristic** ✓ (Default: ON)
+```
+☑ Property Set Heuristic
+  Scans IFC property sets for rule parameters
+  (door widths, space areas, occupancy limits)
+```
+- **What it does**: Looks for properties like "MinimumWidth", "GrossFloorArea"
+- **When to use**: Always (it's the primary extraction method)
+- **Example output**: Doors with min_width_mm extracted from IFC property data
+
+#### **Option 2: Statistical Baseline** ✓ (Default: ON)
+```
+☑ Statistical Baseline
+  Generates baseline rules from building data
+  (e.g., 10th percentile of all door widths)
+```
+- **What it does**: Analyzes all building elements to generate thresholds
+- **When to use**: When you want automatic baselines based on the building's own data
+- **Example output**: "Door width baseline = 10th percentile of all doors in building"
+
+#### **Option 3: Data Completeness** ✓ (Default: ON)
+```
+☑ Data Completeness
+  Detects missing data and generates validation rules
+  (e.g., doors without width data)
+```
+- **What it does**: Checks for missing or incomplete data
+- **When to use**: When you want to identify data quality issues
+- **Example output**: "Found 5 doors without width data"
+
+### 3. **Selecting Strategies**
+
+- **Check/Uncheck** each strategy box to enable/disable it
+- **At least one strategy must be selected** (the system won't allow all to be unchecked)
+- Click **"Apply Strategies"** to save your selection
+
+---
+
+## Workflow Example
+
+### Scenario: You upload a new IFC file
+
+**Step 1: Upload IFC file**
+- Go to "Browse IFC" → select your file
+
+**Step 2: Go to Rule Layer**
+- Click "Rule Layer" in sidebar
+
+**Step 3: Configure Extraction (Optional)**
+- Click "Extraction Settings"
+- Ensure all three strategies are checked (default)
+- Click "Apply Strategies"
+
+**Step 4: View Results**
+- The extracted rules appear in "View Catalogue"
+- Rules from all three strategies are combined and shown:
+  - **Orange badge**: Property set rules (explicit IFC data)
+  - **Yellow badge**: Statistical rules (calculated from building data)
+  - **Blue badge**: Metadata rules (data quality warnings)
+
+**Step 5: Manage Rules**
+- Click "View Catalogue" to see all extracted rules
+- Click "Manage Rules" to edit, delete, or add custom rules
+- Click "Save" to export rules to JSON
+
+---
+
+## What Each Strategy Generates
+
+### Property Set Heuristic Output
+
+For a building with multiple doors, if the IFC property sets contain width data:
+
+```json
+{
+  "id": "IFC_PARAM_DOOR_MIN_WIDTH_Door_123",
+  "name": "Door minimum width (extracted from IFC)",
+  "parameters": { "min_width_mm": 900 },
+  "severity": "ERROR",
+  "provenance": {
+    "pset": "MinimumWidth",
+    "element_type": "doors"
+  }
+}
+```
+
+### Statistical Baseline Output
+
+For spaces with areas 12.5, 25.5, 35.4 m²:
+- 10th percentile = 12.5 m²
+
+```json
+{
+  "id": "STAT_SPACE_AREA_10TH_PERCENTILE",
+  "name": "Space area baseline (10th percentile from building)",
+  "parameters": { "min_area_m2": 12.5 },
+  "severity": "WARNING",
+  "provenance": {
+    "source": "statistical_analysis",
+    "sample_size": 45,
+    "method": "10th_percentile"
+  }
+}
+```
+
+### Data Completeness Output
+
+If 3 out of 25 doors are missing width data:
+
+```json
+{
+  "id": "METADATA_DOORS_MISSING_WIDTH",
+  "name": "Doors missing width data",
+  "severity": "INFO",
+  "provenance": {
+    "source": "metadata_analysis",
+    "issue": "3 doors without width data",
+    "recommendation": "Add width property sets to incomplete doors"
+  }
+}
+```
+
+---
+
+## Backend Implementation (Developers)
+
+### How It Works
+
+1. **IFC Upload** → Data layer builds graph
+2. **extract_rules.py** called with strategies parameter
+3. **Three extraction functions** run in parallel:
+   - `_heuristic_extract_from_pset()` - PSet scanning
+   - `_extract_statistical_rules()` - Statistical analysis
+   - `_extract_metadata_rules()` - Data validation
+4. **Results combined** into single manifest
+5. **Manifest returned** to frontend Rules Catalogue
+
+### Function Signature
+
+```python
+def extract_rules_from_graph(
+    graph: Mapping[str, Any], 
+    strategies: Optional[List[str]] = None
+) -> Dict[str, Any]:
+```
+
+**Parameters:**
+- `graph`: Data-layer graph (dict)
+- `strategies`: List of strategies to use:
+  - `["pset"]` - Only property set heuristic
+  - `["statistical"]` - Only statistical baseline
+  - `["metadata"]` - Only data completeness
+  - `["pset", "statistical", "metadata"]` - All three (default)
+
+**Example Usage:**
+
+```python
+# Use only statistical and metadata strategies
+manifest = extract_rules_from_graph(graph, strategies=["statistical", "metadata"])
+
+# Use all strategies (default)
+manifest = extract_rules_from_graph(graph)
+```
+
+---
+
+## Frontend Implementation (React)
+
+### New Component: RuleExtractionSettings.js
+
+**Location**: `frontend/src/components/RuleExtractionSettings.js`
+
+**Features:**
+- Checkbox UI for each strategy
+- Descriptions of what each does
+- Apply button to save settings
+- Success/error messages
+
+**Props:**
+- `isOpen` (bool): Show/hide modal
+- `onClose` (function): Close handler
+- `onApply` (function): Called with selected strategies array
+
+**Example:**
+```jsx
+<RuleExtractionSettings
+  isOpen={showSettings}
+  onClose={() => setShowSettings(false)}
+  onApply={(strategies) => {
+    // strategies = ["pset", "statistical"]
+    // Send to backend or local storage
+  }}
+/>
+```
+
+### Updated RuleLayerView.js
+
+**New Button:**
+```
+[Extraction Settings]  // Purple button with Settings icon
+```
+
+**New Modal:**
+Opens the RuleExtractionSettings modal
+
+---
+
+## Advanced Usage
+
+### Disable Expensive Operations
+
+If statistical analysis slows down your process:
+
+**Before**:
+```
+[View Catalogue] → Shows: PSet rules + Statistical + Metadata
+```
+
+**After disabling statistical**:
+```
+[Extraction Settings] → Uncheck "Statistical Baseline" → Apply
+[View Catalogue] → Shows: PSet rules + Metadata (faster)
+```
+
+### Focus on Data Quality
+
+To check only for missing data:
+
+```
+[Extraction Settings]
+☐ Property Set Heuristic    (unchecked)
+☑ Statistical Baseline      (unchecked)
+☑ Data Completeness         (checked)
+Apply
+```
+
+### Combine Strategies
+
+The three strategies work **independently and complement each other**:
+
+- **PSet**: Explicit data from IFC
+- **Statistical**: Building-specific baselines
+- **Metadata**: Data quality indicators
+
+Example manifest with all three:
+
+```json
+{
+  "extraction_strategies": ["pset", "statistical", "metadata"],
+  "rules": [
+    { "id": "IFC_PARAM_SPACE_MIN_AREA_Room_123", ... },      // PSet
+    { "id": "STAT_SPACE_AREA_10TH_PERCENTILE", ... },         // Statistical
+    { "id": "METADATA_SPACES_MISSING_AREA", ... }              // Metadata
+  ]
+}
+```
+
+---
+
+## Tips & Tricks
+
+✓ **Always enable PSet heuristic** - It's your primary rule source
+
+✓ **Use Statistical for benchmarking** - Compare against building's own data
+
+✓ **Monitor Metadata for quality** - Tells you which elements need more data
+
+✓ **Export and review** - Use "Save" button to download rules JSON for inspection
+
+✓ **Combine with manual** - Import statistical rules, then manually adjust parameters
+
+✓ **Version control** - Save different rule catalogues for different IFC versions
+
+---
+
+## Troubleshooting
+
+**Q: No statistical rules appear**
+- A: Need at least 3 elements of a type (3+ doors, 3+ spaces)
+- Check: Does your IFC have enough elements?
+
+**Q: Metadata rules show "0 doors missing"**
+- A: All doors have required data
+- Good sign: Your IFC is complete!
+
+**Q: Too many rules extracted**
+- A: Uncheck "Data Completeness" if you only want actual rule constraints
+- Or: Manually delete informational rules in Rules Catalogue
+
+**Q: Rules don't match my standards**
+- A: Edit in "Manage Rules" or import your own via "Import Catalogue"
+- Statistical rules are suggestions, not requirements!
+
+---
+
+## Summary
+
+| Strategy | Type | When to Use | Example |
+|----------|------|-----------|---------|
+| **PSet** | Direct | Always (primary) | Door min_width from IFC |
+| **Statistical** | Computed | Baseline comparison | 10th percentile of building |
+| **Metadata** | Validation | Quality check | Missing data detection |
+
+**Next Step**: Go to Rule Layer → Extraction Settings → Configure your preferences!

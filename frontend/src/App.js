@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FileUp, Settings, Home, BarChart3 } from 'lucide-react';
-import PreviewTab from './components/PreviewTab';
 import ElementsTab from './components/ElementsTab';
 import RulesTab from './components/RulesTab';
 import FileUploadModal from './components/FileUploadModal';
@@ -8,7 +7,9 @@ import PreviewConfirmationModal from './components/PreviewConfirmationModal';
 import Sidebar from './components/Sidebar';
 import DataLayerView from './components/DataLayerView';
 import ElementsView from './components/ElementsView';
+import ExportView from './components/ExportView';
 import RuleLayerView from './components/RuleLayerView';
+import GenerateRuleView from './components/GenerateRuleView';
 import ReasoningView from './components/ReasoningView';
 import ResultsView from './components/ResultsView';
 import './App.css';
@@ -24,6 +25,7 @@ function App() {
   const [currentSummary, setCurrentSummary] = useState(null);
   const [previewFileName, setPreviewFileName] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
+  const [sourceFilePath, setSourceFilePath] = useState(null);
   
   // Stage 3: Graph built (ready to explore)
   const [currentGraph, setCurrentGraph] = useState(null);
@@ -43,18 +45,18 @@ function App() {
       if (isFile) {
         setPreviewFileName(filePath.name);
         setPreviewFile(filePath);
+        setSourceFilePath(filePath.webkitRelativePath || filePath.name);
 
-        // Stage 2: Fetch preview only
+        // Stage 2: Fetch preview only using dedicated preview endpoint
         const form = new FormData();
         form.append('file', filePath);
-        form.append('include_rules', 'false'); // Don't build graph yet
 
-        const res = await fetch('/api/ifc/upload', {
+        const res = await fetch('/api/ifc/preview', {
           method: 'POST',
           body: form,
         });
 
-        if (!res.ok) throw new Error('Failed to upload IFC file');
+        if (!res.ok) throw new Error('Failed to load preview');
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Upload failed');
 
@@ -65,6 +67,7 @@ function App() {
         // Legacy path string fallback
         setPreviewFileName(filePath);
         setPreviewFile(filePath);
+        setSourceFilePath(filePath);
 
         const previewRes = await fetch('/api/ifc/preview', {
           method: 'POST',
@@ -77,20 +80,8 @@ function App() {
         if (!previewData.success) throw new Error(previewData.error);
 
         setCurrentPreview(previewData.preview);
+        setCurrentSummary(previewData.summary);
         setShowUploadModal(false);
-
-        // For path strings, also fetch summary
-        const graphRes = await fetch('/api/ifc/graph', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ifc_path: filePath, include_rules: false }),
-        });
-
-        if (!graphRes.ok) throw new Error('Failed to build graph');
-        const graphData = await graphRes.json();
-        if (!graphData.success) throw new Error(graphData.error);
-
-        setCurrentSummary(graphData.summary);
       }
     } catch (err) {
       setError(err.message || String(err));
@@ -124,7 +115,18 @@ function App() {
         if (!data.success) throw new Error(data.error || 'Upload failed');
 
         setCurrentGraph(data.graph);
+        // Keep preview data for Model Preview tab
+        if (data.preview && data.summary) {
+          setCurrentPreview(data.preview);
+          setCurrentSummary(data.summary);
+        }
+        // Add source file path to graph
+        if (data.graph) {
+          data.graph.source_file = sourceFilePath || data.graph.source_file;
+        }
         setActiveLayer('data-layer'); // Start with Data Layer
+        // Close modal after successful build
+        setCurrentPreview(null);
       } else {
         // Stage 3: Build graph from path string
         const graphRes = await fetch('/api/ifc/graph', {
@@ -138,12 +140,19 @@ function App() {
         if (!graphData.success) throw new Error(graphData.error);
 
         setCurrentGraph(graphData.graph);
+        // Keep preview data for Model Preview tab
+        if (graphData.preview && graphData.summary) {
+          setCurrentPreview(graphData.preview);
+          setCurrentSummary(graphData.summary);
+        }
+        // Add source file path to graph
+        if (graphData.graph) {
+          graphData.graph.source_file = sourceFilePath || graphData.graph.source_file;
+        }
         setActiveLayer('data-layer');
+        // Close modal after successful build
+        setCurrentPreview(null);
       }
-
-      // Clear preview state after graph is built
-      setCurrentPreview(null);
-      setCurrentSummary(null);
     } catch (err) {
       setError(err.message || String(err));
     } finally {
@@ -158,14 +167,44 @@ function App() {
     setPreviewFile(null);
   };
 
+  const handlePreviewAgain = async () => {
+    if (!previewFile) {
+      setError('No preview file available');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append('file', previewFile);
+      form.append('include_rules', 'false');
+      const response = await fetch('/api/ifc/preview', { method: 'POST', body: form });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      if (data.success) {
+        setCurrentPreview(data.preview);
+        setCurrentSummary(data.summary);
+      } else {
+        setError(data.error || 'Failed to load preview');
+      }
+    } catch (err) {
+      console.error('Preview error:', err);
+      setError(`Failed to fetch preview: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="App">
       {/* Header */}
       <header className="header">
         <div className="header-content">
           <div className="header-left">
-            <Home size={28} className="logo" />
-            <h1>IFC Explorer</h1>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <img src="/ace-x-logo.svg" alt="ACE-X" style={{ height: '50px', width: 'auto' }} />
+              <p style={{ margin: 0, fontSize: '0.75rem', color: 'white', fontWeight: '500', textAlign: 'center' }}>The AEC Compliance Explainability Framework</p>
+            </div>
           </div>
           <div className="header-right">
             <button
@@ -223,14 +262,18 @@ function App() {
               currentGraph={currentGraph}
               onLayerSelect={setActiveLayer}
               activeLayer={activeLayer}
+              onPreviewIFC={handlePreviewAgain}
+              hasPreviewFile={!!previewFile}
             />
 
             {/* Main Content Area */}
             <div className="main-content-area">
               {/* Render Layer Views */}
-              {activeLayer === 'data-layer' && <DataLayerView graph={currentGraph} />}
+              {activeLayer === 'data-layer' && <DataLayerView graph={currentGraph} summary={currentSummary} />}
               {activeLayer === 'elements' && <ElementsView graph={currentGraph} />}
+              {activeLayer === 'export' && <ExportView graph={currentGraph} />}
               {activeLayer === 'rule-layer' && <RuleLayerView graph={currentGraph} />}
+              {activeLayer === 'rule-generate' && <GenerateRuleView graph={currentGraph} />}
               {activeLayer === 'reasoning' && <ReasoningView graph={currentGraph} />}
               {activeLayer === 'results' && <ResultsView graph={currentGraph} />}
             </div>

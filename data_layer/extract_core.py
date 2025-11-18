@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from .exceptions import ExtractionError
-from .models import DoorElement, DoorSpaceConnection, SpaceElement
+from .models import DoorElement, DoorSpaceConnection, SpaceElement, GenericElement
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +190,7 @@ def extract_doors(model, space_lookup: Optional[Mapping[str, SpaceElement]] = No
     doors_out: List[DoorElement] = []
     space_lookup = space_lookup or {}
     door_connections = _build_door_connections(model, space_lookup)
+    storey_index = _extract_storey_index(model)
 
     try:
         doors = model.by_type("IfcDoor")
@@ -222,15 +223,71 @@ def extract_doors(model, space_lookup: Optional[Mapping[str, SpaceElement]] = No
         width_mm = _normalize_length_to_mm(width_mm)
         height_mm = _normalize_length_to_mm(height_mm)
 
+        # Get storey information from door's spatial hierarchy
+        storey_id, storey_name = storey_index.get(guid, (None, None))
+
         element = DoorElement(
             guid=guid,
             name=getattr(door, "Name", None),
             width_mm=width_mm,
             height_mm=height_mm,
             fire_rating=_serialise_value(pset_door.get("FireRating")),
+            storey_id=storey_id,
+            storey_name=storey_name,
             connections=door_connections.get(guid, []),
             attributes={"property_sets": psets} if psets else {},
         )
         doors_out.append(element)
 
     return doors_out
+
+
+def extract_all_elements(model) -> Dict[str, List[GenericElement]]:
+    """Extract all IFC entity types from the model."""
+    elements_by_type: Dict[str, List[GenericElement]] = {}
+    
+    # List of common IFC entity types to extract
+    ifc_types = [
+        "IfcWall",
+        "IfcWindow",
+        "IfcSlab",
+        "IfcBeam",
+        "IfcColumn",
+        "IfcStair",
+        "IfcRoof",
+        "IfcDoor",
+        "IfcSpace",
+        "IfcFurniture",
+        "IfcEquipment",
+    ]
+    
+    for ifc_type in ifc_types:
+        try:
+            entities = model.by_type(ifc_type)
+        except RuntimeError:
+            # Entity type not found in this schema
+            continue
+        
+        elements_out: List[GenericElement] = []
+        for entity in entities:
+            guid = getattr(entity, "GlobalId", None)
+            if not guid:
+                logger.debug("Skipping %s without GlobalId: %s", ifc_type, entity)
+                continue
+            
+            psets_raw = _get_psets_safe(entity)
+            psets = _normalise_psets(psets_raw) if psets_raw else {}
+            
+            element = GenericElement(
+                guid=guid,
+                ifc_type=ifc_type,
+                name=getattr(entity, "Name", None),
+                provenance=f"IFC:{ifc_type}",
+                attributes={"property_sets": psets} if psets else {},
+            )
+            elements_out.append(element)
+        
+        if elements_out:
+            elements_by_type[ifc_type] = elements_out
+    
+    return elements_by_type
