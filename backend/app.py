@@ -953,8 +953,15 @@ def analyze_extraction_strategies():
                     "metadata": "Detect missing or incomplete data in IFC elements"
                 }
                 
+                # Always show metadata strategy even if count is 0 (to inform about missing data status)
+                # For pset and statistical, only show if they generate rules
+                if strategy_name == "metadata":
+                    is_available = True
+                else:
+                    is_available = len(strategy_rules) > 0
+                
                 strategies_info[strategy_name] = {
-                    "available": len(strategy_rules) > 0,
+                    "available": is_available,
                     "count": len(strategy_rules),
                     "description": descriptions.get(strategy_name, ""),
                     "sample_rules": sample_rules
@@ -1041,6 +1048,114 @@ def generate_rules():
             "success": False,
             "rules_count": 0,
             "rules": None,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/rules/check-against-ifc", methods=["POST"])
+def check_rules_against_ifc():
+    """Check selected rules against an IFC file.
+    
+    Request:
+        {
+            "graph": dict (the data-layer graph),
+            "rules": list (rules to check),
+            "mode": str ("regulatory" or "generated")
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "results": {
+                "mode": str,
+                "pass_count": int,
+                "fail_count": int,
+                "details": [
+                    {
+                        "rule": dict,
+                        "result": "PASS" or "FAIL",
+                        "message": str,
+                        "details": dict or null
+                    },
+                    ...
+                ]
+            },
+            "error": str or null
+        }
+    """
+    try:
+        data = request.get_json()
+        graph = data.get("graph")
+        rules = data.get("rules", [])
+        mode = data.get("mode", "regulatory")
+        
+        if not graph:
+            return jsonify({"success": False, "error": "graph required"}), 400
+        
+        if not rules:
+            return jsonify({"success": False, "error": "rules required"}), 400
+        
+        # Use compliance checker to evaluate rules
+        from backend.compliance_checker import ComplianceChecker
+        
+        checker = ComplianceChecker()
+        results_details = []
+        pass_count = 0
+        fail_count = 0
+        
+        # Check each rule against the graph
+        for rule in rules:
+            try:
+                # Simple evaluation based on rule structure
+                rule_result = checker.check_rule_against_graph(graph, rule)
+                
+                result_status = "PASS" if rule_result.get("passed", False) else "FAIL"
+                if result_status == "PASS":
+                    pass_count += 1
+                else:
+                    fail_count += 1
+                
+                results_details.append({
+                    "rule": {
+                        "id": rule.get("id"),
+                        "name": rule.get("name"),
+                        "severity": rule.get("severity"),
+                        "target_type": rule.get("target_type")
+                    },
+                    "result": result_status,
+                    "message": rule_result.get("message", ""),
+                    "details": rule_result.get("details", None)
+                })
+            except Exception as e:
+                logger.warning(f"Error checking rule {rule.get('id')}: {e}")
+                results_details.append({
+                    "rule": {
+                        "id": rule.get("id"),
+                        "name": rule.get("name"),
+                        "severity": rule.get("severity")
+                    },
+                    "result": "ERROR",
+                    "message": f"Error evaluating rule: {str(e)}",
+                    "details": None
+                })
+        
+        return jsonify({
+            "success": True,
+            "results": {
+                "mode": mode,
+                "pass_count": pass_count,
+                "fail_count": fail_count,
+                "total_checked": len(rules),
+                "details": results_details
+            },
+            "error": None
+        })
+    
+    except Exception as e:
+        logger.exception("Rule checking failed")
+        return jsonify({
+            "success": False,
+            "results": None,
             "error": str(e)
         }), 500
 
@@ -1165,6 +1280,235 @@ def update_rule():
         })
     
     except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ===== Compliance Checking =====
+
+@app.route("/api/compliance/check", methods=["POST"])
+def check_compliance():
+    """
+    Check IFC graph against regulatory compliance rules.
+    
+    Request:
+        {
+            "graph": dict (IFC graph),
+            "rules": list (optional, rule IDs to check - uses all if omitted),
+            "target_classes": list (optional, IFC classes to check)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "timestamp": str,
+            "total_checks": int,
+            "passed": int,
+            "failed": int,
+            "unable": int,
+            "pass_rate": float,
+            "results": [
+                {
+                    "rule_id": str,
+                    "rule_name": str,
+                    "element_guid": str,
+                    "element_type": str,
+                    "passed": bool,
+                    "severity": str,
+                    "explanation": str,
+                    "code_reference": str
+                }
+            ]
+        }
+    """
+    try:
+        from rule_layer.compliance_checker import ComplianceChecker
+        
+        data = request.get_json()
+        graph = data.get('graph')
+        rule_ids = data.get('rules', [])
+        target_classes = data.get('target_classes', [])
+        
+        if not graph:
+            return jsonify({"success": False, "error": "graph required"}), 400
+        
+        # Initialize compliance checker
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        checker = ComplianceChecker(str(rules_file))
+        
+        # Filter rules if specified
+        rules_to_check = checker.rules
+        if rule_ids:
+            rules_to_check = [r for r in checker.rules if r.get('id') in rule_ids]
+        
+        # Run compliance check
+        results = checker.check_graph(graph, rules_to_check, target_classes if target_classes else None)
+        
+        return jsonify({
+            "success": True,
+            **results,
+            "error": None
+        })
+    
+    except Exception as e:
+        logger.exception("Compliance check failed")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/compliance/summary-by-rule", methods=["POST"])
+def compliance_summary_by_rule():
+    """
+    Get compliance summary grouped by rule.
+    
+    Request:
+        {
+            "check_results": dict (results from /api/compliance/check)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "summary": {
+                "rule_id": {
+                    "rule_name": str,
+                    "passed": int,
+                    "failed": int,
+                    "unable": int,
+                    "severity": str
+                }
+            }
+        }
+    """
+    try:
+        from rule_layer.compliance_checker import ComplianceChecker
+        
+        data = request.get_json()
+        check_results = data.get('check_results')
+        
+        if not check_results:
+            return jsonify({"success": False, "error": "check_results required"}), 400
+        
+        checker = ComplianceChecker()
+        summary = checker.get_summary_by_rule(check_results)
+        
+        return jsonify({
+            "success": True,
+            "summary": summary
+        })
+    
+    except Exception as e:
+        logger.exception("Summary generation failed")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/compliance/failing-elements", methods=["POST"])
+def get_failing_elements():
+    """
+    Get all elements that failed compliance checks.
+    
+    Request:
+        {
+            "check_results": dict (results from /api/compliance/check)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "failing_elements": [...]
+        }
+    """
+    try:
+        from rule_layer.compliance_checker import ComplianceChecker
+        
+        data = request.get_json()
+        check_results = data.get('check_results')
+        
+        if not check_results:
+            return jsonify({"success": False, "error": "check_results required"}), 400
+        
+        checker = ComplianceChecker()
+        failing = checker.get_failing_elements(check_results)
+        
+        return jsonify({
+            "success": True,
+            "failing_count": len(failing),
+            "failing_elements": failing
+        })
+    
+    except Exception as e:
+        logger.exception("Failing elements retrieval failed")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/compliance/export-report", methods=["POST"])
+def export_compliance_report():
+    """
+    Export compliance report as JSON file.
+    
+    Request:
+        {
+            "check_results": dict (results from /api/compliance/check)
+        }
+    
+    Response:
+        File download (compliance-report-TIMESTAMP.json)
+    """
+    try:
+        from rule_layer.compliance_checker import ComplianceChecker
+        from datetime import datetime
+        import os
+        
+        data = request.get_json()
+        check_results = data.get('check_results')
+        
+        if not check_results:
+            return jsonify({"success": False, "error": "check_results required"}), 400
+        
+        # Create temporary report file
+        checker = ComplianceChecker()
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        report_file = f'/tmp/compliance-report-{timestamp}.json'
+        
+        if checker.export_report(check_results, report_file):
+            return send_file(report_file, as_attachment=True, 
+                           download_name=f'compliance-report-{timestamp}.json')
+        else:
+            return jsonify({"success": False, "error": "Failed to create report"}), 500
+    
+    except Exception as e:
+        logger.exception("Report export failed")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/compliance/enhanced-rules", methods=["GET"])
+def get_enhanced_rules():
+    """
+    Get all enhanced regulation rules.
+    
+    Response:
+        {
+            "success": bool,
+            "rules": [...],
+            "metadata": {...}
+        }
+    """
+    try:
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        
+        if not rules_file.exists():
+            return jsonify({"success": False, "error": "Rules file not found"}), 404
+        
+        with open(rules_file, 'r') as f:
+            data = json.load(f)
+        
+        return jsonify({
+            "success": True,
+            "rules": data.get('rules', []),
+            "metadata": data.get('metadata', {}),
+            "count": len(data.get('rules', []))
+        })
+    
+    except Exception as e:
+        logger.exception("Rules retrieval failed")
         return jsonify({"success": False, "error": str(e)}), 500
 
 

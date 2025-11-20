@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Database, CheckCircle, Zap, Network, FileText, AlertCircle, Download } from 'lucide-react';
+import { ChevronDown, ChevronRight, Database, CheckCircle, Zap, Network, FileText, AlertCircle, Download, BarChart3 } from 'lucide-react';
 
 function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
   const [expandedGroups, setExpandedGroups] = useState({
@@ -22,7 +22,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'export', label: 'Export JSON Graph', icon: Download, description: 'Export JSON graph' },
     ],
     ruleLayer: [
-      { id: 'rule-layer', label: 'Rules', icon: CheckCircle, description: 'Compliance rules' },
+      { id: 'rule-layer', label: 'Regulatory Rules', icon: CheckCircle, description: 'Compliance rules' },
       { id: 'rule-generate', label: 'Generate Rule', icon: Zap, description: 'Generate new rules' },
       { id: 'rule-check', label: 'Check Rules', icon: CheckCircle, description: 'Check rule compliance' },
     ],
@@ -34,7 +34,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
 
   const groups = [
     { key: 'dataLayer', label: '📊 Data Layer', color: 'sidebar-model' },
-    { key: 'ruleLayer', label: '✅ Rule Layer', color: 'sidebar-compliance' },
+    { key: 'ruleLayer', label: '✅ Rules Layer', color: 'sidebar-compliance' },
     { key: 'reasoningLayer', label: '🧠 Reasoning & Analysis', color: 'sidebar-reasoning' },
   ];
 

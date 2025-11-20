@@ -10,8 +10,10 @@ import ElementsView from './components/ElementsView';
 import ExportView from './components/ExportView';
 import RuleLayerView from './components/RuleLayerView';
 import GenerateRuleView from './components/GenerateRuleView';
+import CheckRulesView from './components/CheckRulesView';
 import ReasoningView from './components/ReasoningView';
 import ResultsView from './components/ResultsView';
+import ComplianceCheckView from './components/ComplianceCheckView';
 import './App.css';
 
 function App() {
@@ -274,8 +276,10 @@ function App() {
               {activeLayer === 'export' && <ExportView graph={currentGraph} />}
               {activeLayer === 'rule-layer' && <RuleLayerView graph={currentGraph} />}
               {activeLayer === 'rule-generate' && <GenerateRuleView graph={currentGraph} />}
+              {activeLayer === 'rule-check' && <CheckRulesView graph={currentGraph} />}
               {activeLayer === 'reasoning' && <ReasoningView graph={currentGraph} />}
               {activeLayer === 'results' && <ResultsView graph={currentGraph} />}
+              {activeLayer === 'compliance-check' && <ComplianceCheckView graph={currentGraph} />}
             </div>
           </div>
         )}

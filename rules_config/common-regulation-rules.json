@@ -1,0 +1,317 @@
+{
+  "rules": [
+    {
+      "id": "ADA_DOOR_MIN_WIDTH",
+      "name": "ADA Door Minimum Width",
+      "description": "All doors must have minimum 32 inches (813mm) clear opening width for wheelchair accessibility",
+      "target_type": "door",
+      "selector": {
+        "by": "type",
+        "value": "door"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "width_mm"
+        },
+        "rhs": {
+          "param": "min_clear_width_mm"
+        }
+      },
+      "parameters": {
+        "min_clear_width_mm": 813
+      },
+      "severity": "ERROR",
+      "code_reference": "ADA 2010 Standards Section 303.2",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "Americans with Disabilities Act (ADA)",
+        "section": "303.2",
+        "country": "US"
+      }
+    },
+    {
+      "id": "ADA_CORRIDOR_MIN_WIDTH",
+      "name": "ADA Corridor Minimum Width",
+      "description": "All accessible routes and corridors must be at least 36 inches (914mm) wide",
+      "target_type": "space",
+      "selector": {
+        "by": "property",
+        "value": "corridor"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "width_mm"
+        },
+        "rhs": {
+          "param": "min_corridor_width_mm"
+        }
+      },
+      "parameters": {
+        "min_corridor_width_mm": 914
+      },
+      "severity": "ERROR",
+      "code_reference": "ADA 2010 Standards Section 304",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "Americans with Disabilities Act (ADA)",
+        "section": "304",
+        "country": "US"
+      }
+    },
+    {
+      "id": "FIRE_EXIT_DOOR_HEIGHT",
+      "name": "Fire Exit Door Minimum Height",
+      "description": "All exit doors must have minimum height of 78 inches (1980mm)",
+      "target_type": "door",
+      "selector": {
+        "by": "property",
+        "value": "exit"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "height_mm"
+        },
+        "rhs": {
+          "param": "min_exit_height_mm"
+        }
+      },
+      "parameters": {
+        "min_exit_height_mm": 1980
+      },
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 Section 1005.1",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC)",
+        "section": "1005.1",
+        "country": "US"
+      }
+    },
+    {
+      "id": "IBC_STAIR_MIN_WIDTH",
+      "name": "Stair Minimum Width",
+      "description": "All stairs must have minimum width of 44 inches (1118mm)",
+      "target_type": "stair",
+      "selector": {
+        "by": "type",
+        "value": "stair"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "width_mm"
+        },
+        "rhs": {
+          "param": "min_stair_width_mm"
+        }
+      },
+      "parameters": {
+        "min_stair_width_mm": 1118
+      },
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 Section 1003.3.1.1",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC)",
+        "section": "1003.3.1.1",
+        "country": "US"
+      }
+    },
+    {
+      "id": "BUILD_BEDROOM_MIN_AREA",
+      "name": "Bedroom Minimum Area",
+      "description": "Bedrooms must have minimum floor area of 70 square feet (6.5 m²)",
+      "target_type": "space",
+      "selector": {
+        "by": "property",
+        "value": "bedroom"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_bedroom_area_m2"
+        }
+      },
+      "parameters": {
+        "min_bedroom_area_m2": 6.5
+      },
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 Section 1205.2.1",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC)",
+        "section": "1205.2.1",
+        "country": "US"
+      }
+    },
+    {
+      "id": "BUILD_BATHROOM_MIN_AREA",
+      "name": "Bathroom Minimum Area",
+      "description": "Bathrooms must have minimum floor area of 35 square feet (3.25 m²)",
+      "target_type": "space",
+      "selector": {
+        "by": "property",
+        "value": "bathroom"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_bathroom_area_m2"
+        }
+      },
+      "parameters": {
+        "min_bathroom_area_m2": 3.25
+      },
+      "severity": "ERROR",
+      "code_reference": "IBC 2018 Section 1205.2.2",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC)",
+        "section": "1205.2.2",
+        "country": "US"
+      }
+    },
+    {
+      "id": "BUILD_BEDROOM_WINDOW_MIN",
+      "name": "Bedroom Window Minimum Size",
+      "description": "Bedrooms must have windows with minimum area of 10% of floor area or 10 square feet (0.93 m²), whichever is larger",
+      "target_type": "window",
+      "selector": {
+        "by": "property",
+        "value": "bedroom_window"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "area_m2"
+        },
+        "rhs": {
+          "param": "min_window_area_m2"
+        }
+      },
+      "parameters": {
+        "min_window_area_m2": 0.93
+      },
+      "severity": "WARNING",
+      "code_reference": "IBC 2018 Section 1205.2.4",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC)",
+        "section": "1205.2.4",
+        "country": "US"
+      }
+    },
+    {
+      "id": "UK_DOOR_WIDTH_ACCESSIBLE",
+      "name": "UK Accessible Door Width",
+      "description": "Accessible doors must be at least 775mm wide per UK Building Regulations",
+      "target_type": "door",
+      "selector": {
+        "by": "property",
+        "value": "accessible_door"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "width_mm"
+        },
+        "rhs": {
+          "param": "min_width_mm"
+        }
+      },
+      "parameters": {
+        "min_width_mm": 775
+      },
+      "severity": "ERROR",
+      "code_reference": "UK Building Regulations 2010 Technical Guidance M",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "UK Building Regulations",
+        "section": "Technical Guidance M",
+        "country": "UK"
+      }
+    },
+    {
+      "id": "EN_CORRIDOR_WIDTH",
+      "name": "EN Corridor Minimum Width",
+      "description": "Corridors must be at least 900mm wide per EN standards for accessibility",
+      "target_type": "space",
+      "selector": {
+        "by": "property",
+        "value": "corridor"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "width_mm"
+        },
+        "rhs": {
+          "param": "min_width_mm"
+        }
+      },
+      "parameters": {
+        "min_width_mm": 900
+      },
+      "severity": "ERROR",
+      "code_reference": "EN 17210:2021",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "European Accessibility Standard",
+        "section": "EN 17210:2021",
+        "country": "EU"
+      }
+    },
+    {
+      "id": "NBC_DOOR_WIDTH_ACCESSIBLE",
+      "name": "NBC Accessible Door Width",
+      "description": "Accessible doors must be at least 750mm wide per NBC standards",
+      "target_type": "door",
+      "selector": {
+        "by": "property",
+        "value": "accessible_door"
+      },
+      "condition": {
+        "op": "<",
+        "lhs": {
+          "attr": "width_mm"
+        },
+        "rhs": {
+          "param": "min_width_mm"
+        }
+      },
+      "parameters": {
+        "min_width_mm": 750
+      },
+      "severity": "ERROR",
+      "code_reference": "NBC 2020 Accessibility Requirements",
+      "provenance": {
+        "source": "regulation",
+        "regulation": "National Building Code of Canada",
+        "section": "Accessibility Requirements",
+        "country": "CA"
+      }
+    }
+  ],
+  "metadata": {
+    "regulation_set": "International Building Code (IBC) 2018 + ADA + UK/EU/CA Standards",
+    "version": "1.0",
+    "description": "Common compliance rules from major building codes and accessibility standards",
+    "jurisdictions": ["US", "UK", "EU", "CA"],
+    "created": "2025-11-20",
+    "categories": [
+      "Accessibility (ADA)",
+      "Fire Safety",
+      "Room Dimensions",
+      "International Standards"
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronDown, ChevronRight, AlertCircle, AlertTriangle, Info, Upload, Edit2, Save, XCircle, Trash2, Download } from 'lucide-react';
 
-function RuleCatalogueModal({ isOpen, onClose }) {
+function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -14,6 +14,7 @@ function RuleCatalogueModal({ isOpen, onClose }) {
   const [editFormData, setEditFormData] = useState({});
   const [deletingRuleId, setDeletingRuleId] = useState(null);
   const [appendMode, setAppendMode] = useState(false);
+  const [selectedRuleIds, setSelectedRuleIds] = useState(new Set());
   const fileInputRef = useRef(null);
   const appendFileInputRef = useRef(null);
 
@@ -156,7 +157,14 @@ function RuleCatalogueModal({ isOpen, onClose }) {
 
   const startEditingRule = (rule) => {
     setEditingRuleId(rule.id);
-    setEditFormData(JSON.parse(JSON.stringify(rule)));
+    const ruleData = JSON.parse(JSON.stringify(rule));
+    
+    // Normalize: flatten nested provenance.section to code_reference
+    if (ruleData.provenance?.section && !ruleData.code_reference) {
+      ruleData.code_reference = ruleData.provenance.section;
+    }
+    
+    setEditFormData(ruleData);
   };
 
   const cancelEditing = () => {
@@ -171,10 +179,20 @@ function RuleCatalogueModal({ isOpen, onClose }) {
         JSON.parse(params); // Validate JSON
       }
       
+      // Normalize: move code_reference back to provenance.section if it exists
+      const dataToSave = JSON.parse(JSON.stringify(editFormData));
+      if (dataToSave.code_reference) {
+        if (!dataToSave.provenance) {
+          dataToSave.provenance = {};
+        }
+        dataToSave.provenance.section = dataToSave.code_reference;
+        delete dataToSave.code_reference;
+      }
+      
       const response = await fetch('/api/rules/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(dataToSave),
       });
       
       const data = await response.json();
@@ -337,7 +355,6 @@ function RuleCatalogueModal({ isOpen, onClose }) {
             >
               {/* Rule Header - Expandable */}
               <div
-                onClick={() => toggleExpanded(rule.id)}
                 style={{
                   width: '100%',
                   padding: '1rem',
@@ -346,7 +363,6 @@ function RuleCatalogueModal({ isOpen, onClose }) {
                   gap: '0.75rem',
                   backgroundColor: '#f3f4f6',
                   border: 'none',
-                  cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '0.875rem',
                   fontWeight: '500',
@@ -355,32 +371,61 @@ function RuleCatalogueModal({ isOpen, onClose }) {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
               >
-                {expandedRules[rule.id] ? (
-                  <ChevronDown size={18} />
-                ) : (
-                  <ChevronRight size={18} />
-                )}
-                <span style={{ flex: 1 }}>
-                  <strong>{rule.name || rule.id}</strong>
-                  {rule.severity && (
-                    <span style={{
-                      marginLeft: '0.75rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.25rem 0.5rem',
-                      backgroundColor: '#fff',
-                      borderRadius: '0.25rem',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold',
-                      color: getSeverityColor(rule.severity),
-                      border: `1px solid ${getSeverityColor(rule.severity)}`
-                    }}>
-                      {getSeverityIcon(rule.severity)}
-                      {rule.severity.toUpperCase()}
-                    </span>
+                <input
+                  type="checkbox"
+                  checked={selectedRuleIds.has(rule.id)}
+                  onChange={() => {
+                    const newSelected = new Set(selectedRuleIds);
+                    if (newSelected.has(rule.id)) {
+                      newSelected.delete(rule.id);
+                    } else {
+                      newSelected.add(rule.id);
+                    }
+                    setSelectedRuleIds(newSelected);
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    width: '1rem',
+                    height: '1rem'
+                  }}
+                />
+                <div
+                  onClick={() => toggleExpanded(rule.id)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {expandedRules[rule.id] ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
                   )}
-                </span>
+                  <span>
+                    <strong>{rule.name || rule.id}</strong>
+                    {rule.severity && (
+                      <span style={{
+                        marginLeft: '0.75rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#fff',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: getSeverityColor(rule.severity),
+                        border: `1px solid ${getSeverityColor(rule.severity)}`
+                      }}>
+                        {getSeverityIcon(rule.severity)}
+                        {rule.severity.toUpperCase()}
+                      </span>
+                    )}
+                  </span>
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -663,121 +708,150 @@ function RuleCatalogueModal({ isOpen, onClose }) {
           padding: '1rem',
           borderTop: '1px solid #e5e7eb',
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           gap: '0.75rem',
           backgroundColor: '#f9fafb'
         }}>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImportCatalogue}
-              style={{ display: 'none' }}
-            />
-            <input
-              ref={appendFileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleAppendCatalogue}
-              style={{ display: 'none' }}
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importLoading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#06b6d4',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: importLoading ? 'not-allowed' : 'pointer',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                opacity: importLoading ? 0.5 : 1,
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => !importLoading && (e.target.style.backgroundColor = '#0891b2')}
-              onMouseLeave={(e) => !importLoading && (e.target.style.backgroundColor = '#06b6d4')}
-              title="Import rules (replaces current)"
-            >
-              <Upload size={16} /> Import
-            </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImportCatalogue}
+            style={{ display: 'none' }}
+          />
+          <input
+            ref={appendFileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleAppendCatalogue}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importLoading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              backgroundColor: '#06b6d4',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: importLoading ? 'not-allowed' : 'pointer',
+              fontWeight: '500',
+              fontSize: '0.875rem',
+              opacity: importLoading ? 0.5 : 1,
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => !importLoading && (e.target.style.backgroundColor = '#0891b2')}
+            onMouseLeave={(e) => !importLoading && (e.target.style.backgroundColor = '#06b6d4')}
+            title="Import rules (replaces current)"
+          >
+            <Upload size={16} /> Import
+          </button>
 
-            <button
-              onClick={() => appendFileInputRef.current?.click()}
-              disabled={importLoading || rules.length === 0}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: rules.length === 0 ? '#9ca3af' : '#8b5cf6',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: (importLoading || rules.length === 0) ? 'not-allowed' : 'pointer',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                opacity: (importLoading || rules.length === 0) ? 0.5 : 1,
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => rules.length > 0 && !importLoading && (e.target.style.backgroundColor = '#7c3aed')}
-              onMouseLeave={(e) => rules.length > 0 && !importLoading && (e.target.style.backgroundColor = '#8b5cf6')}
-              title={rules.length === 0 ? 'Import rules first to append' : 'Append more rules to existing'}
-            >
-              <Upload size={16} /> Append
-            </button>
+          <button
+            onClick={() => appendFileInputRef.current?.click()}
+            disabled={importLoading || rules.length === 0}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              backgroundColor: rules.length === 0 ? '#9ca3af' : '#8b5cf6',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: (importLoading || rules.length === 0) ? 'not-allowed' : 'pointer',
+              fontWeight: '500',
+              fontSize: '0.875rem',
+              opacity: (importLoading || rules.length === 0) ? 0.5 : 1,
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => rules.length > 0 && !importLoading && (e.target.style.backgroundColor = '#7c3aed')}
+            onMouseLeave={(e) => rules.length > 0 && !importLoading && (e.target.style.backgroundColor = '#8b5cf6')}
+            title={rules.length === 0 ? 'Import rules first to append' : 'Append more rules to existing'}
+          >
+            <Upload size={16} /> Append
+          </button>
 
-            <button
-              onClick={handleSaveRules}
-              disabled={rules.length === 0}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: rules.length === 0 ? '#9ca3af' : '#10b981',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: rules.length === 0 ? 'not-allowed' : 'pointer',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                opacity: rules.length === 0 ? 0.5 : 1,
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => rules.length > 0 && (e.target.style.backgroundColor = '#059669')}
-              onMouseLeave={(e) => rules.length > 0 && (e.target.style.backgroundColor = '#10b981')}
-              title={rules.length === 0 ? 'Add rules first to save' : 'Save rules to JSON file'}
-            >
-              <Download size={16} /> Save
-            </button>
+          <button
+            onClick={handleSaveRules}
+            disabled={rules.length === 0}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              backgroundColor: rules.length === 0 ? '#9ca3af' : '#10b981',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: rules.length === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: '500',
+              fontSize: '0.875rem',
+              opacity: rules.length === 0 ? 0.5 : 1,
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => rules.length > 0 && (e.target.style.backgroundColor = '#059669')}
+            onMouseLeave={(e) => rules.length > 0 && (e.target.style.backgroundColor = '#10b981')}
+            title={rules.length === 0 ? 'Add rules first to save' : 'Save rules to JSON file'}
+          >
+            <Download size={16} /> Save
+          </button>
 
-            <button
-              onClick={onClose}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#e5e7eb',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#d1d5db'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#e5e7eb'}
-            >
-              Close
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              const selectedRules = rules.filter(r => selectedRuleIds.has(r.id));
+              if (onConfirmRules) {
+                onConfirmRules(selectedRules);
+              }
+              onClose();
+            }}
+            disabled={selectedRuleIds.size === 0}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              backgroundColor: selectedRuleIds.size === 0 ? '#9ca3af' : '#6366f1',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: selectedRuleIds.size === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: '500',
+              fontSize: '0.875rem',
+              opacity: selectedRuleIds.size === 0 ? 0.5 : 1,
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => selectedRuleIds.size > 0 && (e.target.style.backgroundColor = '#4f46e5')}
+            onMouseLeave={(e) => selectedRuleIds.size > 0 && (e.target.style.backgroundColor = '#6366f1')}
+            title={selectedRuleIds.size === 0 ? 'Select rules to confirm' : `Confirm ${selectedRuleIds.size} selected rule(s)`}
+          >
+            Confirm ({selectedRuleIds.size})
+          </button>
+
+          <button
+            onClick={onClose}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              backgroundColor: '#e5e7eb',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontWeight: '500',
+              fontSize: '0.875rem',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#d1d5db'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#e5e7eb'}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
