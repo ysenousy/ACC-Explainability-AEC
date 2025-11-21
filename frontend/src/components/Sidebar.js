@@ -19,12 +19,14 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
     dataLayer: [
       { id: 'data-layer', label: 'Model Summary', icon: Database, description: 'IFC structure & elements' },
       { id: 'elements', label: 'Model Elements', icon: FileText, description: 'Spaces & Doors' },
+      { id: 'validation', label: 'Data Validation', icon: CheckCircle, description: 'Validate IFC data properties' },
       { id: 'export', label: 'Export JSON Graph', icon: Download, description: 'Export JSON graph' },
     ],
     ruleLayer: [
       { id: 'rule-layer', label: 'Regulatory Rules', icon: CheckCircle, description: 'Compliance rules' },
       { id: 'rule-generate', label: 'Generate Rule', icon: Zap, description: 'Generate new rules' },
-      { id: 'rule-check', label: 'Check Rules', icon: CheckCircle, description: 'Check rule compliance' },
+      { id: 'rule-check', label: 'Check Compliance', icon: CheckCircle, description: 'Check IFC compliance against rules' },
+      { id: 'compliance-report', label: 'Compliance Report', icon: FileText, description: 'Generate comprehensive compliance report' },
     ],
     reasoningLayer: [
       { id: 'reasoning', label: 'Reasoning Logic', icon: Network, description: 'Rule logic & inference' },

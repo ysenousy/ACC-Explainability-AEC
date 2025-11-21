@@ -12,6 +12,9 @@ from data_layer.services import DataLayerService
 from data_layer.load_ifc import preview_ifc
 from rule_layer.run_rules import run_with_graph
 from backend.analyze_rules import analyze_ifc_rules
+from backend.data_validator import validate_ifc
+from backend.unified_compliance_engine import check_rule_compliance, UnifiedComplianceEngine
+from backend.compliance_report_generator import generate_compliance_report
 from backend.rule_config_manager import (
     load_custom_rules,
     save_custom_rules,
@@ -30,6 +33,9 @@ CORS(app)  # Enable CORS for React frontend
 
 # Services
 data_svc = DataLayerService()
+
+# Track if rules have been imported in this session
+rules_imported_in_session = False
 
 
 # ===== IFC Loading Endpoints =====
@@ -681,6 +687,12 @@ def delete_rule_endpoint(rule_id):
         
         if success:
             custom = load_custom_rules()
+            
+            # Reset rules imported flag if no rules left
+            global rules_imported_in_session
+            if len(custom) == 0:
+                rules_imported_in_session = False
+            
             return jsonify({
                 "success": True,
                 "rules": custom,
@@ -792,6 +804,11 @@ def import_rules_endpoint():
         
         # Call import_rules
         status = import_rules(rules_to_import, merge=merge)
+        
+        # Mark that rules have been imported in this session
+        global rules_imported_in_session
+        if status.get("total_imported", 0) > 0:
+            rules_imported_in_session = True
         
         return jsonify({
             "success": True,
@@ -1035,6 +1052,11 @@ def generate_rules():
         # Save to custom_rules.json
         save_custom_rules(rules)
         
+        # Mark that rules have been generated/activated in this session
+        global rules_imported_in_session
+        if len(rules) > 0:
+            rules_imported_in_session = True
+        
         return jsonify({
             "success": True,
             "rules_count": len(rules),
@@ -1095,10 +1117,9 @@ def check_rules_against_ifc():
         if not rules:
             return jsonify({"success": False, "error": "rules required"}), 400
         
-        # Use compliance checker to evaluate rules
-        from backend.compliance_checker import ComplianceChecker
+        # Use unified compliance engine to evaluate rules
+        engine = UnifiedComplianceEngine()
         
-        checker = ComplianceChecker()
         results_details = []
         pass_count = 0
         fail_count = 0
@@ -1106,8 +1127,8 @@ def check_rules_against_ifc():
         # Check each rule against the graph
         for rule in rules:
             try:
-                # Simple evaluation based on rule structure
-                rule_result = checker.check_rule_against_graph(graph, rule)
+                # Generic evaluation that supports both formats
+                rule_result = engine.check_rule_against_graph(graph, rule)
                 
                 result_status = "PASS" if rule_result.get("passed", False) else "FAIL"
                 if result_status == "PASS":
@@ -1222,6 +1243,11 @@ def import_catalogue():
         # Save updated rules
         save_custom_rules(final_rules)
         
+        # Mark that rules have been imported in this session
+        global rules_imported_in_session
+        if added_count > 0:
+            rules_imported_in_session = True
+        
         return jsonify({
             "success": True,
             "status": {"added": added_count, "skipped": skipped_count},
@@ -1321,8 +1347,6 @@ def check_compliance():
         }
     """
     try:
-        from rule_layer.compliance_checker import ComplianceChecker
-        
         data = request.get_json()
         graph = data.get('graph')
         rule_ids = data.get('rules', [])
@@ -1331,17 +1355,17 @@ def check_compliance():
         if not graph:
             return jsonify({"success": False, "error": "graph required"}), 400
         
-        # Initialize compliance checker
+        # Initialize unified compliance engine
         rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
-        checker = ComplianceChecker(str(rules_file))
+        engine = UnifiedComplianceEngine(str(rules_file))
         
         # Filter rules if specified
-        rules_to_check = checker.rules
+        rules_to_check = engine.rules
         if rule_ids:
-            rules_to_check = [r for r in checker.rules if r.get('id') in rule_ids]
+            rules_to_check = [r for r in engine.rules if r.get('id') in rule_ids]
         
         # Run compliance check
-        results = checker.check_graph(graph, rules_to_check, target_classes if target_classes else None)
+        results = engine.check_graph(graph, rules_to_check, target_classes if target_classes else None)
         
         return jsonify({
             "success": True,
@@ -1379,16 +1403,14 @@ def compliance_summary_by_rule():
         }
     """
     try:
-        from rule_layer.compliance_checker import ComplianceChecker
-        
         data = request.get_json()
         check_results = data.get('check_results')
         
         if not check_results:
             return jsonify({"success": False, "error": "check_results required"}), 400
         
-        checker = ComplianceChecker()
-        summary = checker.get_summary_by_rule(check_results)
+        engine = UnifiedComplianceEngine()
+        summary = engine.get_summary_by_rule(check_results)
         
         return jsonify({
             "success": True,
@@ -1417,16 +1439,14 @@ def get_failing_elements():
         }
     """
     try:
-        from rule_layer.compliance_checker import ComplianceChecker
-        
         data = request.get_json()
         check_results = data.get('check_results')
         
         if not check_results:
             return jsonify({"success": False, "error": "check_results required"}), 400
         
-        checker = ComplianceChecker()
-        failing = checker.get_failing_elements(check_results)
+        engine = UnifiedComplianceEngine()
+        failing = engine.get_failing_elements(check_results)
         
         return jsonify({
             "success": True,
@@ -1453,7 +1473,6 @@ def export_compliance_report():
         File download (compliance-report-TIMESTAMP.json)
     """
     try:
-        from rule_layer.compliance_checker import ComplianceChecker
         from datetime import datetime
         import os
         
@@ -1463,12 +1482,12 @@ def export_compliance_report():
         if not check_results:
             return jsonify({"success": False, "error": "check_results required"}), 400
         
-        # Create temporary report file
-        checker = ComplianceChecker()
+        # Create report file
+        engine = UnifiedComplianceEngine()
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         report_file = f'/tmp/compliance-report-{timestamp}.json'
         
-        if checker.export_report(check_results, report_file):
+        if engine.export_report(check_results, report_file):
             return send_file(report_file, as_attachment=True, 
                            download_name=f'compliance-report-{timestamp}.json')
         else:
@@ -1525,6 +1544,104 @@ def health():
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Not found"}), 404
+
+
+@app.route("/api/reports/generate-compliance", methods=["POST"])
+def generate_compliance_report_endpoint():
+    """Generate comprehensive compliance report."""
+    try:
+        body = request.get_json()
+        graph = body.get("graph")
+        
+        if not graph:
+            return jsonify({"success": False, "error": "No graph provided"}), 400
+        
+        # Generate report
+        report = generate_compliance_report(graph)
+        
+        return jsonify({"success": True, "report": report}), 200
+    
+    except Exception as e:
+        logger.error(f"Error generating compliance report: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/rules/check-compliance", methods=["POST"])
+def check_rules_compliance():
+    """Check IFC rules compliance against regulatory rules."""
+    try:
+        body = request.get_json()
+        graph = body.get("graph")
+        rules_manifest_path = body.get("rules_manifest_path")
+        
+        if not graph:
+            return jsonify({"success": False, "error": "No graph provided"}), 400
+        
+        # Check compliance
+        result = check_rule_compliance(graph, rules_manifest_path)
+        
+        return jsonify({"success": True, "compliance": result}), 200
+    
+    except Exception as e:
+        logger.error(f"Error checking rule compliance: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/validation/validate-ifc", methods=["POST"])
+def validate_ifc_endpoint():
+    """Validate IFC data completeness and quality."""
+    try:
+        body = request.get_json()
+        graph = body.get("graph")
+        
+        if not graph:
+            return jsonify({"success": False, "error": "No graph provided"}), 400
+        
+        validation = validate_ifc(graph)
+        
+        return jsonify({
+            "success": True,
+            "validation": validation
+        })
+    except Exception as e:
+        logger.error(f"Error validating IFC: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/rules/check-status", methods=["GET"])
+def check_rules_status():
+    """Check if regulatory rules are loaded and available."""
+    try:
+        global rules_imported_in_session
+        
+        # Rules are considered loaded only if they've been imported in this session
+        if not rules_imported_in_session:
+            return jsonify({
+                "success": True,
+                "rules_loaded": False,
+                "rule_count": 0,
+                "rules": []
+            }), 200
+        
+        from backend.compliance_report_generator import ComplianceReportGenerator
+        
+        generator = ComplianceReportGenerator()
+        rules_loaded = len(generator.regulatory_rules) > 0
+        
+        return jsonify({
+            "success": True,
+            "rules_loaded": rules_loaded,
+            "rule_count": len(generator.regulatory_rules),
+            "rules": [{"id": r.get("id"), "name": r.get("name")} for r in generator.regulatory_rules]
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Error checking rules status: {e}")
+        return jsonify({
+            "success": False,
+            "rules_loaded": False,
+            "error": str(e)
+        }), 500
 
 
 @app.errorhandler(500)

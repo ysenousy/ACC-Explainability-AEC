@@ -25,6 +25,9 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
     const fetchRules = async () => {
       setLoading(true);
       setError(null);
+      setSelectedRuleIds(new Set()); // Reset selection when modal opens
+      setEditingRuleId(null); // Cancel any editing in progress
+      setSearchTerm(''); // Clear search
       try {
         const response = await fetch('/api/rules/catalogue');
         const data = await response.json();
@@ -303,6 +306,30 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
               fontSize: '0.875rem',
             }}
           />
+          <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <input
+              type="checkbox"
+              id="selectAllCheckbox"
+              checked={filteredRules.length > 0 && selectedRuleIds.size === filteredRules.length}
+              indeterminate={selectedRuleIds.size > 0 && selectedRuleIds.size < filteredRules.length}
+              onChange={() => {
+                if (selectedRuleIds.size === filteredRules.length) {
+                  setSelectedRuleIds(new Set());
+                } else {
+                  const allIds = new Set(filteredRules.map(r => r.id));
+                  setSelectedRuleIds(allIds);
+                }
+              }}
+              style={{
+                cursor: 'pointer',
+                width: '1rem',
+                height: '1rem'
+              }}
+            />
+            <label htmlFor="selectAllCheckbox" style={{ cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}>
+              Select All
+            </label>
+          </div>
           {importMessage && (
             <div style={{
               marginTop: '0.5rem',

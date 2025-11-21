@@ -70,7 +70,7 @@ function RuleExtractionSettings({ isOpen, onClose, onApply }) {
               <input
                 type="checkbox"
                 checked={strategies.pset}
-                onChange={() => handleToggle('pset')}
+                readOnly
                 style={{ marginTop: '0.25rem', cursor: 'pointer' }}
               />
               <div>
@@ -99,7 +99,7 @@ function RuleExtractionSettings({ isOpen, onClose, onApply }) {
               <input
                 type="checkbox"
                 checked={strategies.statistical}
-                onChange={() => handleToggle('statistical')}
+                readOnly
                 style={{ marginTop: '0.25rem', cursor: 'pointer' }}
               />
               <div>
@@ -128,7 +128,7 @@ function RuleExtractionSettings({ isOpen, onClose, onApply }) {
               <input
                 type="checkbox"
                 checked={strategies.metadata}
-                onChange={() => handleToggle('metadata')}
+                readOnly
                 style={{ marginTop: '0.25rem', cursor: 'pointer' }}
               />
               <div>
@@ -142,6 +142,38 @@ function RuleExtractionSettings({ isOpen, onClose, onApply }) {
               </div>
             </div>
           </div>
+
+          {/* Summary of Selected Strategies */}
+          {Object.keys(strategies).some(s => strategies[s]) && (
+            <div style={{
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              backgroundColor: '#ecfdf5',
+              border: '1px solid #86efac',
+              borderRadius: '0.5rem'
+            }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#166534', marginBottom: '0.5rem' }}>
+                ✓ Selected Strategies:
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#166534' }}>
+                {strategies.pset && (
+                  <div style={{ marginBottom: '0.25rem', paddingLeft: '1rem' }}>
+                    • <strong>Property Set Heuristic</strong> - Extracts rules from IFC property sets (door widths, space areas, etc.)
+                  </div>
+                )}
+                {strategies.statistical && (
+                  <div style={{ marginBottom: '0.25rem', paddingLeft: '1rem' }}>
+                    • <strong>Statistical Baseline</strong> - Generates baseline rules from building data (10th percentile analysis)
+                  </div>
+                )}
+                {strategies.metadata && (
+                  <div style={{ paddingLeft: '1rem' }}>
+                    • <strong>Data Completeness</strong> - Detects missing data and generates validation rules
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {message && (
             <div style={{

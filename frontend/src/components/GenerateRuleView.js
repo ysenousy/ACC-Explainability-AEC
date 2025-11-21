@@ -12,6 +12,7 @@ function GenerateRuleView({ graph }) {
   const [analysisError, setAnalysisError] = useState(null);
   const [generatedRules, setGeneratedRules] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [strategiesConfigured, setStrategiesConfigured] = useState(false);
 
   // Analyze available strategies on component mount or when graph changes
   useEffect(() => {
@@ -66,7 +67,8 @@ function GenerateRuleView({ graph }) {
   const handleApplyStrategies = (strategies) => {
     setSelectedStrategies(strategies);
     setShowExtractionSettings(false);
-    setGenerationStatus({ type: 'success', message: `Strategies updated: ${strategies.join(', ')}` });
+    setStrategiesConfigured(true);
+    setGenerationStatus({ type: 'success', message: `Strategies configured: ${strategies.join(', ')}` });
     setTimeout(() => setGenerationStatus(null), 3000);
   };
 
@@ -202,6 +204,17 @@ function GenerateRuleView({ graph }) {
         </div>
 
         <div className="layer-content">
+          <div style={{ 
+            padding: '0.75rem 1rem', 
+            marginBottom: '1.5rem', 
+            backgroundColor: '#fef3c7', 
+            border: '1px solid #d97706', 
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem',
+            color: '#92400e'
+          }}>
+            <strong>⚙️ Generated Rules:</strong> This section extracts and generates rules from your IFC data using various strategies. Generated rules can be saved and imported into the Regulatory Rules catalogue. Use the "Regulatory Rules" section in the main menu to manage your compliance catalogue.
+          </div>
           <div className="info-section">
             <h3>Extract Rules from IFC</h3>
             <p>
@@ -209,76 +222,129 @@ function GenerateRuleView({ graph }) {
             </p>
           </div>
 
-          {/* Selected Strategies Display */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h4 style={{ marginBottom: '1rem', fontWeight: '600', fontSize: '0.95rem' }}>
-              Available Strategies ({selectedStrategies.length})
-            </h4>
-            {selectedStrategies.length === 0 && (
-              <div style={{ padding: '1rem', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '0.5rem', border: '1px solid #fcd34d' }}>
-                <strong>No extraction strategies available</strong> for this IFC file. The data may not contain properties that can be extracted using the available strategies.
+          {/* Strategies Configuration Required Prompt - MAIN ENTRY POINT */}
+          {!strategiesConfigured && !isAnalyzing && (
+            <div style={{
+              padding: '1.5rem',
+              marginBottom: '1.5rem',
+              borderRadius: '0.5rem',
+              backgroundColor: '#fef3c7',
+              border: '2px solid #d97706',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#92400e', marginBottom: '0.75rem' }}>
+                📋 Configure Extraction Strategies
               </div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-              {strategyDetails.map(strategy => {
-                const strategyInfo = strategiesData?.[strategy.id];
-                const isSelected = selectedStrategies.includes(strategy.id);
-                const Icon = strategy.icon;
-                
-                if (!strategyInfo?.available) {
-                  return null;
-                }
-
-                return (
-                  <div
-                    key={strategy.id}
-                    style={{
-                      padding: '1rem',
-                      border: `2px solid ${isSelected ? strategy.color : '#e5e7eb'}`,
-                      borderRadius: '0.5rem',
-                      backgroundColor: isSelected ? `${strategy.color}12` : '#f9fafb',
-                      opacity: isSelected ? 1 : 0.6,
-                      transition: 'all 0.2s',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedStrategies(s => s.filter(st => st !== strategy.id));
-                      } else {
-                        setSelectedStrategies(s => [...s, strategy.id]);
-                      }
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <Icon size={20} color={strategy.color} />
-                      <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>
-                        {strategy.badge} {strategy.title}
-                      </span>
-                      <span style={{ marginLeft: 'auto', fontWeight: '700', fontSize: '1.1rem', color: strategy.color }}>
-                        {strategyInfo?.count || 0}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: '0.85rem', color: '#666', margin: '0 0 0.5rem 0' }}>
-                      {strategy.description}
-                    </p>
-                    {isSelected && (
-                      <span style={{ fontSize: '0.7rem', backgroundColor: strategy.color, color: 'white', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
-                        Selected
-                      </span>
-                    )}
-                    {strategyInfo?.sample_rules && strategyInfo.sample_rules.length > 0 && (
-                      <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
-                        <strong>Example rules:</strong>
-                        {strategyInfo.sample_rules.map((rule, idx) => (
-                          <div key={idx} style={{ marginTop: '0.25rem' }}>• {rule.name}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              <p style={{ color: '#92400e', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                Before generating rules, please select which extraction strategies to use for analyzing your IFC data.
+              </p>
+              <button
+                onClick={() => setShowExtractionSettings(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#d97706',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#b45309'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#d97706'}
+              >
+                <Zap size={18} />
+                Configure Strategies
+              </button>
             </div>
-          </div>
+          )}
+
+          {/* Strategies Configured - Show Summary and Generate Button */}
+          {strategiesConfigured && (
+            <>
+              <div style={{
+                padding: '1rem',
+                marginBottom: '1.5rem',
+                borderRadius: '0.5rem',
+                backgroundColor: '#dbeafe',
+                color: '#1e40af',
+                border: '1px solid #bfdbfe',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <strong>✓ Strategies Configured</strong>
+                  <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                    Selected: {selectedStrategies.map(s => {
+                      const names = { pset: 'Property Set', statistical: 'Statistical', metadata: 'Data Completeness' };
+                      return names[s] || s;
+                    }).join(', ')}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowExtractionSettings(true)}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+                >
+                  Change Strategies
+                </button>
+              </div>
+
+              {/* Action Buttons - Only Show When Configured */}
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button
+                  onClick={handleGenerateRules}
+                  disabled={isGenerating}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#06b6d4',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: isGenerating ? 'not-allowed' : 'pointer',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    transition: 'background-color 0.2s',
+                    opacity: isGenerating ? 0.7 : 1
+                  }}
+                  onMouseEnter={(e) => !isGenerating && (e.target.style.backgroundColor = '#0891b2')}
+                  onMouseLeave={(e) => !isGenerating && (e.target.style.backgroundColor = '#06b6d4')}
+                  title="Generate rules from IFC using selected strategies"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div style={{ animation: 'spin 1s linear infinite' }}>⟳</div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={18} />
+                      Generate Rules
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Status Message */}
           {generationStatus && (
@@ -295,67 +361,6 @@ function GenerateRuleView({ graph }) {
               {generationStatus.message}
             </div>
           )}
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button
-              onClick={() => setShowExtractionSettings(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#8b5cf6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '0.9rem',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#7c3aed'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#8b5cf6'}
-            >
-              <Zap size={18} />
-              Configure Strategies
-            </button>
-
-            <button
-              onClick={handleGenerateRules}
-              disabled={isGenerating || selectedStrategies.length === 0}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: selectedStrategies.length === 0 ? '#d1d5db' : '#06b6d4',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: selectedStrategies.length === 0 ? 'not-allowed' : 'pointer',
-                fontWeight: '600',
-                fontSize: '0.9rem',
-                transition: 'background-color 0.2s',
-                opacity: isGenerating ? 0.7 : 1
-              }}
-              onMouseEnter={(e) => selectedStrategies.length > 0 && !isGenerating && (e.target.style.backgroundColor = '#0891b2')}
-              onMouseLeave={(e) => selectedStrategies.length > 0 && !isGenerating && (e.target.style.backgroundColor = '#06b6d4')}
-              title={selectedStrategies.length === 0 ? 'Select at least one strategy' : 'Generate rules from IFC using selected strategies'}
-            >
-              {isGenerating ? (
-                <>
-                  <div style={{ animation: 'spin 1s linear infinite' }}>⟳</div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={18} />
-                  Generate Rules
-                </>
-              )}
-            </button>
-          </div>
 
           {/* Generated Rules Display */}
           {generatedRules && generatedRules.length > 0 && (

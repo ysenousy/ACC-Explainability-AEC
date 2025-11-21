@@ -11,6 +11,7 @@ function RuleLayerView({ graph }) {
   const handleConfirmRules = (rules) => {
     setConfirmedRules(rules);
     setShowCatalogue(false);
+    // Don't close management panel here - let user control it
   };
 
   const getSeverityIcon = (severity) => {
@@ -48,6 +49,17 @@ function RuleLayerView({ graph }) {
         </div>
 
         <div className="layer-content">
+        <div style={{ 
+          padding: '0.75rem 1rem', 
+          marginBottom: '1rem', 
+          backgroundColor: '#e0f2fe', 
+          border: '1px solid #0284c7', 
+          borderRadius: '0.375rem',
+          fontSize: '0.875rem',
+          color: '#0c4a6e'
+        }}>
+          <strong>📋 Regulatory Rules Catalogue:</strong> Select and view compliance rules from your rules catalogue. This section manages verified regulatory standards for compliance checking.
+        </div>
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <button
             onClick={() => setShowCatalogue(true)}

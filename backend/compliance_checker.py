@@ -93,7 +93,11 @@ class ComplianceChecker:
                     "total_elements": len(matching_elements),
                     "filtered_elements": len(filtered_elements),
                     "passed_elements": condition_result.get("passed_count", 0),
-                    "failed_elements": condition_result.get("failed_count", 0)
+                    "failed_elements": condition_result.get("failed_count", 0),
+                    "actual_value": condition_result.get("actual_value"),
+                    "required_value": condition_result.get("required_value"),
+                    "gap": condition_result.get("gap"),
+                    "affected_elements": condition_result.get("affected_elements", [])
                 }
             }
         
@@ -147,24 +151,45 @@ class ComplianceChecker:
         
         passed_count = 0
         failed_count = 0
+        actual_values = []
+        failed_elements = []
         
         for element in elements:
             lhs_value = self._extract_value(element, lhs)
             rhs_value = self._extract_value(element, rhs, parameters)
             
             if lhs_value is not None and rhs_value is not None:
+                actual_values.append(lhs_value)
                 if self._compare(lhs_value, op, rhs_value):
                     passed_count += 1
                 else:
                     failed_count += 1
+                    failed_elements.append(element.get("name", element.get("id", "Unknown")))
         
         all_passed = failed_count == 0
+        
+        # Calculate gap (actual - required)
+        gap = None
+        actual_val = None
+        required_val = None
+        
+        if actual_values:
+            # For comparison, use first element's values
+            actual_val = actual_values[0]
+            required_val = rhs_value if 'rhs_value' in locals() else None
+            
+            if isinstance(actual_val, (int, float)) and isinstance(required_val, (int, float)):
+                gap = actual_val - required_val
         
         return {
             "passed": all_passed,
             "message": f"{passed_count} of {len(elements)} elements passed" if len(elements) > 0 else "No elements to check",
             "passed_count": passed_count,
-            "failed_count": failed_count
+            "failed_count": failed_count,
+            "actual_value": actual_val,
+            "required_value": required_val,
+            "gap": gap,
+            "affected_elements": failed_elements
         }
     
     def _extract_value(self, element: Dict, spec: Dict, parameters: Dict = None) -> Any:

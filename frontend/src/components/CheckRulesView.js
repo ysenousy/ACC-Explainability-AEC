@@ -604,7 +604,7 @@ function CheckRulesView({ graph }) {
                       backgroundColor: idx % 2 === 0 ? '#f9fafb' : '#ffffff'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.75rem' }}>
                       <div style={{
                         fontSize: '1.5rem',
                         fontWeight: 'bold',
@@ -619,7 +619,8 @@ function CheckRulesView({ graph }) {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.75rem',
-                          marginBottom: '0.25rem'
+                          marginBottom: '0.5rem',
+                          flexWrap: 'wrap'
                         }}>
                           <strong style={{ fontSize: '0.95rem' }}>
                             {item.rule.name || item.rule.id}
@@ -654,14 +655,67 @@ function CheckRulesView({ graph }) {
                             </span>
                           )}
                         </div>
+                        
+                        {/* Actual vs Required Comparison */}
+                        {item.details && (
+                          <div style={{ 
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '1rem',
+                            margin: '0.75rem 0',
+                            padding: '0.75rem',
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '0.375rem',
+                            border: `2px solid ${item.result === 'PASS' ? '#d1fae5' : '#fee2e2'}`
+                          }}>
+                            <div>
+                              <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#666', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                                Actual Value
+                              </div>
+                              <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#1f2937' }}>
+                                {item.details.actual_value !== undefined 
+                                  ? String(item.details.actual_value) 
+                                  : 'N/A'}
+                              </div>
+                              {item.details.actual_elements && (
+                                <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
+                                  Elements: {item.details.actual_elements}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#666', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                                Required Value
+                              </div>
+                              <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#1f2937' }}>
+                                {item.details.required_value !== undefined 
+                                  ? String(item.details.required_value) 
+                                  : 'N/A'}
+                              </div>
+                              {item.details.gap !== undefined && (
+                                <div style={{ 
+                                  fontSize: '0.8rem', 
+                                  color: item.result === 'PASS' ? '#059669' : '#dc2626',
+                                  marginTop: '0.25rem',
+                                  fontWeight: '600'
+                                }}>
+                                  {item.result === 'PASS' 
+                                    ? `✓ Exceeds by ${item.details.gap}` 
+                                    : `✗ Short by ${Math.abs(item.details.gap)}`}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {item.message && (
                           <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>
                             {item.message}
                           </div>
                         )}
-                        {item.details && (
+                        {item.details && item.details.affected_elements && (
                           <div style={{ fontSize: '0.8rem', color: '#999', padding: '0.5rem', backgroundColor: '#f0f0f0', borderRadius: '0.25rem', marginTop: '0.5rem' }}>
-                            {typeof item.details === 'object' ? JSON.stringify(item.details) : item.details}
+                            <strong>Affected Elements:</strong> {item.details.affected_elements.join(', ')}
                           </div>
                         )}
                       </div>

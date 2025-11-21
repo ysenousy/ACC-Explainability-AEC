@@ -11,9 +11,11 @@ import ExportView from './components/ExportView';
 import RuleLayerView from './components/RuleLayerView';
 import GenerateRuleView from './components/GenerateRuleView';
 import CheckRulesView from './components/CheckRulesView';
+import DataValidationView from './components/DataValidationView';
+import RuleCheckView from './components/RuleCheckView';
 import ReasoningView from './components/ReasoningView';
 import ResultsView from './components/ResultsView';
-import ComplianceCheckView from './components/ComplianceCheckView';
+import ComplianceReportView from './components/ComplianceReportView';
 import './App.css';
 
 function App() {
@@ -274,12 +276,13 @@ function App() {
               {activeLayer === 'data-layer' && <DataLayerView graph={currentGraph} summary={currentSummary} />}
               {activeLayer === 'elements' && <ElementsView graph={currentGraph} />}
               {activeLayer === 'export' && <ExportView graph={currentGraph} />}
+              {activeLayer === 'validation' && <DataValidationView graph={currentGraph} />}
+              {activeLayer === 'rule-check' && <RuleCheckView graph={currentGraph} />}
               {activeLayer === 'rule-layer' && <RuleLayerView graph={currentGraph} />}
               {activeLayer === 'rule-generate' && <GenerateRuleView graph={currentGraph} />}
-              {activeLayer === 'rule-check' && <CheckRulesView graph={currentGraph} />}
               {activeLayer === 'reasoning' && <ReasoningView graph={currentGraph} />}
               {activeLayer === 'results' && <ResultsView graph={currentGraph} />}
-              {activeLayer === 'compliance-check' && <ComplianceCheckView graph={currentGraph} />}
+              {activeLayer === 'compliance-report' && <ComplianceReportView graph={currentGraph} />}
             </div>
           </div>
         )}
