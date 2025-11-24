@@ -2,6 +2,7 @@
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from flask.json.provider import DefaultJSONProvider
 from pathlib import Path
 import json
 import logging
@@ -24,6 +25,7 @@ from backend.rule_config_manager import (
     import_rules,
     export_rules,
 )
+from reasoning_layer.reasoning_engine import ReasoningEngine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,11 +33,82 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
+# Custom JSON provider to handle UTF-8 properly
+class UTF8JSONProvider(DefaultJSONProvider):
+    """Custom JSON provider that preserves Unicode characters."""
+    def dumps(self, obj, **kwargs):
+        kwargs.setdefault('ensure_ascii', False)
+        kwargs.setdefault('indent', 2)
+        return super().dumps(obj, **kwargs)
+    
+    def dump(self, obj, fp, **kwargs):
+        kwargs.setdefault('ensure_ascii', False)
+        kwargs.setdefault('indent', 2)
+        return super().dump(obj, fp, **kwargs)
+
+app.json = UTF8JSONProvider(app)
+
+# Ensure UTF-8 encoding for all JSON responses
+@app.after_request
+def set_utf8_encoding(response):
+    """Ensure all responses have proper UTF-8 encoding."""
+    if response.content_type and 'application/json' in response.content_type:
+        response.content_type = 'application/json; charset=utf-8'
+    return response
+
 # Services
 data_svc = DataLayerService()
 
+# Initialize reasoning engine with both regulatory and custom rules
+rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+custom_rules_file = Path(__file__).parent / 'custom_rules.json'
+reasoning_engine = ReasoningEngine(
+    str(rules_file) if rules_file.exists() else None,
+    str(custom_rules_file) if custom_rules_file.exists() else None
+)
+
 # Track if rules have been imported in this session
 rules_imported_in_session = False
+
+
+# ===== Health & Info Endpoints =====
+
+@app.route("/", methods=["GET"])
+def health_check():
+    """Health check and API information endpoint."""
+    return jsonify({
+        "status": "healthy",
+        "service": "ACC-Explainability-AEC API",
+        "version": "1.0",
+        "message": "Backend API is running",
+        "endpoints": "/api/info"
+    })
+
+
+@app.route("/api/info", methods=["GET"])
+def api_info():
+    """List all available API endpoints."""
+    routes_info = []
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint != 'static':
+            routes_info.append({
+                "endpoint": rule.rule,
+                "methods": list(rule.methods - {'HEAD', 'OPTIONS'}),
+                "function": rule.endpoint
+            })
+    
+    routes_info.sort(key=lambda x: x['endpoint'])
+    
+    return jsonify({
+        "status": "operational",
+        "total_endpoints": len(routes_info),
+        "endpoints": routes_info,
+        "reasoning_engine": {
+            "regulatory_rules": len(reasoning_engine.regulatory_rules),
+            "custom_rules": len(reasoning_engine.custom_rules),
+            "total_rules": len(reasoning_engine.rules)
+        }
+    })
 
 
 # ===== IFC Loading Endpoints =====
@@ -349,13 +422,15 @@ def get_doors_endpoint():
 
 @app.route("/api/rules/evaluate", methods=["POST"])
 def evaluate_rules_endpoint():
-    """Evaluate rules against a graph.
+    """Evaluate regulatory compliance rules against a graph.
+    
+    Uses the unified compliance engine with regulatory rules from enhanced-regulation-rules.json
     
     Request:
         {
             "graph": dict,
-            "include_manifest": bool (optional, default true),
-            "include_builtin": bool (optional, default true)
+            "include_manifest": bool (optional, ignored - kept for API compatibility),
+            "include_builtin": bool (optional, ignored - kept for API compatibility)
         }
     
     Response:
@@ -369,66 +444,51 @@ def evaluate_rules_endpoint():
     try:
         data = request.get_json()
         graph = data.get("graph")
-        include_manifest = data.get("include_manifest", True)
-        include_builtin = data.get("include_builtin", True)
         
         if not graph:
             return jsonify({"success": False, "error": "graph required"}), 400
         
-        logger.info("Evaluating rules (manifest=%s, builtin=%s)",
-                   include_manifest, include_builtin)
+        logger.info("Evaluating regulatory compliance rules")
         
-        # Save graph to temporary file
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            suffix=".json",
-            delete=False,
-            encoding="utf-8"
-        ) as f:
-            json.dump(graph, f)
-            temp_graph_file = f.name
+        # Initialize unified compliance engine with regulatory rules
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        engine = UnifiedComplianceEngine(str(rules_file))
         
-        try:
-            # Run rule engine
-            results_file = run_with_graph(
-                temp_graph_file,
-                include_manifest=include_manifest,
-                include_builtin=include_builtin,
-            )
+        logger.info(f"Using {len(engine.rules)} regulatory compliance rules")
+        
+        # Run compliance check
+        results = engine.check_graph(graph)
+        
+        # Transform results to match expected format
+        check_results = results.get('results', [])
+        
+        # Compute summary
+        summary = {
+            "total": results.get('total_checks', 0),
+            "passed": results.get('passed', 0),
+            "failed": results.get('failed', 0),
+            "unable": results.get('unable', 0),
+            "pass_rate": results.get('pass_rate', 0),
+            "by_severity": {},
+            "by_rule": {},
+        }
+        
+        # Group by severity and rule
+        for result in check_results:
+            severity = result.get("severity", "UNKNOWN")
+            summary["by_severity"][severity] = summary["by_severity"].get(severity, 0) + 1
             
-            # Load results
-            with open(results_file, "r", encoding="utf-8") as f:
-                results_data = json.load(f)
-            
-            results = results_data.get("results", [])
-            
-            # Compute summary
-            summary = {
-                "total": len(results),
-                "passed": sum(1 for r in results if r.get("status") == "PASS"),
-                "failed": sum(1 for r in results if r.get("status") == "FAIL"),
-                "by_severity": {},
-                "by_rule": {},
-            }
-            
-            for result in results:
-                severity = result.get("severity", "UNKNOWN")
-                summary["by_severity"][severity] = summary["by_severity"].get(severity, 0) + 1
-                
-                rule_id = result.get("rule_id", "UNKNOWN")
-                summary["by_rule"][rule_id] = summary["by_rule"].get(rule_id, 0) + 1
-            
-            return jsonify({
-                "success": True,
-                "results": results,
-                "summary": summary,
-                "error": None,
-            })
-        finally:
-            try:
-                Path(temp_graph_file).unlink()
-            except Exception:
-                pass
+            rule_id = result.get("rule_id", "UNKNOWN")
+            summary["by_rule"][rule_id] = summary["by_rule"].get(rule_id, 0) + 1
+        
+        logger.info(f"Evaluation complete: {len(check_results)} checks performed")
+        
+        return jsonify({
+            "success": True,
+            "results": check_results,
+            "summary": summary,
+            "error": None,
+        })
                 
     except Exception as e:
         logger.exception("Rule evaluation failed")
@@ -709,6 +769,41 @@ def delete_rule_endpoint(rule_id):
         return jsonify({
             "success": False,
             "rules": None,
+            "error": str(e),
+        }), 500
+
+
+@app.route("/api/rules/save-all", methods=["POST"])
+def save_all_rules_endpoint():
+    """Save all custom rules at once.
+    
+    Request:
+        {
+            "rules": list of rule objects
+        }
+    Response:
+        {
+            "success": bool,
+            "error": str or null
+        }
+    """
+    try:
+        data = request.get_json()
+        rules = data.get("rules", [])
+        
+        logger.info("Saving %d custom rules", len(rules))
+        
+        # Save all rules
+        save_custom_rules(rules)
+        
+        return jsonify({
+            "success": True,
+            "error": None,
+        })
+    except Exception as e:
+        logger.exception("Failed to save rules")
+        return jsonify({
+            "success": False,
             "error": str(e),
         }), 500
 
@@ -1355,9 +1450,22 @@ def check_compliance():
         if not graph:
             return jsonify({"success": False, "error": "graph required"}), 400
         
+        # Log graph structure for debugging
+        logger.info(f"Compliance check: Received graph with keys: {list(graph.keys())}")
+        if 'elements' in graph:
+            elements = graph.get('elements', {})
+            logger.info(f"Compliance check: Graph has elements section with keys: {list(elements.keys() if isinstance(elements, dict) else [])}")
+            if isinstance(elements, dict):
+                for elem_type, elem_list in elements.items():
+                    logger.info(f"Compliance check: Found {len(elem_list) if isinstance(elem_list, list) else 0} {elem_type}")
+        else:
+            logger.info(f"Compliance check: Graph has NO elements section. Available keys: {list(graph.keys())}")
+        
         # Initialize unified compliance engine
         rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
         engine = UnifiedComplianceEngine(str(rules_file))
+        
+        logger.info(f"Compliance check: Loaded {len(engine.rules)} rules")
         
         # Filter rules if specified
         rules_to_check = engine.rules
@@ -1366,6 +1474,11 @@ def check_compliance():
         
         # Run compliance check
         results = engine.check_graph(graph, rules_to_check, target_classes if target_classes else None)
+        
+        logger.info(f"Compliance check: Found {len(results.get('results', []))} check results")
+        if results.get('results'):
+            rule_ids = set(r.get('rule_id') for r in results['results'] if r.get('rule_id'))
+            logger.info(f"Compliance check: Rule IDs in results: {rule_ids}")
         
         return jsonify({
             "success": True,
@@ -1459,8 +1572,94 @@ def get_failing_elements():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route("/api/compliance/export-report", methods=["POST"])
-def export_compliance_report():
+@app.route("/api/compliance/get-failures", methods=["POST"])
+def get_failures_for_reasoning():
+    """
+    Get list of failures from compliance check for reasoning layer analysis.
+    
+    Request:
+        {
+            "check_results": dict (results from /api/compliance/check)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "failures": [
+                {
+                    "element_id": str,
+                    "element_type": str,
+                    "element_name": str,
+                    "failed_rules": [
+                        {
+                            "rule_id": str,
+                            "rule_name": str,
+                            "actual_value": any,
+                            "required_value": any,
+                            "unit": str,
+                            "explanation": str
+                        }
+                    ]
+                }
+            ],
+            "total_failures": int,
+            "error": str or null
+        }
+    """
+    try:
+        data = request.get_json()
+        check_results = data.get('check_results', {})
+        
+        if not check_results:
+            return jsonify({"success": False, "error": "check_results required"}), 400
+        
+        results = check_results.get('results', [])
+        
+        # Group failures by element
+        failures_by_element = {}
+        
+        for result in results:
+            if result.get('passed') is False:  # Only failed checks
+                element_id = result.get('element_guid', 'unknown')
+                element_type = result.get('element_type', 'unknown')
+                element_name = result.get('element_name', element_id)
+                
+                if element_id not in failures_by_element:
+                    failures_by_element[element_id] = {
+                        "element_id": element_id,
+                        "element_type": element_type,
+                        "element_name": element_name,
+                        "failed_rules": []
+                    }
+                
+                # Add failed rule
+                failures_by_element[element_id]["failed_rules"].append({
+                    "rule_id": result.get('rule_id', 'unknown'),
+                    "rule_name": result.get('rule_name', 'Unknown Rule'),
+                    "actual_value": result.get('actual_value'),
+                    "required_value": result.get('required_value'),
+                    "unit": result.get('unit', ''),
+                    "explanation": result.get('explanation', ''),
+                    "severity": result.get('severity', 'WARNING')
+                })
+        
+        failures_list = list(failures_by_element.values())
+        
+        return jsonify({
+            "success": True,
+            "failures": failures_list,
+            "total_failures": len(failures_list),
+            "error": None
+        })
+    
+    except Exception as e:
+        logger.exception("Error getting failures for reasoning")
+        return jsonify({
+            "success": False,
+            "failures": [],
+            "total_failures": 0,
+            "error": str(e)
+        }), 500
     """
     Export compliance report as JSON file.
     
@@ -1498,37 +1697,191 @@ def export_compliance_report():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route("/api/compliance/enhanced-rules", methods=["GET"])
-def get_enhanced_rules():
+@app.route("/api/reasoning/all-rules", methods=["GET"])
+def get_all_regulatory_rules():
     """
-    Get all enhanced regulation rules.
+    Get all rules (regulatory and custom) loaded in the ReasoningEngine.
     
     Response:
         {
             "success": bool,
-            "rules": [...],
-            "metadata": {...}
+            "rules": [
+                {
+                    "id": str,
+                    "name": str,
+                    "description": str,
+                    "severity": str,
+                    "source": str ("regulatory" or "custom"),
+                    "target_ifc_class": str,
+                    "regulation": str,
+                    "section": str,
+                    "jurisdiction": str
+                }
+            ],
+            "total_rules": int,
+            "regulatory_rules": int,
+            "custom_rules": int,
+            "error": str or null
         }
     """
     try:
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        # Get rules from ReasoningEngine (loads both regulatory and custom)
+        all_rules = reasoning_engine.rules
         
+        if not all_rules:
+            return jsonify({
+                "success": False,
+                "error": "No rules loaded",
+                "rules": [],
+                "total_rules": 0
+            }), 404
+        
+        # Transform rules to simplified format for display
+        rules_list = []
+        for rule_id, rule in all_rules.items():
+            # Determine if rule is regulatory or custom
+            rule_source = "custom" if rule_id in reasoning_engine.custom_rules else "regulatory"
+            
+            rules_list.append({
+                "id": rule.get("id"),
+                "name": rule.get("name"),
+                "description": rule.get("description"),
+                "severity": rule.get("severity", "WARNING"),
+                "source": rule_source,
+                "target_ifc_class": rule.get("target", {}).get("ifc_class") if isinstance(rule.get("target"), dict) else None,
+                "regulation": rule.get("provenance", {}).get("regulation") if isinstance(rule.get("provenance"), dict) else None,
+                "section": rule.get("provenance", {}).get("section") if isinstance(rule.get("provenance"), dict) else None,
+                "jurisdiction": rule.get("provenance", {}).get("jurisdiction") if isinstance(rule.get("provenance"), dict) else None,
+                "short_explanation": rule.get("explanation", {}).get("short", "") if isinstance(rule.get("explanation"), dict) else rule.get("explanation", "")
+            })
+        
+        return jsonify({
+            "success": True,
+            "rules": rules_list,
+            "total_rules": len(all_rules),
+            "regulatory_rules": len(reasoning_engine.regulatory_rules),
+            "custom_rules": len(reasoning_engine.custom_rules),
+            "error": None
+        })
+    
+    except Exception as e:
+        logger.exception("Error getting all rules")
+        return jsonify({
+            "success": False,
+            "rules": [],
+            "total_rules": 0,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/reasoning/all-rules-with-status", methods=["POST"])
+def get_all_rules_with_applicability():
+    """
+    Get all loaded rules with applicability status for current IFC.
+    
+    Request:
+        {
+            "graph": dict (IFC graph)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "rules": [
+                {
+                    "id": str,
+                    "name": str,
+                    "applicable": bool,
+                    "reason": str (why or why not applicable),
+                    "target_ifc_class": str,
+                    "applicable_element_count": int,
+                    "description": str,
+                    "severity": str
+                }
+            ],
+            "total_rules": int,
+            "applicable_rules": int,
+            "error": str or null
+        }
+    """
+    try:
+        data = request.get_json()
+        graph = data.get("graph")
+        
+        if not graph:
+            return jsonify({"success": False, "error": "graph required"}), 400
+        
+        # Load all regulatory rules
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
         if not rules_file.exists():
             return jsonify({"success": False, "error": "Rules file not found"}), 404
         
         with open(rules_file, 'r') as f:
-            data = json.load(f)
+            rules_data = json.load(f)
+        
+        all_rules = rules_data.get('rules', [])
+        
+        # Get element counts from graph
+        elements = graph.get("elements", {})
+        element_counts = {
+            "IfcDoor": len(elements.get("doors", [])),
+            "IfcSpace": len(elements.get("spaces", [])),
+            "IfcWindow": len(elements.get("windows", [])),
+            "IfcStairFlight": len(elements.get("stairs", [])),
+            "IfcWall": len(elements.get("walls", [])),
+            "IfcSlab": len(elements.get("slabs", [])),
+            "IfcColumn": len(elements.get("columns", [])),
+            "IfcBeam": len(elements.get("beams", []))
+        }
+        
+        # Build rules with applicability status
+        rules_with_status = []
+        applicable_count = 0
+        
+        for rule in all_rules:
+            target = rule.get("target", {})
+            ifc_class = target.get("ifc_class", "")
+            element_count = element_counts.get(ifc_class, 0)
+            
+            # Check if rule is applicable
+            is_applicable = element_count > 0
+            
+            if is_applicable:
+                applicable_count += 1
+                reason = f"Applicable - {element_count} {ifc_class} element(s) in IFC"
+            else:
+                reason = f"Not applicable - No {ifc_class} elements in current IFC"
+            
+            rules_with_status.append({
+                "id": rule.get("id", "unknown"),
+                "name": rule.get("name", "Unknown Rule"),
+                "applicable": is_applicable,
+                "reason": reason,
+                "target_ifc_class": ifc_class,
+                "applicable_element_count": element_count,
+                "description": rule.get("description", ""),
+                "severity": rule.get("severity", "WARNING"),
+                "regulation": rule.get("provenance", {}).get("regulation", ""),
+                "section": rule.get("provenance", {}).get("section", "")
+            })
         
         return jsonify({
             "success": True,
-            "rules": data.get('rules', []),
-            "metadata": data.get('metadata', {}),
-            "count": len(data.get('rules', []))
+            "rules": rules_with_status,
+            "total_rules": len(all_rules),
+            "applicable_rules": applicable_count,
+            "error": None
         })
     
     except Exception as e:
-        logger.exception("Rules retrieval failed")
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.exception("Error getting rules with status")
+        return jsonify({
+            "success": False,
+            "rules": [],
+            "total_rules": 0,
+            "applicable_rules": 0,
+            "error": str(e)
+        }), 500
 
 
 # ===== Health Check =====
@@ -1642,6 +1995,391 @@ def check_rules_status():
             "rules_loaded": False,
             "error": str(e)
         }), 500
+
+
+# ===== Reasoning Layer Endpoints =====
+
+@app.route("/api/reasoning/explain-rule", methods=["POST"])
+def explain_rule():
+    """
+    Explain WHY a rule exists (regulatory intent, beneficiaries, safety concerns).
+    
+    Request:
+        {
+            "rule_id": str,
+            "applicable_elements": list (optional),
+            "elements_checked": int (optional),
+            "elements_passing": int (optional),
+            "elements_failing": int (optional)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "reasoning": {
+                "reasoning_type": str,
+                "rule_explanations": [
+                    {
+                        "rule_id": str,
+                        "rule_name": str,
+                        "justification": {
+                            "regulatory_intent": str,
+                            "target_beneficiary": str,
+                            "safety_concern": str or null,
+                            "accessibility_concern": str or null,
+                            "explanation": str,
+                            "primary_regulation": {...},
+                            ...
+                        },
+                        ...
+                    }
+                ]
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        rule_id = data.get("rule_id")
+        
+        if not rule_id:
+            return jsonify({"success": False, "error": "rule_id required"}), 400
+        
+        logger.info(f"Explaining rule: {rule_id}")
+        logger.info(f"ReasoningEngine has {len(reasoning_engine.rules)} rules loaded")
+        logger.info(f"Available rule IDs: {list(reasoning_engine.rules.keys())[:5]}...")
+        
+        result = reasoning_engine.explain_rule(
+            rule_id,
+            applicable_elements=data.get("applicable_elements"),
+            elements_checked=data.get("elements_checked", 0),
+            elements_passing=data.get("elements_passing", 0),
+            elements_failing=data.get("elements_failing", 0)
+        )
+        
+        if "error" in result:
+            logger.warning(f"Rule explanation error: {result['error']}")
+            return jsonify({"success": False, "error": result['error']}), 404
+        else:
+            logger.info(f"Successfully generated explanation for {rule_id}")
+        
+        return jsonify({"success": True, "reasoning": result}), 200
+    
+    except Exception as e:
+        logger.error(f"Error explaining rule: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/reasoning/analyze-failure", methods=["POST"])
+def analyze_failure():
+    """
+    Explain WHY an element failed and HOW to fix it.
+    
+    Request:
+        {
+            "element_id": str,
+            "element_type": str,
+            "element_name": str (optional),
+            "failed_rules": [
+                {
+                    "rule_id": str,
+                    "rule_name": str,
+                    "actual_value": any,
+                    "required_value": any,
+                    "unit": str (optional),
+                    "location": str (optional)
+                }
+            ]
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "reasoning": {
+                "reasoning_type": str,
+                "element_explanations": [
+                    {
+                        "element_id": str,
+                        "element_type": str,
+                        "analyses": [
+                            {
+                                "failure_reason": str,
+                                "root_cause": str,
+                                "metrics": {...},
+                                "impact_on_users": str,
+                                ...
+                            }
+                        ],
+                        "solutions": [
+                            {
+                                "recommendation": str,
+                                "implementation_steps": [...],
+                                "alternatives": [...],
+                                "estimated_cost": str,
+                                ...
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        element_id = data.get("element_id")
+        element_type = data.get("element_type")
+        element_name = data.get("element_name")
+        failed_rules = data.get("failed_rules", [])
+        
+        if not element_id or not element_type:
+            return jsonify({"success": False, "error": "element_id and element_type required"}), 400
+        
+        if not failed_rules:
+            return jsonify({"success": False, "error": "failed_rules required"}), 400
+        
+        logger.info(f"Analyzing failure for element {element_id} with {len(failed_rules)} failed rules")
+        
+        # Enrich failed_rules with full rule objects from reasoning engine
+        enriched_failed_rules = []
+        for failed_rule in failed_rules:
+            rule_id = failed_rule.get("rule_id")
+            
+            # Look up full rule object from reasoning engine
+            full_rule = None
+            if rule_id in reasoning_engine.rules:
+                full_rule = reasoning_engine.rules[rule_id]
+            
+            # Build enriched rule result with full rule object
+            enriched_rule = {
+                "rule": full_rule or {
+                    "id": rule_id,
+                    "name": failed_rule.get("rule_name", "Unknown Rule"),
+                    "description": failed_rule.get("rule_name", "Unknown Rule")
+                },
+                "actual_value": failed_rule.get("actual_value"),
+                "required_value": failed_rule.get("required_value"),
+                "unit": failed_rule.get("unit", ""),
+                "location": failed_rule.get("location")
+            }
+            enriched_failed_rules.append(enriched_rule)
+        
+        result = reasoning_engine.explain_failure(
+            element_id, element_type, element_name, enriched_failed_rules
+        )
+        
+        return jsonify({"success": True, "reasoning": result}), 200
+    
+    except Exception as e:
+        logger.exception("Error analyzing failure")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/reasoning/analyze-pass", methods=["POST"])
+def analyze_pass():
+    """
+    Explain WHY an element PASSED a compliance check.
+    
+    Request:
+        {
+            "element_id": str,
+            "element_type": str,
+            "element_name": str (optional),
+            "passed_rules": [
+                {
+                    "rule_id": str,
+                    "rule_name": str,
+                    "actual_value": any,
+                    "required_value": any,
+                    "unit": str (optional),
+                    "location": str (optional)
+                }
+            ]
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "reasoning": {
+                "element_id": str,
+                "element_type": str,
+                "element_name": str,
+                "compliance_explanations": [
+                    {
+                        "rule_id": str,
+                        "rule_name": str,
+                        "why_passed": str,
+                        "actual_value": any,
+                        "required_value": any,
+                        "metrics": {...},
+                        "margin": str,
+                        "beneficiaries": str,
+                        "design_standard": str
+                    }
+                ]
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        element_id = data.get("element_id")
+        element_type = data.get("element_type")
+        element_name = data.get("element_name")
+        passed_rules = data.get("passed_rules", [])
+        
+        if not element_id or not element_type:
+            return jsonify({"success": False, "error": "element_id and element_type required"}), 400
+        
+        if not passed_rules:
+            return jsonify({"success": False, "error": "passed_rules required"}), 400
+        
+        # Build explanations for passing checks
+        compliance_explanations = []
+        
+        for passed_rule in passed_rules:
+            rule_id = passed_rule.get("rule_id")
+            actual_value = passed_rule.get("actual_value")
+            required_value = passed_rule.get("required_value")
+            unit = passed_rule.get("unit", "")
+            
+            # Look up full rule from reasoning engine
+            full_rule = reasoning_engine.rules.get(rule_id, {})
+            
+            # Calculate how much it exceeds requirement
+            margin_info = ""
+            if actual_value is not None and required_value is not None:
+                try:
+                    actual_float = float(actual_value)
+                    required_float = float(required_value)
+                    if required_float > 0:
+                        excess_pct = ((actual_float - required_float) / required_float) * 100
+                        excess_abs = actual_float - required_float
+                        margin_info = f"{excess_pct:.1f}% above minimum ({excess_abs:.1f}{unit} margin)"
+                except (ValueError, TypeError):
+                    margin_info = f"Exceeds minimum requirement"
+            
+            # Get beneficiaries from rule
+            beneficiaries = ""
+            rule_name = full_rule.get("name", passed_rule.get("rule_name", "Unknown"))
+            
+            if "door" in rule_name.lower() or "door" in element_type.lower():
+                beneficiaries = "Users with mobility devices, wheelchair users, elderly"
+            elif "window" in rule_name.lower():
+                beneficiaries = "Building occupants - emergency egress and daylight access"
+            elif "bedroom" in rule_name.lower():
+                beneficiaries = "Building occupants - habitable space requirements"
+            elif "bathroom" in rule_name.lower():
+                beneficiaries = "Building occupants - bathroom functionality"
+            elif "stair" in rule_name.lower():
+                beneficiaries = "All building occupants - accessible circulation"
+            elif "corridor" in rule_name.lower():
+                beneficiaries = "Users with mobility limitations, wheelchair users"
+            else:
+                beneficiaries = "Building occupants and users with accessibility needs"
+            
+            # Get design standard
+            provenance = full_rule.get("provenance", {})
+            design_standard = f"{provenance.get('regulation', 'Building Code')} - Section {provenance.get('section', 'TBD')}"
+            
+            explanation = {
+                "rule_id": rule_id,
+                "rule_name": rule_name,
+                "why_passed": f"This element meets or exceeds the {rule_name}. {margin_info}",
+                "actual_value": actual_value,
+                "required_value": required_value,
+                "unit": unit,
+                "metrics": {
+                    "actual": actual_value,
+                    "required": required_value,
+                    "unit": unit,
+                    "compliance": "✓ Pass"
+                },
+                "margin": margin_info,
+                "beneficiaries": beneficiaries,
+                "design_standard": design_standard,
+                "description": full_rule.get("description", "")
+            }
+            compliance_explanations.append(explanation)
+        
+        result = {
+            "element_id": element_id,
+            "element_type": element_type,
+            "element_name": element_name or "Unknown",
+            "compliance_explanations": compliance_explanations,
+            "summary": f"Element {element_name or element_id} passes {len(compliance_explanations)} compliance requirements"
+        }
+        
+        return jsonify({"success": True, "reasoning": result}), 200
+    
+    except Exception as e:
+        logger.exception("Error analyzing pass")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/reasoning/enrich-compliance", methods=["POST"])
+def enrich_compliance_with_reasoning():
+    """
+    Enrich compliance check results with reasoning explanations.
+    
+    Request:
+        {
+            "compliance_results": dict (from /api/compliance/check)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "enriched_results": {...},
+            "reasoning_added": bool,
+            "element_explanations_count": int
+        }
+    """
+    try:
+        data = request.get_json()
+        compliance_results = data.get("compliance_results")
+        
+        if not compliance_results:
+            return jsonify({"success": False, "error": "compliance_results required"}), 400
+        
+        enriched = reasoning_engine.explain_compliance_check(compliance_results)
+        
+        return jsonify({
+            "success": True,
+            "enriched_results": enriched,
+            "reasoning_added": "element_reasoning" in enriched,
+            "element_explanations_count": len(enriched.get("element_reasoning", []))
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Error enriching compliance results: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/reasoning/validate", methods=["GET"])
+def validate_reasoning_layer():
+    """
+    Validate reasoning layer configuration and readiness.
+    
+    Response:
+        {
+            "success": bool,
+            "validation": {
+                "rules_loaded": bool,
+                "total_rules": int,
+                "standards": {...},
+                "components": {...}
+            }
+        }
+    """
+    try:
+        validation = reasoning_engine.validate_reasoning_layer()
+        
+        return jsonify({
+            "success": True,
+            "validation": validation
+        }), 200
+    
+    except Exception as e:
+        logger.error(f"Error validating reasoning layer: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.errorhandler(500)

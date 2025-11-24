@@ -1,0 +1,153 @@
+{
+  "timestamp": "2025-11-24T17:00:21.151105",
+  "total_checks": 13,
+  "passed": 5,
+  "failed": 6,
+  "unable": 2,
+  "pass_rate": 38.46153846153847,
+  "results": [
+    {
+      "rule_id": "ADA_DOOR_MIN_WIDTH",
+      "element_guid": "door_001_narrow",
+      "element_type": "IfcDoor",
+      "rule_name": "ADA Door Minimum Width",
+      "passed": false,
+      "explanation": "Door door_001_narrow has clear width of 600.00 mm, below the required 813 mm.",
+      "severity": "ERROR",
+      "code_reference": "ADA 2010 Standards",
+      "section": "404.2.3"
+    },
+    {
+      "rule_id": "ADA_DOOR_MIN_WIDTH",
+      "element_guid": "door_002_short",
+      "element_type": "IfcDoor",
+      "rule_name": "ADA Door Minimum Width",
+      "passed": true,
+      "explanation": "Door door_002_short meets the ADA clear width requirement (900.00 mm ≥ 813 mm).",
+      "severity": "ERROR",
+      "code_reference": "ADA 2010 Standards",
+      "section": "404.2.3"
+    },
+    {
+      "rule_id": "ADA_CORRIDOR_MIN_WIDTH",
+      "element_guid": "space_001_small",
+      "element_type": "IfcSpace",
+      "rule_name": "ADA Corridor Minimum Width",
+      "passed": null,
+      "explanation": "Unable to extract required properties",
+      "severity": "ERROR",
+      "code_reference": "ADA 2010 Standards",
+      "section": "403.5"
+    },
+    {
+      "rule_id": "FIRE_EXIT_DOOR_HEIGHT",
+      "element_guid": "door_001_narrow",
+      "element_type": "IfcDoor",
+      "rule_name": "Fire Exit Door Minimum Height",
+      "passed": true,
+      "explanation": "Fire exit door door_001_narrow meets the minimum height requirement (2100.00 mm ≥ 2032 mm).",
+      "severity": "ERROR",
+      "code_reference": "International Building Code (IBC)",
+      "section": "1010.1.1"
+    },
+    {
+      "rule_id": "FIRE_EXIT_DOOR_HEIGHT",
+      "element_guid": "door_002_short",
+      "element_type": "IfcDoor",
+      "rule_name": "Fire Exit Door Minimum Height",
+      "passed": false,
+      "explanation": "Fire exit door door_002_short has height of 1800.00 mm, below the required 2032 mm.",
+      "severity": "ERROR",
+      "code_reference": "International Building Code (IBC)",
+      "section": "1010.1.1"
+    },
+    {
+      "rule_id": "BUILD_BEDROOM_MIN_AREA",
+      "element_guid": "space_001_small",
+      "element_type": "IfcSpace",
+      "rule_name": "Bedroom Minimum Area",
+      "passed": false,
+      "explanation": "Bedroom space_001_small has area of 5.00 m², below the required 6.50 m².",
+      "severity": "ERROR",
+      "code_reference": "International Residential Code (IRC)",
+      "section": "R304.1"
+    },
+    {
+      "rule_id": "BUILD_BATHROOM_MIN_AREA",
+      "element_guid": "space_001_small",
+      "element_type": "IfcSpace",
+      "rule_name": "Bathroom Minimum Area",
+      "passed": true,
+      "explanation": "Bathroom space_001_small has adequate floor area (5.00 m²).",
+      "severity": "WARNING",
+      "code_reference": "International Building Code (IBC)",
+      "section": "1210"
+    },
+    {
+      "rule_id": "BUILD_BEDROOM_WINDOW_MIN",
+      "element_guid": "window_001_small",
+      "element_type": "IfcWindow",
+      "rule_name": "Bedroom Window – Emergency Escape & Egress",
+      "passed": false,
+      "explanation": "Window window_001_small has area of 0.64 m², below the required 0.93 m².",
+      "severity": "ERROR",
+      "code_reference": "International Residential Code (IRC) & IBC",
+      "section": "IRC R310 / IBC 1205"
+    },
+    {
+      "rule_id": "UK_DOOR_WIDTH_ACCESSIBLE",
+      "element_guid": "door_001_narrow",
+      "element_type": "IfcDoor",
+      "rule_name": "UK Accessible Door Width",
+      "passed": false,
+      "explanation": "Door door_001_narrow has width of 600.00 mm, below the UK requirement of 775 mm.",
+      "severity": "ERROR",
+      "code_reference": "UK Building Regulations – Approved Document M",
+      "section": "Access to and Use of Buildings"
+    },
+    {
+      "rule_id": "UK_DOOR_WIDTH_ACCESSIBLE",
+      "element_guid": "door_002_short",
+      "element_type": "IfcDoor",
+      "rule_name": "UK Accessible Door Width",
+      "passed": true,
+      "explanation": "Door door_002_short meets UK accessibility width requirements (900.00 mm ≥ 775 mm).",
+      "severity": "ERROR",
+      "code_reference": "UK Building Regulations – Approved Document M",
+      "section": "Access to and Use of Buildings"
+    },
+    {
+      "rule_id": "EN_CORRIDOR_WIDTH",
+      "element_guid": "space_001_small",
+      "element_type": "IfcSpace",
+      "rule_name": "EN Corridor Minimum Width",
+      "passed": null,
+      "explanation": "Unable to extract required properties",
+      "severity": "ERROR",
+      "code_reference": "European Accessibility Standard – Inclusive Design",
+      "section": "EN 17210:2021"
+    },
+    {
+      "rule_id": "NBC_DOOR_WIDTH_ACCESSIBLE",
+      "element_guid": "door_001_narrow",
+      "element_type": "IfcDoor",
+      "rule_name": "NBC Accessible Door Width",
+      "passed": false,
+      "explanation": "Door door_001_narrow has width of 600.00 mm, below the NBC requirement of 750 mm.",
+      "severity": "ERROR",
+      "code_reference": "National Building Code of Canada",
+      "section": "Accessibility Requirements"
+    },
+    {
+      "rule_id": "NBC_DOOR_WIDTH_ACCESSIBLE",
+      "element_guid": "door_002_short",
+      "element_type": "IfcDoor",
+      "rule_name": "NBC Accessible Door Width",
+      "passed": true,
+      "explanation": "Door door_002_short meets NBC accessibility width requirements (900.00 mm ≥ 750 mm).",
+      "severity": "ERROR",
+      "code_reference": "National Building Code of Canada",
+      "section": "Accessibility Requirements"
+    }
+  ]
+}

@@ -75,7 +75,6 @@ function ElementsTab({ graph }) {
               <th>ID</th>
               <th>Name</th>
               <th>Width / Area</th>
-              <th>Storey</th>
               <th>Connections</th>
             </tr>
           </thead>
@@ -100,7 +99,6 @@ function ElementsTab({ graph }) {
                     ? `${item.width_mm.toFixed(1)} mm`
                     : '—'}
                 </td>
-                <td>{item.storey_name || '—'}</td>
                 <td>
                   {item.type === 'door'
                     ? item.connected_spaces?.length || 0

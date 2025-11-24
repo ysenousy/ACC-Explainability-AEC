@@ -277,6 +277,84 @@ class ComplianceReportGenerator:
         
         return applicable_rules
 
+    def _check_selector_filters(self, item: Dict, filters: List[Dict]) -> bool:
+        """Check if item matches all selector filters.
+        
+        If no filters are specified, return True (apply rule to all items of type).
+        If filters are specified but properties not found in IFC, return True anyway
+        (be permissive - assume rule applies unless we can definitively prove otherwise).
+        """
+        if not filters:
+            return True
+        
+        attributes = item.get("attributes", {})
+        properties = item.get("properties", {})
+        
+        # Track if we found any filter property in the IFC
+        found_any_property = False
+        all_filters_match = True
+        
+        for filter_spec in filters:
+            pset = filter_spec.get("pset", "")
+            property_name = filter_spec.get("property", "")
+            op = filter_spec.get("op", "=")
+            required_value = filter_spec.get("value")
+            
+            # Get property value from attributes
+            pset_data = attributes.get("property_sets", {}).get(pset, {})
+            actual_value = pset_data.get(property_name)
+            
+            # Fallback: check simplified properties for common cases
+            if actual_value is None:
+                if property_name == "UsageType" and "usage_type" in properties:
+                    actual_value = properties.get("usage_type")
+                elif property_name == "IsAccessible" and "is_accessible" in attributes:
+                    actual_value = attributes.get("is_accessible")
+                elif property_name == "FireExit" and "fire_exit" in attributes:
+                    actual_value = attributes.get("fire_exit")
+                elif property_name == "IsExternal" and "is_external" in attributes:
+                    actual_value = attributes.get("is_external")
+            
+            # If we found the property, evaluate it
+            if actual_value is not None:
+                found_any_property = True
+                if not self._evaluate_filter(actual_value, op, required_value):
+                    all_filters_match = False
+                    break
+        
+        # If we found at least one property and all matched, apply rule
+        if found_any_property and all_filters_match:
+            return True
+        
+        # If we didn't find any filter properties in the IFC, be permissive
+        # (assume rule applies - don't skip it)
+        # This allows rules to work with IFCs that don't have standard properties
+        if not found_any_property:
+            return True
+        
+        # If we found properties but they didn't match, skip
+        return False
+
+    def _evaluate_filter(self, actual_value, op: str, required_value) -> bool:
+        """Evaluate a single filter condition."""
+        if actual_value is None:
+            return False
+        
+        if op == "=":
+            return actual_value == required_value
+        elif op == "!=":
+            return actual_value != required_value
+        elif op == ">":
+            return actual_value > required_value
+        elif op == ">=":
+            return actual_value >= required_value
+        elif op == "<":
+            return actual_value < required_value
+        elif op == "<=":
+            return actual_value <= required_value
+        
+        return False
+
     def _evaluate_item_against_rule(self, item: Dict, rule: Dict) -> Dict:
         """Evaluate if item complies with enhanced regulatory rule."""
         rule_id = rule.get("id")
@@ -285,6 +363,24 @@ class ComplianceReportGenerator:
         message = ""
         
         try:
+            # Check if item matches rule selector before evaluating
+            target = rule.get("target", {})
+            selector = target.get("selector", {})
+            filters = selector.get("filters", [])
+            
+            # If there are filters, check if element matches them
+            if filters and not self._check_selector_filters(item, filters):
+                # Element doesn't match selector, skip evaluation (not applicable)
+                return {
+                    "rule_id": rule_id,
+                    "rule_name": rule_name,
+                    "status": "skip",
+                    "message": "Element does not match rule selector criteria (not applicable)",
+                    "severity": rule.get("severity", "warning"),
+                    "code_reference": rule.get("provenance", {}).get("section", ""),
+                    "description": rule.get("description", "")
+                }
+            
             # Get condition from rule
             condition = rule.get("condition", {})
             if not condition:
@@ -446,22 +542,89 @@ class ComplianceReportGenerator:
         compliant = sum(1 for item in evaluated_items if item["compliance_status"] == "pass")
         non_compliant = sum(1 for item in evaluated_items if item["compliance_status"] == "fail")
         partial = sum(1 for item in evaluated_items if item["compliance_status"] == "partial")
+        no_rules = sum(1 for item in evaluated_items if item["compliance_status"] == "no_rules")
         
         total_rules_evaluated = sum(len(item["rules_evaluated"]) for item in evaluated_items)
         total_rules_passed = sum(
             sum(1 for r in item["rules_evaluated"] if r["status"] == "pass")
             for item in evaluated_items
         )
+        total_rules_failed = sum(
+            sum(1 for r in item["rules_evaluated"] if r["status"] == "fail")
+            for item in evaluated_items
+        )
+        
+        # Build breakdown by rule for transparency
+        rules_breakdown = {}
+        for item in evaluated_items:
+            for rule_result in item["rules_evaluated"]:
+                rule_id = rule_result.get("rule_id", "unknown")
+                rule_name = rule_result.get("rule_name", rule_id)
+                
+                if rule_id not in rules_breakdown:
+                    rules_breakdown[rule_id] = {
+                        "rule_name": rule_name,
+                        "passed": 0,
+                        "failed": 0,
+                        "unknown": 0,
+                        "skipped": 0,
+                        "severity": rule_result.get("severity", "WARNING"),
+                        "failing_elements": []
+                    }
+                
+                status = rule_result.get("status", "unknown")
+                if status == "pass":
+                    rules_breakdown[rule_id]["passed"] += 1
+                elif status == "fail":
+                    rules_breakdown[rule_id]["failed"] += 1
+                    rules_breakdown[rule_id]["failing_elements"].append({
+                        "element_id": item.get("id"),
+                        "element_name": item.get("name"),
+                        "element_type": item.get("type"),
+                        "message": rule_result.get("message", "")
+                    })
+                elif status == "skip":
+                    rules_breakdown[rule_id]["skipped"] += 1
+                else:
+                    rules_breakdown[rule_id]["unknown"] += 1
+        
+        # Build breakdown by element type
+        items_by_type_breakdown = {}
+        for item in evaluated_items:
+            item_type = item.get("type", "unknown")
+            if item_type not in items_by_type_breakdown:
+                items_by_type_breakdown[item_type] = {
+                    "pass": 0,
+                    "fail": 0,
+                    "partial": 0,
+                    "no_rules": 0,
+                    "total": 0
+                }
+            
+            items_by_type_breakdown[item_type]["total"] += 1
+            status = item.get("compliance_status", "unknown")
+            if status == "pass":
+                items_by_type_breakdown[item_type]["pass"] += 1
+            elif status == "fail":
+                items_by_type_breakdown[item_type]["fail"] += 1
+            elif status == "partial":
+                items_by_type_breakdown[item_type]["partial"] += 1
+            elif status == "no_rules":
+                items_by_type_breakdown[item_type]["no_rules"] += 1
         
         return {
             "total_items": items_report["total_items"],
             "items_by_type": items_report["items_by_type"],
+            "items_by_type_breakdown": items_by_type_breakdown,
             "compliant_items": compliant,
             "non_compliant_items": non_compliant,
             "partial_compliance_items": partial,
+            "items_with_no_rules": no_rules,
             "total_rules_evaluated": total_rules_evaluated,
             "total_rules_passed": total_rules_passed,
-            "overall_compliance_percentage": (total_rules_passed / total_rules_evaluated * 100) if total_rules_evaluated > 0 else 0
+            "total_rules_failed": total_rules_failed,
+            "overall_compliance_percentage": (compliant / items_report["total_items"] * 100) if items_report["total_items"] > 0 else 0,
+            "rules_breakdown": rules_breakdown
         }
 
     def _load_regulatory_rules(self) -> List[Dict]:

@@ -29,7 +29,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'compliance-report', label: 'Compliance Report', icon: FileText, description: 'Generate comprehensive compliance report' },
     ],
     reasoningLayer: [
-      { id: 'reasoning', label: 'Reasoning Logic', icon: Network, description: 'Rule logic & inference' },
+      { id: 'reasoning', label: 'Reasoning Layer', icon: Network, description: 'Rule justifications & failure analysis' },
       { id: 'results', label: 'Analysis Results', icon: AlertCircle, description: 'Rule evaluation outcomes' },
     ],
   };
@@ -37,7 +37,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
   const groups = [
     { key: 'dataLayer', label: '📊 Data Layer', color: 'sidebar-model' },
     { key: 'ruleLayer', label: '✅ Rules Layer', color: 'sidebar-compliance' },
-    { key: 'reasoningLayer', label: '🧠 Reasoning & Analysis', color: 'sidebar-reasoning' },
+    { key: 'reasoningLayer', label: '🧠 Reasoning Layer', color: 'sidebar-reasoning' },
   ];
 
   const handleLayerClick = (layerId) => {

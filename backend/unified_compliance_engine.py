@@ -35,7 +35,7 @@ class UnifiedComplianceEngine:
     def _load_rules(self, rules_file: str) -> bool:
         """Load rules from JSON file."""
         try:
-            with open(rules_file, 'r') as f:
+            with open(rules_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 self.rules = data.get('rules', [])
                 logger.info(f"Loaded {len(self.rules)} rules from {rules_file}")
@@ -105,23 +105,95 @@ class UnifiedComplianceEngine:
         return None
 
     def _extract_from_qto(self, element: Dict, spec: Dict) -> Optional[float]:
-        """Extract value from QTO (Quantity Take-Off)."""
-        qto_name = spec.get("qto_name")
+        """Extract value from QTO (Quantity Take-Off).
+        
+        Tries multiple strategies in order of speed/likelihood:
+        1. Direct top-level properties (width_mm, height_mm, area_m2) - FASTEST
+        2. Legacy QTO locations (quantities, qto)
+        3. Modern format BaseQuantities
+        4. Property set fallback
+        """
         quantity = spec.get("quantity")
-
-        # Check multiple possible QTO locations
-        if "quantities" in element:
+        target_unit = spec.get("unit", "mm")
+        
+        # STRATEGY 1: Direct top-level properties (FASTEST - try first)
+        direct_mapping = {
+            "ClearWidth": "width_mm",
+            "Width": "width_mm",
+            "ClearHeight": "height_mm",
+            "Height": "height_mm",
+            "FloorArea": "area_m2",
+            "NetFloorArea": "area_m2",
+            "GrossFloorArea": "area_m2",
+            "Area": "area_m2"
+        }
+        
+        prop_name = direct_mapping.get(quantity)
+        if prop_name and prop_name in element:
+            val = element[prop_name]
+            if val is not None and isinstance(val, (int, float)):
+                logger.debug(f"[QTO] Found direct property '{prop_name}': {val}")
+                return float(val)
+        
+        # STRATEGY 2: Try 'quantities' key (legacy format)
+        qto_name = spec.get("qto_name")
+        if "quantities" in element and qto_name:
             qtos = element["quantities"]
             if qto_name in qtos:
                 val = qtos[qto_name].get(quantity)
-                return float(val) if val is not None else None
+                if val is not None:
+                    logger.debug(f"[QTO] Found in 'quantities': {val}")
+                    return float(val)
 
-        if "qto" in element:
+        # STRATEGY 3: Try 'qto' key
+        if "qto" in element and qto_name:
             qto_data = element["qto"]
             if qto_name in qto_data:
                 val = qto_data[qto_name].get(quantity)
-                return float(val) if val is not None else None
+                if val is not None:
+                    logger.debug(f"[QTO] Found in 'qto': {val}")
+                    return float(val)
 
+        # STRATEGY 4: Modern format - attributes.property_sets.BaseQuantities
+        base_q = element.get("attributes", {}).get("property_sets", {}).get("BaseQuantities", {})
+        if base_q:
+            quantity_mapping = {
+                "ClearWidth": "Width",
+                "Width": "Width",
+                "ClearHeight": "Height",
+                "Height": "Height",
+                "NetFloorArea": "Area",
+                "GrossFloorArea": "Area",
+                "FloorArea": "Area",
+                "Area": "Area",
+                "Perimeter": "Perimeter",
+                "Volume": "Volume",
+                "Depth": "Depth"
+            }
+            
+            mapped_quantity = quantity_mapping.get(quantity, quantity)
+            if mapped_quantity in base_q:
+                val = base_q[mapped_quantity]
+                if val is not None and isinstance(val, (int, float)):
+                    if target_unit == "mm" and mapped_quantity in ["Width", "Height", "Depth", "Perimeter"]:
+                        logger.debug(f"[QTO] Found BaseQuantities (meters): {val}, converting to mm")
+                        return float(val) * 1000.0
+                    else:
+                        logger.debug(f"[QTO] Found BaseQuantities: {val}")
+                        return float(val)
+        
+        # STRATEGY 5: Check pset properties as fallback
+        psets = element.get("attributes", {}).get("property_sets", {})
+        for pset_name, pset_data in psets.items():
+            if pset_data and isinstance(pset_data, dict):
+                for key in ["ClearWidth", "Width", "ClearHeight", "Height", "Area"]:
+                    if key in pset_data:
+                        val = pset_data[key]
+                        if val is not None and isinstance(val, (int, float)):
+                            logger.debug(f"[QTO] Found in pset '{pset_name}' property '{key}': {val}")
+                            return float(val)
+        
+        logger.debug(f"[QTO] Could not extract '{quantity}' from element. Available keys: {list(element.keys())}")
         return None
 
     def _extract_from_pset(self, element: Dict, spec: Dict) -> Optional[Any]:
@@ -265,12 +337,16 @@ class UnifiedComplianceEngine:
             'rule_id': rule.get('id'),
             'element_guid': element.get('guid') or element.get('id'),
             'element_type': element.get('type') or element.get('ifc_class'),
+            'element_name': element.get('name'),
             'rule_name': rule.get('name'),
             'passed': False,
             'explanation': '',
             'severity': rule.get('severity', 'WARNING'),
             'code_reference': rule.get('provenance', {}).get('regulation'),
-            'section': rule.get('provenance', {}).get('section')
+            'section': rule.get('provenance', {}).get('section'),
+            'actual_value': None,
+            'required_value': None,
+            'unit': None
         }
 
         # Evaluate condition
@@ -282,8 +358,11 @@ class UnifiedComplianceEngine:
         # Extract LHS value
         lhs_value = self._extract_value(element, lhs_source, rule.get('parameters', {}))
         if lhs_value is None:
+            # MORE LENIENT: Mark as "Unable" but still try to pass if element doesn't have required properties
+            # This prevents false negatives when IFC data isn't fully populated
             result['passed'] = None
-            result['explanation'] = "Unable to extract required properties"
+            result['explanation'] = f"Unable to extract property '{lhs_source.get('quantity', 'unknown')}' from element - insufficient data"
+            logger.debug(f"Rule {rule.get('id')}: Could not extract LHS from element {element.get('name', 'unknown')}")
             return result
 
         # Extract RHS value
@@ -294,8 +373,14 @@ class UnifiedComplianceEngine:
 
         if rhs_value is None:
             result['passed'] = None
-            result['explanation'] = "Unable to extract comparison value"
+            result['explanation'] = "Unable to extract comparison value from rule"
+            logger.debug(f"Rule {rule.get('id')}: Could not extract RHS")
             return result
+
+        # Store actual and required values for reasoning
+        result['actual_value'] = lhs_value
+        result['required_value'] = rhs_value
+        result['unit'] = lhs_source.get('unit', '')
 
         # Evaluate
         result['passed'] = self._compare(lhs_value, operator, rhs_value)
@@ -329,11 +414,20 @@ class UnifiedComplianceEngine:
         elements = []
         for section in ['elements', 'objects', 'entities']:
             if section in graph:
-                elements.extend(graph[section])
+                section_data = graph[section]
+                # Handle both list format and dict format
+                if isinstance(section_data, dict):
+                    # Modern format: {"doors": [...], "spaces": [...], ...}
+                    for comp_type, comp_list in section_data.items():
+                        if isinstance(comp_list, list):
+                            elements.extend(comp_list)
+                elif isinstance(section_data, list):
+                    # Legacy format: [element1, element2, ...]
+                    elements.extend(section_data)
 
         # Filter to specific IFC classes if requested
         if target_ifc_classes:
-            elements = [e for e in elements if e.get('ifc_class') in target_ifc_classes]
+            elements = [e for e in elements if isinstance(e, dict) and e.get('ifc_class') in target_ifc_classes]
 
         # Check each element against each rule
         for rule in rules:
@@ -342,7 +436,7 @@ class UnifiedComplianceEngine:
 
             target_elements = elements
             if target_class:
-                target_elements = [e for e in elements if e.get('ifc_class') == target_class]
+                target_elements = [e for e in elements if isinstance(e, dict) and e.get('ifc_class') == target_class]
 
             for element in target_elements:
                 check_result = self.check_element_against_rule(element, rule)

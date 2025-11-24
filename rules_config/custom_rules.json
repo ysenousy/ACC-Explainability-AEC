@@ -1,462 +1,416 @@
 {
   "rules": [
     {
-      "id": "ADA_DOOR_MIN_WIDTH",
-      "name": "ADA Door Minimum Width",
-      "rule_type": "attribute_comparison",
-      "description": "All accessible doors must have clear opening width ≥ 813 mm (32 inches).",
-      "target": {
-        "ifc_class": "IfcDoor",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_DoorCommon",
-              "property": "IsAccessible",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
-      },
       "condition": {
-        "op": ">=",
         "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_DoorBaseQuantities",
-          "quantity": "ClearWidth",
-          "unit": "mm"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_clear_width_mm"
-        }
-      },
-      "parameters": {
-        "min_clear_width_mm": 813
-      },
-      "severity": "ERROR",
-      "explanation": {
-        "short": "Accessible doors must have a clear width of at least 813 mm.",
-        "on_fail": "Door {guid} has clear width of {lhs} mm, below the required {rhs} mm.",
-        "on_pass": "Door {guid} meets the ADA clear width requirement ({lhs} mm ≥ {rhs} mm)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "ADA 2010 Standards",
-        "section": "303.2",
-        "jurisdiction": "US"
-      }
-    },
-    {
-      "id": "ADA_CORRIDOR_MIN_WIDTH",
-      "name": "ADA Corridor Minimum Width",
-      "rule_type": "attribute_comparison",
-      "description": "All accessible routes and corridors must be at least 914 mm (36 inches) wide.",
-      "target": {
-        "ifc_class": "IfcSpace",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_SpaceCommon",
-              "property": "IsAccessible",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_SpaceBaseQuantities",
-          "quantity": "Width",
-          "unit": "mm"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_corridor_width_mm"
-        }
-      },
-      "parameters": {
-        "min_corridor_width_mm": 914
-      },
-      "severity": "ERROR",
-      "explanation": {
-        "short": "Accessible corridors must have a minimum width of 914 mm.",
-        "on_fail": "Space {guid} has width of {lhs} mm, below the required {rhs} mm.",
-        "on_pass": "Space {guid} meets the ADA corridor width requirement ({lhs} mm ≥ {rhs} mm)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "ADA 2010 Standards",
-        "section": "304",
-        "jurisdiction": "US"
-      }
-    },
-    {
-      "id": "FIRE_EXIT_DOOR_HEIGHT",
-      "name": "Fire Exit Door Minimum Height",
-      "rule_type": "attribute_comparison",
-      "description": "All exit doors must have minimum height of 1980 mm (78 inches).",
-      "target": {
-        "ifc_class": "IfcDoor",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_DoorCommon",
-              "property": "FireExit",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
           "qto_name": "Qto_DoorBaseQuantities",
           "quantity": "Height",
+          "source": "qto",
           "unit": "mm"
         },
+        "op": ">=",
         "rhs": {
-          "source": "parameter",
-          "param": "min_exit_height_mm"
+          "param": "min_exit_height_mm",
+          "source": "parameter"
         }
       },
-      "parameters": {
-        "min_exit_height_mm": 1980
-      },
-      "severity": "ERROR",
+      "description": "Doors in a means of egress must have a minimum clear height of 2032 mm (80 inches) to ensure safe emergency egress, in accordance with IBC Section 1010.1.1.",
       "explanation": {
-        "short": "Fire exit doors must have a minimum height of 1980 mm.",
-        "on_fail": "Fire exit door {guid} has height of {lhs} mm, below the required {rhs} mm.",
-        "on_pass": "Fire exit door {guid} meets the minimum height requirement ({lhs} mm ≥ {rhs} mm)."
+        "on_fail": "Fire exit door {guid} has height {lhs} mm, below the required {rhs} mm (IBC 1010.1.1).",
+        "on_pass": "Fire exit door {guid} meets the IBC minimum height requirement ({lhs} mm ≥ {rhs} mm, IBC 1010.1.1).",
+        "short": "Fire exit doors must provide a clear height of at least 2032 mm (80 in)."
+      },
+      "id": "IBC_FIRE_EXIT_DOOR_HEIGHT",
+      "name": "Fire Exit Door Minimum Height",
+      "parameters": {
+        "min_exit_height_mm": 2032
       },
       "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1010.1.1",
         "source": "regulation",
-        "regulation": "International Building Code (IBC)",
-        "section": "1005.1",
-        "jurisdiction": "US"
+        "title": "Door Size"
+      },
+      "rule_type": "attribute_comparison",
+      "severity": "ERROR",
+      "target": {
+        "ifc_class": "IfcDoor",
+        "selector": {
+          "filters": [
+            {
+              "op": "=",
+              "property": "FireExit",
+              "pset": "Pset_DoorCommon",
+              "value": true
+            }
+          ]
+        }
       }
     },
     {
+      "condition": {
+        "lhs": {
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity": "Width",
+          "source": "qto",
+          "unit": "mm"
+        },
+        "op": ">=",
+        "rhs": {
+          "param": "min_stair_width_mm",
+          "source": "parameter"
+        }
+      },
+      "description": "Stairways serving an occupant load of 50 or more must have a minimum clear width of 1118 mm (44 inches) in accordance with IBC Section 1011.2.",
+      "explanation": {
+        "on_fail": "Stair flight {guid} has width {lhs} mm, below the required {rhs} mm (IBC 1011.2).",
+        "on_pass": "Stair flight {guid} meets the IBC minimum width requirement ({lhs} mm ≥ {rhs} mm, IBC 1011.2).",
+        "short": "Stairways (for typical occupant loads) must have a minimum clear width of 1118 mm (44 in)."
+      },
       "id": "IBC_STAIR_MIN_WIDTH",
       "name": "Stair Minimum Width",
+      "parameters": {
+        "min_stair_width_mm": 1118
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1011.2",
+        "source": "regulation",
+        "title": "Width and Capacity"
+      },
       "rule_type": "attribute_comparison",
-      "description": "All stairs must have minimum width of 1118 mm (44 inches).",
+      "severity": "ERROR",
       "target": {
         "ifc_class": "IfcStairFlight",
         "selector": {
           "filters": []
         }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_StairFlightBaseQuantities",
-          "quantity": "Width",
-          "unit": "mm"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_stair_width_mm"
-        }
-      },
-      "parameters": {
-        "min_stair_width_mm": 1118
-      },
-      "severity": "ERROR",
-      "explanation": {
-        "short": "Stairs must have a minimum width of 1118 mm.",
-        "on_fail": "Stair {guid} has width of {lhs} mm, below the required {rhs} mm.",
-        "on_pass": "Stair {guid} meets the minimum width requirement ({lhs} mm ≥ {rhs} mm)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "International Building Code (IBC)",
-        "section": "1003.3.1.1",
-        "jurisdiction": "US"
       }
     },
     {
-      "id": "BUILD_BEDROOM_MIN_AREA",
-      "name": "Bedroom Minimum Area",
+      "condition": {
+        "lhs": {
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity": "FloorArea",
+          "source": "qto",
+          "unit": "m2"
+        },
+        "op": ">=",
+        "rhs": {
+          "param": "min_bedroom_area_m2",
+          "source": "parameter"
+        }
+      },
+      "description": "Habitable rooms such as bedrooms must have a minimum floor area of 6.5 m² (70 ft²) in accordance with IRC Section R304.1/R304.2.",
+      "explanation": {
+        "on_fail": "Bedroom space {guid} has area {lhs} m², below the required {rhs} m² (IRC R304.1/R304.2).",
+        "on_pass": "Bedroom space {guid} meets the minimum floor area requirement ({lhs} m² ≥ {rhs} m², IRC R304.1/R304.2).",
+        "short": "Bedrooms must have a minimum floor area of 6.5 m² (70 ft²)."
+      },
+      "id": "IRC_BEDROOM_MIN_AREA",
+      "name": "Bedroom Minimum Floor Area",
+      "parameters": {
+        "min_bedroom_area_m2": 6.5
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R304.1 / R304.2",
+        "source": "regulation",
+        "title": "Minimum Room Areas"
+      },
       "rule_type": "attribute_comparison",
-      "description": "Bedrooms must have minimum floor area of 6.5 m² (70 square feet).",
+      "severity": "ERROR",
       "target": {
         "ifc_class": "IfcSpace",
         "selector": {
           "filters": [
             {
-              "pset": "Pset_SpaceCommon",
-              "property": "UsageType",
               "op": "=",
+              "property": "UsageType",
+              "pset": "Pset_SpaceCommon",
               "value": "Bedroom"
             }
           ]
         }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_SpaceBaseQuantities",
-          "quantity": "FloorArea",
-          "unit": "m2"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_bedroom_area_m2"
-        }
-      },
-      "parameters": {
-        "min_bedroom_area_m2": 6.5
-      },
-      "severity": "ERROR",
-      "explanation": {
-        "short": "Bedrooms must have a minimum floor area of 6.5 m².",
-        "on_fail": "Bedroom {guid} has area of {lhs} m², below the required {rhs} m².",
-        "on_pass": "Bedroom {guid} meets the minimum area requirement ({lhs} m² ≥ {rhs} m²)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "International Building Code (IBC)",
-        "section": "1205.2.1",
-        "jurisdiction": "US"
       }
     },
     {
-      "id": "BUILD_BATHROOM_MIN_AREA",
-      "name": "Bathroom Minimum Area",
-      "rule_type": "attribute_comparison",
-      "description": "Bathrooms must have minimum floor area of 3.25 m² (35 square feet).",
-      "target": {
-        "ifc_class": "IfcSpace",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_SpaceCommon",
-              "property": "UsageType",
-              "op": "=",
-              "value": "Bathroom"
-            }
-          ]
-        }
-      },
       "condition": {
-        "op": ">=",
         "lhs": {
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity": "Area",
           "source": "qto",
-          "qto_name": "Qto_SpaceBaseQuantities",
-          "quantity": "FloorArea",
           "unit": "m2"
         },
+        "op": ">=",
         "rhs": {
-          "source": "parameter",
-          "param": "min_bathroom_area_m2"
+          "param": "min_egress_area_m2",
+          "source": "parameter"
         }
       },
-      "parameters": {
-        "min_bathroom_area_m2": 3.25
-      },
-      "severity": "ERROR",
+      "description": "Emergency escape and rescue openings (egress windows) must provide a minimum net clear opening area of 0.53 m² (5.7 ft²) in accordance with IRC Section R310.2.1.",
       "explanation": {
-        "short": "Bathrooms must have a minimum floor area of 3.25 m².",
-        "on_fail": "Bathroom {guid} has area of {lhs} m², below the required {rhs} m².",
-        "on_pass": "Bathroom {guid} meets the minimum area requirement ({lhs} m² ≥ {rhs} m²)."
+        "on_fail": "Egress window {guid} has clear opening area {lhs} m², below the required {rhs} m² (IRC R310.2.1).",
+        "on_pass": "Egress window {guid} meets the minimum clear opening area ({lhs} m² ≥ {rhs} m², IRC R310.2.1).",
+        "short": "Egress windows must provide a minimum net clear opening area of 0.53 m² (5.7 ft²)."
+      },
+      "id": "IRC_EGRESS_WINDOW_MIN_AREA",
+      "name": "Emergency Escape and Rescue Opening – Minimum Area",
+      "parameters": {
+        "min_egress_area_m2": 0.53
       },
       "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.1",
         "source": "regulation",
-        "regulation": "International Building Code (IBC)",
-        "section": "1205.2.2",
-        "jurisdiction": "US"
-      }
-    },
-    {
-      "id": "BUILD_BEDROOM_WINDOW_MIN",
-      "name": "Bedroom Window Minimum Size",
+        "title": "Minimum Opening Area"
+      },
       "rule_type": "attribute_comparison",
-      "description": "Bedrooms must have windows with minimum area of 0.93 m² (10 square feet).",
+      "severity": "ERROR",
       "target": {
         "ifc_class": "IfcWindow",
         "selector": {
           "filters": [
             {
-              "pset": "Pset_WindowCommon",
-              "property": "IsExternal",
               "op": "=",
+              "property": "IsEgress",
+              "pset": "Pset_WindowCommon",
               "value": true
             }
           ]
         }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_WindowBaseQuantities",
-          "quantity": "Area",
-          "unit": "m2"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_window_area_m2"
-        }
-      },
-      "parameters": {
-        "min_window_area_m2": 0.93
-      },
-      "severity": "WARNING",
-      "explanation": {
-        "short": "Bedroom windows must have a minimum area of 0.93 m².",
-        "on_fail": "Window {guid} has area of {lhs} m², below the recommended {rhs} m².",
-        "on_pass": "Window {guid} meets the minimum size requirement ({lhs} m² ≥ {rhs} m²)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "International Building Code (IBC)",
-        "section": "1205.2.4",
-        "jurisdiction": "US"
       }
     },
     {
-      "id": "UK_DOOR_WIDTH_ACCESSIBLE",
-      "name": "UK Accessible Door Width",
+      "condition": {
+        "lhs": {
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity": "Height",
+          "source": "qto",
+          "unit": "mm"
+        },
+        "op": ">=",
+        "rhs": {
+          "param": "min_egress_height_mm",
+          "source": "parameter"
+        }
+      },
+      "description": "Emergency escape and rescue openings must provide a minimum net clear opening height of 610 mm (24 inches) in accordance with IRC Section R310.2.2.",
+      "explanation": {
+        "on_fail": "Egress window {guid} has clear opening height {lhs} mm, below the required {rhs} mm (IRC R310.2.2).",
+        "on_pass": "Egress window {guid} meets the minimum clear opening height ({lhs} mm ≥ {rhs} mm, IRC R310.2.2).",
+        "short": "Egress windows must provide a minimum net clear opening height of 610 mm (24 in)."
+      },
+      "id": "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+      "name": "Emergency Escape and Rescue Opening – Minimum Height",
+      "parameters": {
+        "min_egress_height_mm": 610
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.2",
+        "source": "regulation",
+        "title": "Minimum Opening Height"
+      },
       "rule_type": "attribute_comparison",
-      "description": "Accessible doors must be at least 775 mm wide per UK Building Regulations.",
+      "severity": "ERROR",
       "target": {
-        "ifc_class": "IfcDoor",
+        "ifc_class": "IfcWindow",
         "selector": {
           "filters": [
             {
-              "pset": "Pset_DoorCommon",
-              "property": "IsAccessible",
               "op": "=",
+              "property": "IsEgress",
+              "pset": "Pset_WindowCommon",
               "value": true
             }
           ]
         }
-      },
+      }
+    },
+    {
       "condition": {
-        "op": ">=",
         "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_DoorBaseQuantities",
+          "qto_name": "Qto_WindowBaseQuantities",
           "quantity": "Width",
+          "source": "qto",
           "unit": "mm"
         },
+        "op": ">=",
         "rhs": {
-          "source": "parameter",
-          "param": "min_width_mm"
+          "param": "min_egress_width_mm",
+          "source": "parameter"
         }
       },
+      "description": "Emergency escape and rescue openings must provide a minimum net clear opening width of 508 mm (20 inches) in accordance with IRC Section R310.2.3.",
+      "explanation": {
+        "on_fail": "Egress window {guid} has clear opening width {lhs} mm, below the required {rhs} mm (IRC R310.2.3).",
+        "on_pass": "Egress window {guid} meets the minimum clear opening width ({lhs} mm ≥ {rhs} mm, IRC R310.2.3).",
+        "short": "Egress windows must provide a minimum net clear opening width of 508 mm (20 in)."
+      },
+      "id": "IRC_EGRESS_WINDOW_MIN_WIDTH",
+      "name": "Emergency Escape and Rescue Opening – Minimum Width",
+      "parameters": {
+        "min_egress_width_mm": 508
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.3",
+        "source": "regulation",
+        "title": "Minimum Opening Width"
+      },
+      "rule_type": "attribute_comparison",
+      "severity": "ERROR",
+      "target": {
+        "ifc_class": "IfcWindow",
+        "selector": {
+          "filters": [
+            {
+              "op": "=",
+              "property": "IsEgress",
+              "pset": "Pset_WindowCommon",
+              "value": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "condition": {
+        "lhs": {
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity": "ClearWidth",
+          "source": "qto",
+          "unit": "mm"
+        },
+        "op": ">=",
+        "rhs": {
+          "param": "min_width_mm",
+          "source": "parameter"
+        }
+      },
+      "description": "Accessible doors in dwellings must provide a minimum effective clear opening width of 775 mm in accordance with UK Building Regulations Approved Document M.",
+      "explanation": {
+        "on_fail": "Accessible door {guid} has clear width {lhs} mm, below the UK requirement of {rhs} mm (Approved Document M).",
+        "on_pass": "Accessible door {guid} meets the UK minimum clear width requirement ({lhs} mm ≥ {rhs} mm, Approved Document M).",
+        "short": "UK regulations require an effective clear opening width of at least 775 mm for accessible doors in new dwellings."
+      },
+      "id": "UK_DOOR_WIDTH_ACCESSIBLE",
+      "name": "UK Accessible Door Minimum Clear Width",
       "parameters": {
         "min_width_mm": 775
       },
-      "severity": "ERROR",
-      "explanation": {
-        "short": "UK regulations require accessible doors to be at least 775 mm wide.",
-        "on_fail": "Door {guid} has width of {lhs} mm, below the UK requirement of {rhs} mm.",
-        "on_pass": "Door {guid} meets UK accessibility width requirements ({lhs} mm ≥ {rhs} mm)."
-      },
       "provenance": {
+        "jurisdiction": "UK",
+        "jurisdiction_scope": [
+          "UK",
+          "ADM"
+        ],
+        "regulation": "UK Building Regulations – Approved Document M",
+        "section": "Access to and Use of Buildings",
         "source": "regulation",
-        "regulation": "UK Building Regulations",
-        "section": "Technical Guidance M",
-        "jurisdiction": "UK"
-      }
-    },
-    {
-      "id": "EN_CORRIDOR_WIDTH",
-      "name": "EN Corridor Minimum Width",
+        "title": "Minimum Effective Clear Widths of Doors"
+      },
       "rule_type": "attribute_comparison",
-      "description": "Corridors must be at least 900 mm wide per EN standards for accessibility.",
-      "target": {
-        "ifc_class": "IfcSpace",
-        "selector": {
-          "filters": []
-        }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_SpaceBaseQuantities",
-          "quantity": "Width",
-          "unit": "mm"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_width_mm"
-        }
-      },
-      "parameters": {
-        "min_width_mm": 900
-      },
       "severity": "ERROR",
-      "explanation": {
-        "short": "EN standards require corridors to be at least 900 mm wide.",
-        "on_fail": "Space {guid} has width of {lhs} mm, below the EN requirement of {rhs} mm.",
-        "on_pass": "Space {guid} meets EN accessibility width requirements ({lhs} mm ≥ {rhs} mm)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "European Accessibility Standard",
-        "section": "EN 17210:2021",
-        "jurisdiction": "EU"
-      }
-    },
-    {
-      "id": "NBC_DOOR_WIDTH_ACCESSIBLE",
-      "name": "NBC Accessible Door Width",
-      "rule_type": "attribute_comparison",
-      "description": "Accessible doors must be at least 750 mm wide per NBC standards.",
       "target": {
         "ifc_class": "IfcDoor",
         "selector": {
           "filters": [
             {
-              "pset": "Pset_DoorCommon",
-              "property": "IsAccessible",
               "op": "=",
+              "property": "IsAccessible",
+              "pset": "Pset_DoorCommon",
               "value": true
             }
           ]
         }
-      },
+      }
+    },
+    {
       "condition": {
-        "op": ">=",
         "lhs": {
-          "source": "qto",
           "qto_name": "Qto_DoorBaseQuantities",
-          "quantity": "Width",
+          "quantity": "ClearWidth",
+          "source": "qto",
           "unit": "mm"
         },
+        "op": ">=",
         "rhs": {
-          "source": "parameter",
-          "param": "min_width_mm"
+          "param": "min_width_mm",
+          "source": "parameter"
         }
       },
-      "parameters": {
-        "min_width_mm": 750
-      },
-      "severity": "ERROR",
+      "description": "Doorways on accessible paths of travel must provide a minimum clear opening width of 850 mm in accordance with Canadian accessibility standards and National Building Code adaptations.",
       "explanation": {
-        "short": "NBC standards require accessible doors to be at least 750 mm wide.",
-        "on_fail": "Door {guid} has width of {lhs} mm, below the NBC requirement of {rhs} mm.",
-        "on_pass": "Door {guid} meets NBC accessibility width requirements ({lhs} mm ≥ {rhs} mm)."
+        "on_fail": "Accessible door {guid} has clear width {lhs} mm, below the Canadian requirement of {rhs} mm (NBC/CSA B651).",
+        "on_pass": "Accessible door {guid} meets the minimum Canadian clear width requirement ({lhs} mm ≥ {rhs} mm, NBC/CSA B651).",
+        "short": "Canadian accessibility guidance typically requires a minimum door clear opening width of 850 mm on accessible routes."
+      },
+      "id": "CA_DOOR_WIDTH_ACCESSIBLE",
+      "name": "Canadian Accessible Door Minimum Clear Width",
+      "parameters": {
+        "min_width_mm": 850
       },
       "provenance": {
+        "jurisdiction": "CA",
+        "jurisdiction_scope": [
+          "CA",
+          "NBC",
+          "CSA B651"
+        ],
+        "regulation": "National Building Code of Canada + CSA B651",
+        "section": "NBC 3.8 / CSA B651-18 5.2.1",
         "source": "regulation",
-        "regulation": "National Building Code of Canada",
-        "section": "Accessibility Requirements",
-        "jurisdiction": "CA"
+        "title": "Door Clear Opening Width"
+      },
+      "rule_type": "attribute_comparison",
+      "severity": "ERROR",
+      "target": {
+        "ifc_class": "IfcDoor",
+        "selector": {
+          "filters": [
+            {
+              "op": "=",
+              "property": "IsAccessible",
+              "pset": "Pset_DoorCommon",
+              "value": true
+            }
+          ]
+        }
       }
     }
   ],
-  "saved_at": "2025-11-21T17:36:46.315840",
+  "saved_at": "2025-11-24T19:31:47.732932",
   "version": 1
 }

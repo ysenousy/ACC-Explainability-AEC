@@ -112,7 +112,8 @@ function ElementsView({ graph }) {
                       {type === 'doors' && <th>Width (mm)</th>}
                       {type === 'doors' && <th>Height (mm)</th>}
                       {type !== 'spaces' && type !== 'doors' && <th>IFC Type</th>}
-                      {type === 'spaces' || type === 'doors' ? <th>Storey</th> : <th>Properties</th>}
+                      {type === 'doors' && <th>Storey</th>}
+                      {type !== 'spaces' && type !== 'doors' && <th>Properties</th>}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -125,9 +126,10 @@ function ElementsView({ graph }) {
                         {type === 'doors' && <td>{item.width_mm !== null ? item.width_mm.toFixed(0) : '—'}</td>}
                         {type === 'doors' && <td>{item.height_mm !== null ? item.height_mm.toFixed(0) : '—'}</td>}
                         {type !== 'spaces' && type !== 'doors' && <td>{item.ifc_type || '—'}</td>}
-                        {type === 'spaces' || type === 'doors' ? (
+                        {type === 'doors' && (
                           <td>{item.storey_id || item.storey || '—'}</td>
-                        ) : (
+                        )}
+                        {type !== 'spaces' && type !== 'doors' && (
                           <td style={{ fontSize: '0.85rem' }}>
                             {Object.keys(item.attributes || {}).length > 0 ? 'Has data' : 'Basic'}
                           </td>
@@ -178,7 +180,8 @@ function ElementsView({ graph }) {
                     {elementType === 'doors' && <th>Width (mm)</th>}
                     {elementType === 'doors' && <th>Height (mm)</th>}
                     {elementType !== 'spaces' && elementType !== 'doors' && <th>IFC Type</th>}
-                    {elementType === 'spaces' || elementType === 'doors' ? <th>Storey</th> : <th>Properties</th>}
+                    {elementType === 'doors' && <th>Storey</th>}
+                    {elementType !== 'spaces' && elementType !== 'doors' && <th>Properties</th>}
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -191,9 +194,10 @@ function ElementsView({ graph }) {
                       {elementType === 'doors' && <td>{item.width_mm !== null ? item.width_mm.toFixed(0) : '—'}</td>}
                       {elementType === 'doors' && <td>{item.height_mm !== null ? item.height_mm.toFixed(0) : '—'}</td>}
                       {elementType !== 'spaces' && elementType !== 'doors' && <td>{item.ifc_type || '—'}</td>}
-                      {elementType === 'spaces' || elementType === 'doors' ? (
+                      {elementType === 'doors' && (
                         <td>{item.storey_id || item.storey || '—'}</td>
-                      ) : (
+                      )}
+                      {elementType !== 'spaces' && elementType !== 'doors' && (
                         <td style={{ fontSize: '0.85rem' }}>
                           {Object.keys(item.attributes || {}).length > 0 ? 'Has data' : 'Basic'}
                         </td>

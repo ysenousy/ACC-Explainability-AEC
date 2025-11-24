@@ -55,6 +55,18 @@ function ResultsView({ graph }) {
       </div>
 
       <div className="layer-content">
+        <div style={{ 
+          padding: '0.75rem', 
+          backgroundColor: '#eff6ff', 
+          borderLeft: '4px solid #0066cc',
+          borderRadius: '4px',
+          marginBottom: '1rem',
+          fontSize: '0.9rem',
+          color: '#0066cc'
+        }}>
+          <strong>Regulatory Compliance Rules</strong> - Evaluating against ADA, IBC, and other building codes
+        </div>
+        
         <button onClick={handleEvaluate} disabled={loading} className="btn btn-primary" style={{ marginBottom: '1rem' }}>
           {loading ? 'Evaluating...' : 'Evaluate Rules'}
         </button>
@@ -112,14 +124,14 @@ function ResultsView({ graph }) {
                 </thead>
                 <tbody>
                   {filteredResults.slice(0, 50).map((result, idx) => (
-                    <tr key={idx} className={`result-row result-${result.status.toLowerCase()}`}>
+                    <tr key={idx} className={`result-row result-${(result.status || 'unknown').toLowerCase()}`}>
                       <td>{result.rule_id || '—'}</td>
                       <td>{result.element_id || '—'}</td>
                       <td>
-                        <span className={`badge badge-${result.status.toLowerCase()}`}>{result.status}</span>
+                        <span className={`badge badge-${(result.status || 'unknown').toLowerCase()}`}>{result.status || 'Unknown'}</span>
                       </td>
                       <td>
-                        <span className={`badge badge-${result.severity?.toLowerCase()}`}>{result.severity || '—'}</span>
+                        <span className={`badge badge-${(result.severity || 'unknown').toLowerCase()}`}>{result.severity || '—'}</span>
                       </td>
                       <td style={{ fontSize: '0.85rem' }}>{result.message || '—'}</td>
                     </tr>

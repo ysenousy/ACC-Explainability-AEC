@@ -9,6 +9,8 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
   const [messageType, setMessageType] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showImportStatus, setShowImportStatus] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [savedRules, setSavedRules] = useState([]);
 
   // Fetch custom rules on mount
   useEffect(() => {
@@ -22,7 +24,10 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
       const response = await fetch('/api/rules/custom');
       const data = await response.json();
       if (data.success) {
-        setCustomRules(data.custom_rules || []);
+        const rules = data.custom_rules || [];
+        setCustomRules(rules);
+        setSavedRules(rules);
+        setHasChanges(false);
       }
     } catch (err) {
       setMessage('Failed to load custom rules');
@@ -42,9 +47,10 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
       if (data.success) {
         setCustomRules(data.custom_rules);
         setShowAddForm(false);
-        setMessage('Rule added successfully');
+        setHasChanges(true);
+        setMessage('Rule added - Click "Save" to confirm');
         setMessageType('success');
-        setTimeout(() => setMessage(null), 2000);
+        setTimeout(() => setMessage(null), 3000);
       } else {
         setMessage(data.error || 'Failed to add rule');
         setMessageType('error');
@@ -67,10 +73,18 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
       });
       const data = await response.json();
       if (data.success) {
-        setCustomRules(data.custom_rules);
-        setMessage('Rule deleted successfully');
+        // Backend returns "rules" but we handle both "rules" and "custom_rules"
+        const rulesArray = data.custom_rules || data.rules || [];
+        if (Array.isArray(rulesArray)) {
+          setCustomRules(rulesArray);
+        } else {
+          // Fallback: remove from local state
+          setCustomRules(prev => prev.filter(r => r.id !== ruleId));
+        }
+        setHasChanges(true);
+        setMessage('Rule deleted - Click "Save" to confirm');
         setMessageType('success');
-        setTimeout(() => setMessage(null), 2000);
+        setTimeout(() => setMessage(null), 3000);
       } else {
         setMessage(data.error || 'Failed to delete rule');
         setMessageType('error');
@@ -151,6 +165,36 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
     }
   };
 
+  const handleSaveChanges = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/rules/save-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: customRules })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSavedRules(customRules);
+        setHasChanges(false);
+        setMessage('All rules saved successfully');
+        setMessageType('success');
+        if (onRulesUpdated) {
+          onRulesUpdated(customRules);
+        }
+        setTimeout(() => setMessage(null), 2000);
+      } else {
+        setMessage(data.error || 'Failed to save rules');
+        setMessageType('error');
+      }
+    } catch (err) {
+      setMessage(err.message);
+      setMessageType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -166,7 +210,7 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', backgroundColor: 'white' }}>
           {/* Left: Custom Rules */}
           <div>
-            <h3>Custom Rules ({customRules.length})</h3>
+            <h3>Custom Rules ({(customRules && customRules.length) || 0})</h3>
             {message && (
               <div style={{
                 padding: '0.75rem 1rem',
@@ -184,7 +228,7 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '100%', overflowY: 'auto' }}>
-              {customRules.length === 0 ? (
+              {!customRules || customRules.length === 0 ? (
                 <div style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>
                   No custom rules yet
                 </div>
@@ -269,9 +313,32 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
         {/* Footer */}
         <div className="modal-footer">
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {hasChanges && (
+              <button
+                onClick={handleSaveChanges}
+                disabled={loading}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  opacity: loading ? 0.6 : 1
+                }}
+              >
+                <Save size={16} />
+                Save Changes
+              </button>
+            )}
             <button
               onClick={handleExportRules}
-              disabled={loading || customRules.length === 0}
+              disabled={loading || !customRules || customRules.length === 0}
               style={{
                 padding: '0.5rem 1rem',
                 backgroundColor: '#8b5cf6',
@@ -284,7 +351,7 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                opacity: loading || customRules.length === 0 ? 0.6 : 1
+                opacity: loading || !customRules || customRules.length === 0 ? 0.6 : 1
               }}
             >
               <Download size={16} />

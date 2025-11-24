@@ -22,6 +22,7 @@ class SpaceElement:
         data: Dict[str, Any] = {
             "id": self.guid,
             "ifc_guid": self.guid,
+            "ifc_class": "IfcSpace",  # Add explicit IFC class for compliance checking
             "name": self.name,
             "long_name": self.long_name,
             "storey": self.storey_id,
@@ -68,6 +69,7 @@ class DoorElement:
         data: Dict[str, Any] = {
             "id": self.guid,
             "ifc_guid": self.guid,
+            "ifc_class": "IfcDoor",  # Add explicit IFC class for compliance checking
             "name": self.name,
             "width_mm": self.width_mm,
             "height_mm": self.height_mm,
@@ -95,6 +97,7 @@ class GenericElement:
         data: Dict[str, Any] = {
             "id": self.guid,
             "ifc_guid": self.guid,
+            "ifc_class": self.ifc_type,  # Use ifc_type as ifc_class for consistency
             "ifc_type": self.ifc_type,
             "name": self.name,
             "provenance": self.provenance or f"IFC:{self.ifc_type}",

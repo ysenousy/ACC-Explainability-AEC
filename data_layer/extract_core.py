@@ -94,6 +94,9 @@ def _extract_storey_index(model) -> Dict[str, Tuple[Optional[str], Optional[str]
         structure = getattr(rel, "RelatingStructure", None)
         if structure is None:
             continue
+        # Only consider IfcBuildingStorey, not IfcBuilding or IfcSite
+        if not getattr(structure, "is_a", lambda _: False)("IfcBuildingStorey"):
+            continue
         storey_id = getattr(structure, "GlobalId", None)
         storey_name = getattr(structure, "LongName", None) or getattr(structure, "Name", None)
         for elem in getattr(rel, "RelatedElements", []) or []:
@@ -101,6 +104,47 @@ def _extract_storey_index(model) -> Dict[str, Tuple[Optional[str], Optional[str]
             if elem_id:
                 storey_index[elem_id] = (storey_id, storey_name)
     return storey_index
+
+
+
+def _find_storey_from_hierarchy(element, model) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Find storey information by traversing the spatial hierarchy.
+    
+    IFC spaces may not be directly contained in storeys. This function
+    searches through various relationships to find the parent storey.
+    """
+    try:
+        # Check if this element is directly contained in a storey
+        related_to = getattr(element, "ContainedInStructure", None)
+        if related_to:
+            for rel in related_to:
+                structure = getattr(rel, "RelatingStructure", None)
+                if structure and getattr(structure, "is_a", lambda _: False)("IfcBuildingStorey"):
+                    storey_id = getattr(structure, "GlobalId", None)
+                    storey_name = getattr(structure, "LongName", None) or getattr(structure, "Name", None)
+                    return (storey_id, storey_name)
+        
+        # If not directly contained, check via IfcZone or other spatial containers
+        zones = getattr(element, "GroupedBy", None)
+        if zones:
+            for rel in zones:
+                zone = getattr(rel, "RelatingGroup", None)
+                if zone:
+                    zone_name = getattr(zone, "Name", None)
+                    # Try to find storey via zone's containment
+                    zone_contained = getattr(zone, "ContainedInStructure", None)
+                    if zone_contained:
+                        for zrel in zone_contained:
+                            structure = getattr(zrel, "RelatingStructure", None)
+                            if structure and getattr(structure, "is_a", lambda _: False)("IfcBuildingStorey"):
+                                storey_id = getattr(structure, "GlobalId", None)
+                                storey_name = getattr(structure, "LongName", None) or getattr(structure, "Name", None)
+                                return (storey_id, storey_name)
+    except Exception as exc:
+        logger.debug("Failed to traverse spatial hierarchy: %s", exc)
+    
+    return (None, None)
 
 
 def _build_space_lookup(spaces: Iterable[SpaceElement]) -> Dict[str, SpaceElement]:
@@ -169,6 +213,10 @@ def extract_spaces(model) -> List[SpaceElement]:
             area_m2 = _coerce_float(qto_space.get("NetFloorArea") or qto_space.get("GrossFloorArea"))
 
         storey_id, storey_name = storey_index.get(guid, (None, None))
+        
+        # If storey not found in direct containment, search through hierarchy
+        if not storey_id and not storey_name:
+            storey_id, storey_name = _find_storey_from_hierarchy(space, model)
 
         element = SpaceElement(
             guid=guid,
@@ -225,6 +273,23 @@ def extract_doors(model, space_lookup: Optional[Mapping[str, SpaceElement]] = No
 
         # Get storey information from door's spatial hierarchy
         storey_id, storey_name = storey_index.get(guid, (None, None))
+        
+        # If storey not found in direct containment, search through hierarchy
+        if not storey_id and not storey_name:
+            storey_id, storey_name = _find_storey_from_hierarchy(door, model)
+
+        # Populate BaseQuantities with extracted dimensions for compatibility with compliance rules
+        # This enriches the property_sets to ensure compliance engine can find values consistently
+        if not psets:
+            psets = {}
+        if "BaseQuantities" not in psets:
+            psets["BaseQuantities"] = {}
+        
+        # Store width and height in meters (IFC standard) alongside existing mm values
+        if width_mm is not None:
+            psets["BaseQuantities"]["Width"] = width_mm / 1000.0  # Convert mm to meters
+        if height_mm is not None:
+            psets["BaseQuantities"]["Height"] = height_mm / 1000.0  # Convert mm to meters
 
         element = DoorElement(
             guid=guid,

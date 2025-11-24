@@ -7,11 +7,21 @@ function RuleLayerView({ graph }) {
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showManagement, setShowManagement] = useState(false);
   const [confirmedRules, setConfirmedRules] = useState([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleConfirmRules = (rules) => {
     setConfirmedRules(rules);
     setShowCatalogue(false);
     // Don't close management panel here - let user control it
+  };
+
+  const handleRulesUpdated = (updatedRules) => {
+    // When rules are saved, refresh the confirmed rules display
+    if (updatedRules && Array.isArray(updatedRules)) {
+      setConfirmedRules(updatedRules);
+    }
+    // Trigger a refresh by incrementing the refresh counter
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const getSeverityIcon = (severity) => {
@@ -247,7 +257,7 @@ function RuleLayerView({ graph }) {
         isOpen={showManagement}
         onClose={() => setShowManagement(false)}
         extractedRules={[]}
-        onRulesUpdated={() => {}}
+        onRulesUpdated={handleRulesUpdated}
       />
     </>
   );
