@@ -145,6 +145,28 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
       if (data.success) {
         setShowImportStatus(data.status);
         fetchCustomRules();
+        
+        // Load the rules into the reasoning engine (lazy-loading)
+        // This triggers the backend to load rules on-demand, not at startup
+        try {
+          const rulesFile = file.name;
+          const loadResponse = await fetch('/api/rules/load-regulations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              file_path: `rules_config/${rulesFile}`,
+              rule_type: 'custom'
+            })
+          });
+          const loadData = await loadResponse.json();
+          if (loadData.success) {
+            console.log(`[REASONING LAYER] Loaded ${loadData.rules_loaded} rules via frontend`);
+          }
+        } catch (loadErr) {
+          console.warn('Could not load rules into reasoning engine:', loadErr.message);
+          // Continue even if reasoning engine loading fails
+        }
+        
         setMessage(`Import completed: ${data.status.added} added, ${data.status.skipped} skipped`);
         setMessageType('success');
         setTimeout(() => {

@@ -1,10 +1,31 @@
-import React, { useState } from 'react';
-import { BarChart2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BarChart2, RefreshCw, AlertTriangle } from 'lucide-react';
 
 function RulesAnalysisPanel({ ifcPath }) {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [rulesLoaded, setRulesLoaded] = useState(null); // null = checking, false = not loaded, true = loaded
+  const [checkingRules, setCheckingRules] = useState(true); // Start as true (checking)
+
+  // Check if rules are loaded on component mount
+  useEffect(() => {
+    checkRulesStatus();
+  }, []);
+
+  const checkRulesStatus = async () => {
+    setCheckingRules(true);
+    try {
+      const response = await fetch('/api/rules/check-status');
+      const data = await response.json();
+      setRulesLoaded(data.rules_loaded || false);
+    } catch (err) {
+      console.error('Error checking rules status:', err);
+      setRulesLoaded(false);
+    } finally {
+      setCheckingRules(false);
+    }
+  };
 
   const fetchAnalysis = async () => {
     setLoading(true);
@@ -35,7 +56,7 @@ function RulesAnalysisPanel({ ifcPath }) {
         <h2 style={{ margin: 0 }}>Rules Analysis</h2>
         <button
           onClick={fetchAnalysis}
-          disabled={loading || !ifcPath}
+          disabled={loading || !ifcPath || rulesLoaded === false || rulesLoaded === null || checkingRules}
           style={{
             marginLeft: 'auto',
             padding: '0.5rem 1rem',
@@ -43,25 +64,54 @@ function RulesAnalysisPanel({ ifcPath }) {
             color: 'white',
             border: 'none',
             borderRadius: '0.375rem',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: (rulesLoaded === false || rulesLoaded === null || checkingRules) ? 'not-allowed' : loading ? 'not-allowed' : 'pointer',
             fontWeight: '500',
             fontSize: '0.875rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            opacity: loading ? 0.6 : 1
+            opacity: (loading || rulesLoaded === false || rulesLoaded === null || checkingRules) ? 0.6 : 1
           }}
         >
           <RefreshCw size={16} />
-          {loading ? 'Analyzing...' : 'Analyze Rules'}
+          {checkingRules ? 'Checking rules...' : loading ? 'Analyzing...' : 'Analyze Rules'}
         </button>
       </div>
+
+      {/* Show warning if rules not loaded or still checking */}
+      {(checkingRules || rulesLoaded === false || rulesLoaded === null) && (
+        <div style={{
+          padding: '1rem',
+          textAlign: 'center',
+          backgroundColor: '#fef3c7',
+          borderRadius: '0.5rem',
+          border: '2px solid #f59e0b',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1rem',
+          marginBottom: '1rem'
+        }}>
+          <AlertTriangle size={48} style={{ color: '#f59e0b' }} />
+          <div>
+            <h3 style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '1.1rem' }}>
+              Rules Import Required
+            </h3>
+            <p style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '0.95rem' }}>
+              You must import regulatory rules before analyzing rules.
+            </p>
+            <p style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '0.85rem' }}>
+              Go to the Rule Management Panel and import rules to continue.
+            </p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div style={{ color: '#dc2626', marginBottom: '1rem' }}>Error: {error}</div>
       )}
 
-      {analysis && (
+      {analysis && rulesLoaded && (
         <div style={{ background: '#f9fafb', borderRadius: 8, padding: 24, boxShadow: '0 1px 4px #0001' }}>
           <h3>Element Types Present</h3>
           <ul style={{ marginBottom: 16 }}>

@@ -59,12 +59,11 @@ def set_utf8_encoding(response):
 # Services
 data_svc = DataLayerService()
 
-# Initialize reasoning engine with both regulatory and custom rules
-rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
-custom_rules_file = Path(__file__).parent / 'custom_rules.json'
+# Initialize reasoning engine WITHOUT loading rules at startup
+# Rules will be loaded on-demand when user imports/selects them
 reasoning_engine = ReasoningEngine(
-    str(rules_file) if rules_file.exists() else None,
-    str(custom_rules_file) if custom_rules_file.exists() else None
+    rules_file=None,  # Not loaded at startup
+    custom_rules_file=None  # Not loaded at startup
 )
 
 # Track if rules have been imported in this session
@@ -2317,19 +2316,44 @@ def analyze_pass():
 @app.route("/api/reasoning/enrich-compliance", methods=["POST"])
 def enrich_compliance_with_reasoning():
     """
-    Enrich compliance check results with reasoning explanations.
+    REASONING LAYER: Enrich cached compliance results with explanations.
+    
+    ARCHITECTURE DEPENDENCY CHAIN:
+    ==============================
+    1. Rule Layer (Foundation)
+       └─ Provides rule definitions and catalogue
+    
+    2. Compliance Check Layer (Calculation - CACHED)
+       └─ /api/compliance/check executes rules, caches results
+       └─ Results include: pass/fail, metrics, explanations (WHY)
+    
+    3. Reasoning Layer (Explanation - THIS ENDPOINT)
+       └─ Reads cached compliance results (NO recalculation)
+       └─ Adds detailed reasoning and solutions
+       └─ Enriches results with "why" information
+    
+    KEY BEHAVIOR:
+    - This endpoint does NOT re-execute compliance checks
+    - This endpoint does NOT modify rules or pass/fail status
+    - This endpoint ONLY adds explanations to cached results
+    - Uses results from /api/compliance/check as input
     
     Request:
         {
-            "compliance_results": dict (from /api/compliance/check)
+            "compliance_results": dict (from /api/compliance/check endpoint)
         }
+    
+    The input compliance_results must contain:
+    - results: List of individual rule check results (ALREADY CALCULATED)
+    - summary: {total, passed, failed, unknown}
+    - Each result includes: element_guid, rule_id, passed (boolean), explanation
     
     Response:
         {
             "success": bool,
-            "enriched_results": {...},
-            "reasoning_added": bool,
-            "element_explanations_count": int
+            "enriched_results": {...},  // Original results + element_reasoning
+            "reasoning_added": bool,     // Whether reasoning was added
+            "element_explanations_count": int  // Number of elements explained
         }
     """
     try:
@@ -2339,6 +2363,7 @@ def enrich_compliance_with_reasoning():
         if not compliance_results:
             return jsonify({"success": False, "error": "compliance_results required"}), 400
         
+        # Call reasoning layer to enrich (read-only operation on cached results)
         enriched = reasoning_engine.explain_compliance_check(compliance_results)
         
         return jsonify({
@@ -2380,6 +2405,77 @@ def validate_reasoning_layer():
     except Exception as e:
         logger.error(f"Error validating reasoning layer: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/rules/load-regulations", methods=["POST"])
+def load_regulations_endpoint():
+    """Load regulatory rules on-demand into the reasoning engine.
+    
+    This endpoint allows the frontend to trigger lazy-loading of rules.
+    Rules are NOT loaded at server startup - they are loaded when the user
+    imports/selects them via this endpoint.
+    
+    Request JSON:
+        {
+            "file_path": str - path to rules JSON file,
+            "rule_type": str - 'regulatory' or 'custom' (default: 'regulatory')
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "rule_type": str,
+            "rules_loaded": int - number of rules loaded,
+            "sample_rules": list - first 3 rule IDs as examples,
+            "error": str or null
+        }
+    
+    Architecture Context:
+    - Rule Layer: Loads rules (now lazy-loaded here)
+    - Compliance Layer: Executes compliance checks (cached)
+    - Reasoning Layer: Reads cached results to explain why rules passed/failed
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "Request body required with file_path"
+            }), 400
+        
+        file_path = data.get("file_path")
+        rule_type = data.get("rule_type", "regulatory")
+        
+        if not file_path:
+            return jsonify({
+                "success": False,
+                "error": "file_path is required"
+            }), 400
+        
+        if rule_type not in ["regulatory", "custom"]:
+            return jsonify({
+                "success": False,
+                "error": "rule_type must be 'regulatory' or 'custom'"
+            }), 400
+        
+        # Call the reasoning engine to load rules on-demand
+        result = reasoning_engine.load_rules_from_file(file_path, rule_type=rule_type)
+        
+        if result.get("success"):
+            # Track that rules were imported in this session
+            global rules_imported_in_session
+            rules_imported_in_session = True
+            logger.info(f"[APP] Loaded {rule_type} rules: {result['rules_loaded']} rules from {file_path}")
+        
+        return jsonify(result), (200 if result.get("success") else 400)
+    
+    except Exception as e:
+        logger.error(f"Error loading regulations: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 
 @app.errorhandler(500)

@@ -461,11 +461,168 @@
           "CSA B651"
         ]
       }
+    },
+
+    {
+      "id": "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+      "name": "Fire Partition Wall – Minimum Fire-Resistance Rating",
+      "rule_type": "attribute_comparison",
+      "description": "Interior fire partitions such as corridor walls and dwelling separations are generally required to have a minimum 1-hour fire-resistance rating in accordance with IBC Section 708.3, unless specific exceptions apply.",
+      "target": {
+        "ifc_class": "IfcWall",
+        "selector": {
+          "filters": [
+            {
+              "pset": "Pset_WallCommon",
+              "property": "IsFirePartition",
+              "op": "=",
+              "value": true
+            }
+          ]
+        }
+      },
+      "condition": {
+        "op": ">=",
+        "lhs": {
+          "source": "pset",
+          "pset": "Pset_WallCommon",
+          "property": "FireRating",
+          "unit": "h"
+        },
+        "rhs": {
+          "source": "parameter",
+          "param": "min_fire_partition_rating_h"
+        }
+      },
+      "parameters": {
+        "min_fire_partition_rating_h": 1.0
+      },
+      "severity": "ERROR",
+      "explanation": {
+        "short": "Walls designated as fire partitions should provide at least a 1-hour fire-resistance rating.",
+        "on_fail": "Wall {guid} is marked as a fire partition but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 708.3).",
+        "on_pass": "Wall {guid} meets the minimum fire partition rating ({lhs} h \u2265 {rhs} h, IBC 708.3)."
+      },
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "708.3",
+        "title": "Fire-resistance rating – Fire Partitions",
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ]
+      }
+    },
+    {
+      "id": "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+      "name": "Horizontal Assembly Between Dwellings – Minimum Fire-Resistance Rating",
+      "rule_type": "attribute_comparison",
+      "description": "Horizontal assemblies (floors/ceilings) separating dwelling or sleeping units are required to be not less than 1/2-hour fire-resistance-rated construction in accordance with IBC Section 711.2.4.3.",
+      "target": {
+        "ifc_class": "IfcSlab",
+        "selector": {
+          "filters": [
+            {
+              "pset": "Pset_SlabCommon",
+              "property": "SeparatesDwellingUnits",
+              "op": "=",
+              "value": true
+            }
+          ]
+        }
+      },
+      "condition": {
+        "op": ">=",
+        "lhs": {
+          "source": "pset",
+          "pset": "Pset_SlabCommon",
+          "property": "FireRating",
+          "unit": "h"
+        },
+        "rhs": {
+          "source": "parameter",
+          "param": "min_horizontal_assembly_rating_h"
+        }
+      },
+      "parameters": {
+        "min_horizontal_assembly_rating_h": 0.5
+      },
+      "severity": "ERROR",
+      "explanation": {
+        "short": "Floor/ceiling assemblies separating dwelling units must be at least 1/2-hour fire-resistance rated.",
+        "on_fail": "Slab {guid} separates dwelling/sleeping units but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 711.2.4.3).",
+        "on_pass": "Slab {guid} meets the minimum horizontal assembly rating ({lhs} h \u2265 {rhs} h, IBC 711.2.4.3)."
+      },
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "711.2.4.3",
+        "title": "Dwelling and Sleeping Unit Separations – Horizontal Assemblies",
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ]
+      }
+    },
+    {
+      "id": "IBC_COLUMN_MIN_FIRE_RATING",
+      "name": "Fire-Protected Columns – Minimum Fire-Resistance Rating",
+      "rule_type": "attribute_comparison",
+      "description": "Where columns are required to be fire-resistance rated, they must be provided with individual encasement protection for their full height with materials having the required fire-resistance rating, not less than that of the assemblies they support, in accordance with IBC Sections 704.1 and 704.2.",
+      "target": {
+        "ifc_class": "IfcColumn",
+        "selector": {
+          "filters": [
+            {
+              "pset": "Pset_ColumnCommon",
+              "property": "RequiresFireProtection",
+              "op": "=",
+              "value": true
+            }
+          ]
+        }
+      },
+      "condition": {
+        "op": ">=",
+        "lhs": {
+          "source": "pset",
+          "pset": "Pset_ColumnCommon",
+          "property": "FireRating",
+          "unit": "h"
+        },
+        "rhs": {
+          "source": "parameter",
+          "param": "min_column_rating_h"
+        }
+      },
+      "parameters": {
+        "min_column_rating_h": 1.0
+      },
+      "severity": "ERROR",
+      "explanation": {
+        "short": "Columns that are required to be fire-resistance rated must achieve at least the specified minimum rating.",
+        "on_fail": "Column {guid} is marked as requiring fire protection but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 704.1/704.2).",
+        "on_pass": "Column {guid} meets the minimum fire-resistance requirement ({lhs} h \u2265 {rhs} h, IBC 704.1/704.2)."
+      },
+      "provenance": {
+        "source": "regulation",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "704.1 / 704.2",
+        "title": "Fire-Resistance Rating of Structural Members / Column Protection",
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ]
+      }
     }
   ],
   "metadata": {
-    "version": "3.0",
-    "description": "Compliance rules with explicit IFC class targeting, QTO sourcing, and parameterized explanations, aligned with selected ADA, IBC, IRC, UK and Canadian accessibility and habitability provisions.",
+    "version": "3.1",
+    "description": "Compliance rules with explicit IFC class targeting, QTO and Pset sourcing, and parameterized explanations, aligned with selected ADA, IBC, IRC, UK and Canadian accessibility, habitability and fire-resistance provisions.",
     "regulation_set": "2010 ADA Standards + IBC 2018 + IRC 2021 + UK Approved Document M + NBC/CSA B651",
     "jurisdictions": [
       "US",
@@ -476,15 +633,16 @@
       "Accessibility",
       "Means of Egress",
       "Room Dimensions",
+      "Fire Resistance and Separation",
       "International Standards"
     ],
     "rule_types": [
       "attribute_comparison"
     ],
     "enhancements": [
-      "Explicit IFC class targeting (IfcDoor, IfcSpace, IfcWindow, IfcStairFlight)",
-      "QTO source differentiation",
-      "Filtered selectors via Pset properties (IsAccessible, UsageType, IsEgress)",
+      "Explicit IFC class targeting (IfcDoor, IfcSpace, IfcWindow, IfcStairFlight, IfcWall, IfcSlab, IfcColumn)",
+      "QTO and Pset source differentiation",
+      "Filtered selectors via Pset properties (IsAccessible, UsageType, IsEgress, IsFirePartition, SeparatesDwellingUnits, RequiresFireProtection)",
       "Parameterized explanation messages with template variables",
       "Explicit unit specifications and jurisdiction scopes"
     ]

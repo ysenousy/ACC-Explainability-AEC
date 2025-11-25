@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 
 function ResultsView({ graph }) {
   // All hooks at the top
@@ -8,6 +8,32 @@ function ResultsView({ graph }) {
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
+  const [rulesLoaded, setRulesLoaded] = useState(null); // null = checking, false = not loaded, true = loaded
+  const [checkingRules, setCheckingRules] = useState(true); // Start as true (checking)
+
+  // Check if rules are loaded on component mount
+  useEffect(() => {
+    checkRulesStatus();
+    
+    // Cleanup on unmount - clear cached results so they refresh next time
+    return () => {
+      setResults(null);
+    };
+  }, []);
+
+  const checkRulesStatus = async () => {
+    setCheckingRules(true);
+    try {
+      const response = await fetch('/api/rules/check-status');
+      const data = await response.json();
+      setRulesLoaded(data.rules_loaded || false);
+    } catch (err) {
+      console.error('Error checking rules status:', err);
+      setRulesLoaded(false);
+    } finally {
+      setCheckingRules(false);
+    }
+  };
 
   // Early return for empty graph
   if (!graph) {
@@ -66,9 +92,47 @@ function ResultsView({ graph }) {
         }}>
           <strong>Regulatory Compliance Rules</strong> - Evaluating against ADA, IBC, and other building codes
         </div>
+
+        {/* Show warning if rules not loaded or still checking */}
+        {(checkingRules || rulesLoaded === false || rulesLoaded === null) && (
+          <div style={{
+            padding: '1rem',
+            textAlign: 'center',
+            backgroundColor: '#fef3c7',
+            borderRadius: '0.5rem',
+            border: '2px solid #f59e0b',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <AlertTriangle size={48} style={{ color: '#f59e0b' }} />
+            <div>
+              <h3 style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '1.1rem' }}>
+                Rules Import Required
+              </h3>
+              <p style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '0.95rem' }}>
+                You must import regulatory rules before evaluating compliance.
+              </p>
+              <p style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '0.85rem' }}>
+                Go to the Rule Management Panel and import rules to continue.
+              </p>
+            </div>
+          </div>
+        )}
         
-        <button onClick={handleEvaluate} disabled={loading} className="btn btn-primary" style={{ marginBottom: '1rem' }}>
-          {loading ? 'Evaluating...' : 'Evaluate Rules'}
+        <button 
+          onClick={handleEvaluate} 
+          disabled={loading || rulesLoaded === false || rulesLoaded === null || checkingRules} 
+          className="btn btn-primary" 
+          style={{ 
+            marginBottom: '1rem',
+            opacity: (rulesLoaded === false || rulesLoaded === null || checkingRules) ? 0.6 : 1,
+            cursor: (rulesLoaded === false || rulesLoaded === null || checkingRules) ? 'not-allowed' : 'pointer'
+          }} 
+        >
+          {checkingRules ? 'Checking rules...' : loading ? 'Evaluating...' : 'Evaluate Rules'}
         </button>
 
         {error && (
@@ -77,7 +141,7 @@ function ResultsView({ graph }) {
           </div>
         )}
 
-        {results && (
+        {results && rulesLoaded && (
           <>
             <div className="results-summary">
               <div className="summary-card">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, ChevronDown, ChevronUp, AlertCircle, CheckCircle, Lightbulb, Wrench, Book } from 'lucide-react';
+import { Zap, ChevronDown, ChevronUp, AlertCircle, CheckCircle, Lightbulb, Wrench, Book, AlertTriangle } from 'lucide-react';
 import reasoningService from '../services/reasoningService';
 
 function ReasoningView({ graph }) {
@@ -23,18 +23,31 @@ function ReasoningView({ graph }) {
 
   const validateReasoningLayer = async () => {
     try {
+      console.log('[ReasoningView] Validating reasoning layer...');
       const data = await reasoningService.validateReasoningLayer();
+      console.log('[ReasoningView] Validation response:', data);
+      
       if (data.success) {
-        setRulesLoaded(data.validation.rules_loaded);
+        const rulesAreLoaded = data.validation.rules_loaded;
+        console.log('[ReasoningView] Rules loaded status:', rulesAreLoaded);
+        
+        setRulesLoaded(rulesAreLoaded);
         setStandards(data.validation.standards || {});
-        if (data.validation.rules_loaded) {
+        
+        if (rulesAreLoaded) {
+          console.log('[ReasoningView] Loading all rules from catalogue...');
           await loadAllRulesFromCatalogue();
           await loadReasoningData();
+        } else {
+          console.log('[ReasoningView] No rules loaded in reasoning engine yet');
         }
+      } else {
+        console.error('[ReasoningView] Validation failed:', data);
+        setError('Validation failed: ' + (data.error || 'Unknown error'));
       }
     } catch (err) {
-      setError('Failed to validate reasoning layer');
-      console.error('Validation error:', err);
+      console.error('[ReasoningView] Validation error:', err);
+      setError('Failed to validate reasoning layer: ' + err.message);
     }
   };
 
@@ -139,9 +152,10 @@ function ReasoningView({ graph }) {
 
       <div className="layer-content">
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '1.5rem' }}>
-          <button
-            onClick={() => setActiveTab('overview')}
+        <div style={{ display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '1.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex' }}>
+            <button
+              onClick={() => setActiveTab('overview')}
             style={{
               padding: '0.75rem 1rem',
               backgroundColor: activeTab === 'overview' ? '#f0f7ff' : 'transparent',
@@ -196,7 +210,53 @@ function ReasoningView({ graph }) {
             <CheckCircle size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
             Passes & Benefits
           </button>
+          </div>
+          <button
+            onClick={validateReasoningLayer}
+            style={{
+              padding: '0.75rem 1rem',
+              backgroundColor: '#f0f7ff',
+              border: '1px solid #0066cc',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              marginLeft: 'auto',
+              marginTop: '-2px'
+            }}
+            title="Refresh to check if rules have been imported"
+          >
+            Refresh Rules Status
+          </button>
         </div>
+
+        {/* Show warning if rules not loaded */}
+        {rulesLoaded === false && (
+          <div style={{
+            padding: '1rem',
+            textAlign: 'center',
+            backgroundColor: '#fef3c7',
+            borderRadius: '0.5rem',
+            border: '2px solid #f59e0b',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <AlertTriangle size={48} style={{ color: '#f59e0b' }} />
+            <div>
+              <h3 style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '1.1rem' }}>
+                Rules Import Required
+              </h3>
+              <p style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '0.95rem' }}>
+                You must import regulatory rules before accessing the reasoning layer.
+              </p>
+              <p style={{ margin: '0.5rem 0', color: '#92400e', fontSize: '0.85rem' }}>
+                Go to the Rule Management Panel and import rules to continue.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && (
@@ -216,19 +276,6 @@ function ReasoningView({ graph }) {
           }}>
             <AlertCircle size={18} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
             {error}
-          </div>
-        )}
-
-        {/* Rules Not Loaded */}
-        {rulesLoaded === false && !loading && (
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#ffe',
-            border: '1px solid #fd8',
-            borderRadius: '4px'
-          }}>
-            <AlertCircle size={18} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-            Reasoning layer requires regulatory rules to be loaded. Please import rules first.
           </div>
         )}
 

@@ -3,6 +3,55 @@ Reasoning Engine
 
 Orchestrates the reasoning layer components (justifier, analyzer, solution generator)
 to provide complete explanations for compliance checking.
+
+ARCHITECTURE OVERVIEW:
+======================
+
+The ACC-Explainability system follows a three-layer architecture:
+
+1. RULE LAYER (Foundation)
+   - Loads rules from catalogue (regulatory + custom)
+   - Validates rule syntax and structure
+   - Stores rules in memory for reference
+   - Does NOT execute compliance checks
+
+2. COMPLIANCE CHECK LAYER (Calculation - CACHED)
+   - Executes rules against IFC elements
+   - Calculates pass/fail status for each rule
+   - Collects metrics (passed, failed, unknown)
+   - STORES RESULTS (no recalculation)
+   - Location: backend/unified_compliance_engine.py
+
+3. REASONING LAYER (Explanation - THIS MODULE)
+   - READS cached compliance results (NO recalculation)
+   - Explains WHY each rule passed
+   - Explains WHY each rule failed
+   - Provides detailed justifications
+   - Generates solutions for failures
+   - Enriches results with reasoning
+
+DEPENDENCY CHAIN:
+=================
+Rule Layer (Foundation)
+    ↓ (provides rules)
+Compliance Check Layer (uses rules, CACHES results)
+    ↓ (provides cached results)
+Reasoning Layer (uses cached results, adds explanations)
+
+KEY PRINCIPLE:
+The Reasoning Layer is a read-only layer that:
+✗ Does NOT re-execute compliance checks
+✗ Does NOT modify rule definitions
+✗ Does NOT recalculate pass/fail status
+✓ Only adds explanations and justifications
+✓ Only reads from cached compliance results
+✓ Only provides "why" information
+
+When a compliance check is performed:
+1. Rule Layer provides the rules
+2. Compliance Check Layer executes and caches results
+3. Reasoning Layer reads cached results and adds reasoning
+4. Frontend receives enriched data with full context
 """
 
 from typing import Dict, List, Optional, Any
@@ -22,39 +71,101 @@ logger = logging.getLogger(__name__)
 
 
 class ReasoningEngine:
-    """Orchestrates reasoning components to provide explainability."""
+    """
+    Reasoning Layer Engine - Provides Explainability WITHOUT Recalculation
+    
+    CRITICAL: This engine reads from cached compliance results only.
+    It does NOT recalculate compliance checks or modify rule definitions.
+    
+    Dependencies:
+    - Requires Rule Layer to provide rules (loaded in __init__)
+    - Requires Compliance Check Layer to execute checks and cache results
+    - Reads from cached results in explain_compliance_check()
+    
+    Responsibilities:
+    1. Load all rules (regulatory + custom) for reference
+    2. Provide rule justifications (WHY rules exist)
+    3. Analyze cached compliance failures (WHY elements failed)
+    4. Generate solutions (HOW to fix failures)
+    5. Enrich compliance results with explanations
+    """
     
     def __init__(self, rules_file: Optional[str] = None, custom_rules_file: Optional[str] = None):
         """
-        Initialize reasoning engine with regulatory and custom rules.
+        Initialize reasoning engine WITHOUT loading rules at startup.
+        
+        Rules are loaded on-demand when user imports/selects them via load_rules_from_file().
+        This allows flexible rule management with multiple JSON files and regulations.
         
         Args:
-            rules_file: Path to enhanced-regulation-rules.json (regulatory rules)
-            custom_rules_file: Path to custom_rules.json (generated/imported rules)
+            rules_file: (Deprecated - ignored) Path to regulatory rules JSON
+            custom_rules_file: (Deprecated - ignored) Path to custom rules JSON
+            
+        NOTE: Use load_rules_from_file() to load rules when user requests them.
         """
-        self.justifier = RuleJustifier(rules_file)
+        self.justifier = RuleJustifier(None)  # Initialize without rules
         self.analyzer = ElementFailureAnalyzer()
         self.generator = SolutionGenerator()
         
-        # Load all rules (regulatory + custom)
+        # Initialize empty rule storage
         self.rules = {}
         self.regulatory_rules = {}
         self.custom_rules = {}
+        self.loaded_files = {}  # Track which files have been loaded
         
-        # Load regulatory rules
-        if rules_file and Path(rules_file).exists():
-            self._load_rules_from_file(rules_file, rule_type='regulatory')
-        
-        # Load custom/generated rules
-        if custom_rules_file and Path(custom_rules_file).exists():
-            self._load_rules_from_file(custom_rules_file, rule_type='custom')
-        
-        logger.info(f"ReasoningEngine loaded {len(self.rules)} total rules")
-        logger.info(f"  Regulatory: {len(self.regulatory_rules)}")
-        logger.info(f"  Custom: {len(self.custom_rules)}")
+        logger.info("[REASONING LAYER] Initialized without rules - waiting for user to import/select rules")
     
-    def _load_rules_from_file(self, rules_file: str, rule_type: str = 'regulatory'):
-        """Load rules from a file and categorize them."""
+    def load_rules_from_file(self, rules_file: str, rule_type: str = 'regulatory') -> Dict[str, Any]:
+        """
+        Load rules on-demand when user imports or selects them.
+        
+        This is called when:
+        - User imports a regulation file
+        - User selects a regulation to use
+        - Frontend requests to load specific rules
+        
+        Args:
+            rules_file: Path to rules JSON file
+            rule_type: 'regulatory' or 'custom'
+            
+        Returns:
+            Dict with loading status and loaded rules count
+        """
+        try:
+            result = self._load_rules_from_file(rules_file, rule_type=rule_type)
+            
+            # Track loaded files
+            self.loaded_files[rule_type] = {
+                'path': rules_file,
+                'count': result['count'],
+                'samples': result['samples']
+            }
+            
+            logger.info(f"[REASONING LAYER] User loaded {rule_type} rules from: {rules_file}")
+            return {
+                'success': True,
+                'rule_type': rule_type,
+                'rules_loaded': result['count'],
+                'sample_rules': result['samples']
+            }
+        except Exception as e:
+            logger.error(f"[REASONING LAYER] Failed to load {rule_type} rules from {rules_file}: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _load_rules_from_file(self, rules_file: str, rule_type: str = 'regulatory') -> Dict[str, Any]:
+        """
+        Internal method to load rules from a file.
+        
+        Args:
+            rules_file: Path to rules JSON file
+            rule_type: 'regulatory' or 'custom'
+            
+        Returns:
+            Dict with count and sample rules
+        """
         try:
             with open(rules_file, 'r', encoding='utf-8') as f:
                 rules_data = json.load(f)
@@ -92,12 +203,19 @@ class ReasoningEngine:
                     elif rule_type == 'custom':
                         self.custom_rules[rule_id] = rule
             
-            logger.info(f"Loaded {len(rules_list)} {rule_type} rules from {rules_file}")
-            if rules_list:
-                logger.info(f"Sample {rule_type} rules: {[r.get('id') for r in rules_list[:3]]}")
+            samples = [r.get('id') for r in rules_list[:3]]
+            logger.info(f"[REASONING LAYER] Loaded {len(rules_list)} {rule_type} rules")
+            logger.info(f"[REASONING LAYER] Sample {rule_type} rules: {samples}")
+            
+            return {
+                'count': len(rules_list),
+                'samples': samples
+            }
         
         except Exception as e:
-            logger.warning(f"Could not load {rule_type} rules from {rules_file}: {e}")
+            logger.error(f"[REASONING LAYER] Could not load {rule_type} rules from {rules_file}: {e}")
+            raise
+    
     
     def explain_rule(self, rule_id: str,
                     applicable_elements: Optional[List[str]] = None,
@@ -179,20 +297,54 @@ class ReasoningEngine:
     
     def explain_compliance_check(self, compliance_results: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Add reasoning to compliance check results.
+        CACHED RESULT ENRICHMENT - Add reasoning to compliance check results.
         
-        Args:
-            compliance_results: Results from UnifiedComplianceEngine.check_graph()
+        CRITICAL BEHAVIOR:
+        This method reads from CACHED compliance results provided by the Compliance Check Layer.
+        It does NOT re-execute compliance checks or recalculate pass/fail status.
+        
+        Inputs (from Compliance Check Layer):
+            compliance_results: Pre-calculated results from UnifiedComplianceEngine.check_graph()
+            Contains:
+            - results: List of individual rule check results (ALREADY CALCULATED)
+            - summary: {total, passed, failed, unknown} (ALREADY CALCULATED)
+            - Each result includes:
+              - element_guid, element_type, element_name
+              - rule_id, rule_name
+              - passed: boolean (ALREADY DETERMINED)
+              - explanation: string (WHY it passed/failed)
+            
+        Processing (This Layer Only):
+        1. Read the pre-calculated results
+        2. Group failures by element (organization only, no recalculation)
+        3. Extract failure details from cached results
+        4. Generate explanations for each failure
+        5. Generate solutions for each failure
+        6. Attach reasoning to results
+        
+        Output:
+            compliance_results with added reasoning layer:
+            - element_reasoning: Detailed explanations of why failures occurred
+            - Each explanation includes WHY it failed and HOW to fix it
             
         Returns:
-            Compliance results with added reasoning explanations
+            Enriched compliance results with reasoning explanations
         """
+        # Make a copy to avoid modifying the original cached results
         results_with_reasoning = compliance_results.copy()
         
-        # Group failures by element
+        logger.info(f"[REASONING LAYER] Enriching cached compliance results with explanations")
+        logger.info(f"[REASONING LAYER] Processing {len(compliance_results.get('results', []))} cached check results")
+        
+        # STEP 1: Group failures by element (from cached results - NO recalculation)
+        # This is purely organizational - we're reading pre-calculated pass/fail status
         failures_by_element = {}
         for result in compliance_results.get('results', []):
-            if not result.get('passed'):
+            # Read the pre-calculated passed status
+            passed = result.get('passed')
+            
+            # Only process failures (passed=False)
+            if not passed:
                 element_guid = result.get('element_guid')
                 if element_guid not in failures_by_element:
                     failures_by_element[element_guid] = {
@@ -201,41 +353,69 @@ class ReasoningEngine:
                         'failures': []
                     }
                 
+                # Collect failure information from cached result
                 failures_by_element[element_guid]['failures'].append({
                     'rule_id': result.get('rule_id'),
                     'rule_name': result.get('rule_name'),
-                    'explanation': result.get('explanation')
+                    'explanation': result.get('explanation'),  # Already calculated
+                    'status': result.get('status')  # PASSED, FAILED, or UNKNOWN
                 })
         
-        # Add reasoning to failing elements
+        logger.info(f"[REASONING LAYER] Found {len(failures_by_element)} elements with failures (from cache)")
+        
+        # STEP 2: Generate explanations for each failure (reading only, no recalculation)
         element_explanations = []
         for element_guid, element_info in failures_by_element.items():
             failures = []
+            
+            # Process each failure for this element
             for failure in element_info['failures']:
                 rule_id = failure['rule_id']
+                
+                # Look up rule definition from Rule Layer
                 if rule_id in self.rules:
                     rule = self.rules[rule_id]
-                    # Note: In real scenario, would need actual vs required values
-                    # For now, using explanation as proxy
+                    
+                    # Prepare failure analysis using cached data + rule definition
+                    # The actual values come from compliance check (cached)
                     failures.append({
                         'rule': rule,
-                        'actual_value': 'See rule check for details',
-                        'required_value': rule.get('value', 'See rule check'),
+                        'rule_id': rule_id,
+                        'rule_name': failure['rule_name'],
+                        'cached_explanation': failure['explanation'],  # Why it failed (cached)
+                        'status': failure['status'],  # PASSED, FAILED, or UNKNOWN
+                        # Note: actual_value/required_value come from cached explanation
+                        'actual_value': 'See cached result for details',
+                        'required_value': rule.get('value', 'See rule definition'),
                         'unit': rule.get('unit', ''),
                         'location': None
                     })
             
+            # Generate reasoning only if there are failures
             if failures:
+                logger.info(f"[REASONING LAYER] Generating explanations for element {element_guid} ({len(failures)} failures)")
+                
+                # Use cached failure data to generate element explanation
                 element_explanation = self.analyzer.generate_element_explanation(
                     element_guid,
                     element_info['element_type'],
                     element_info.get('element_name'),
                     failures
                 )
+                
+                # Generate solutions for each failure
+                for analysis in element_explanation.analyses:
+                    rule_id = analysis.rule_id
+                    if rule_id in self.rules:
+                        rule = self.rules[rule_id]
+                        solution = self.generator.generate_solution(analysis, rule)
+                        element_explanation.solutions.append(solution)
+                
                 element_explanations.append(element_explanation)
         
-        # Add to results
+        # STEP 3: Attach reasoning to results
         if element_explanations:
+            logger.info(f"[REASONING LAYER] Adding reasoning for {len(element_explanations)} elements")
             results_with_reasoning['element_reasoning'] = [
                 reasoning_result_to_dict(ReasoningResult(
                     reasoning_type=ReasoningType.FAILURE_ANALYSIS,
@@ -245,6 +425,7 @@ class ReasoningEngine:
                 for exp in element_explanations
             ]
         
+        logger.info(f"[REASONING LAYER] Enrichment complete - added reasoning for {len(element_explanations)} elements")
         return results_with_reasoning
     
     def get_rule_count_by_standard(self) -> Dict[str, int]:
