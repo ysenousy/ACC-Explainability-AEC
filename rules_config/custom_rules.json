@@ -468,17 +468,7 @@
       "rule_type": "attribute_comparison",
       "description": "Interior fire partitions such as corridor walls and dwelling separations are generally required to have a minimum 1-hour fire-resistance rating in accordance with IBC Section 708.3, unless specific exceptions apply.",
       "target": {
-        "ifc_class": "IfcWall",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_WallCommon",
-              "property": "IsFirePartition",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
+        "ifc_class": "IfcWall"
       },
       "condition": {
         "op": ">=",
@@ -486,7 +476,20 @@
           "source": "pset",
           "pset": "Pset_WallCommon",
           "property": "FireRating",
-          "unit": "h"
+          "unit": "h",
+          "fallback_sources": [
+            {
+              "source": "pset",
+              "pset": "ArchiCADProperties",
+              "property": "FireRating",
+              "unit": "h"
+            },
+            {
+              "source": "attribute",
+              "attribute": "FireRating",
+              "unit": "h"
+            }
+          ]
         },
         "rhs": {
           "source": "parameter",
@@ -520,17 +523,7 @@
       "rule_type": "attribute_comparison",
       "description": "Horizontal assemblies (floors/ceilings) separating dwelling or sleeping units are required to be not less than 1/2-hour fire-resistance-rated construction in accordance with IBC Section 711.2.4.3.",
       "target": {
-        "ifc_class": "IfcSlab",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_SlabCommon",
-              "property": "SeparatesDwellingUnits",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
+        "ifc_class": "IfcSlab"
       },
       "condition": {
         "op": ">=",
@@ -538,7 +531,20 @@
           "source": "pset",
           "pset": "Pset_SlabCommon",
           "property": "FireRating",
-          "unit": "h"
+          "unit": "h",
+          "fallback_sources": [
+            {
+              "source": "pset",
+              "pset": "ArchiCADProperties",
+              "property": "FireRating",
+              "unit": "h"
+            },
+            {
+              "source": "attribute",
+              "attribute": "FireRating",
+              "unit": "h"
+            }
+          ]
         },
         "rhs": {
           "source": "parameter",
@@ -567,22 +573,12 @@
       }
     },
     {
-      "id": "IBC_COLUMN_MIN_FIRE_RATING",
+      "id": "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
       "name": "Fire-Protected Columns – Minimum Fire-Resistance Rating",
       "rule_type": "attribute_comparison",
       "description": "Where columns are required to be fire-resistance rated, they must be provided with individual encasement protection for their full height with materials having the required fire-resistance rating, not less than that of the assemblies they support, in accordance with IBC Sections 704.1 and 704.2.",
       "target": {
-        "ifc_class": "IfcColumn",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_ColumnCommon",
-              "property": "RequiresFireProtection",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
+        "ifc_class": "IfcColumn"
       },
       "condition": {
         "op": ">=",
@@ -590,7 +586,20 @@
           "source": "pset",
           "pset": "Pset_ColumnCommon",
           "property": "FireRating",
-          "unit": "h"
+          "unit": "h",
+          "fallback_sources": [
+            {
+              "source": "pset",
+              "pset": "ArchiCADProperties",
+              "property": "FireRating",
+              "unit": "h"
+            },
+            {
+              "source": "attribute",
+              "attribute": "FireRating",
+              "unit": "h"
+            }
+          ]
         },
         "rhs": {
           "source": "parameter",
@@ -617,8 +626,52 @@
           "IBC"
         ]
       }
+    },
+    {
+      "id": "WINDOW_OPERATION_WARNING",
+      "name": "Window Operation Quality Check",
+      "rule_type": "attribute_comparison",
+      "description": "Windows should be operable and properly maintained for building functionality and user comfort.",
+      "target": {
+        "ifc_class": "IfcWindow",
+        "selector": {
+          "filters": []
+        }
+      },
+      "condition": {
+        "op": ">=",
+        "lhs": {
+          "source": "pset",
+          "pset_name": "Pset_WindowCommon",
+          "property": "Operability",
+          "unit": "count"
+        },
+        "rhs": {
+          "source": "parameter",
+          "param": "min_operable_pct"
+        }
+      },
+      "parameters": {
+        "min_operable_pct": 80
+      },
+      "severity": "WARNING",
+      "explanation": {
+        "short": "Windows should maintain operational functionality for ventilation and user control.",
+        "on_fail": "Window {guid} has operability rating {lhs}%, below recommended threshold {rhs}%.",
+        "on_pass": "Window {guid} meets window operability recommendations ({lhs}% >= {rhs}%)."
+      },
+      "provenance": {
+        "source": "regulation",
+        "regulation": "Building Performance Standards",
+        "section": "6.2.1",
+        "title": "Window Operability",
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US"
+        ]
+      }
     }
   ],
-  "saved_at": "2025-11-25T10:14:12.082886",
+  "saved_at": "2025-11-25T16:44:03.282323",
   "version": 1
 }

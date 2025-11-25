@@ -15,7 +15,7 @@ from rule_layer.run_rules import run_with_graph
 from backend.analyze_rules import analyze_ifc_rules
 from backend.data_validator import validate_ifc
 from backend.unified_compliance_engine import check_rule_compliance, UnifiedComplianceEngine
-from backend.compliance_report_generator import generate_compliance_report
+from backend.compliance_report_generator import generate_compliance_report, ComplianceReportGenerator
 from backend.rule_config_manager import (
     load_custom_rules,
     save_custom_rules,
@@ -274,10 +274,9 @@ def upload_ifc_endpoint():
         include_rules_raw = request.form.get('include_rules', 'true')
         include_rules = str(include_rules_raw).lower() in ("1", "true", "yes")
 
-        # Clear the rules catalogue when loading a new IFC file
-        # This ensures a fresh start for each IFC file
-        save_custom_rules([])
-        logger.info("Rules catalogue cleared for new IFC file upload")
+        # DO NOT clear the rules catalogue here - it persists across IFC uploads
+        # The rules are session-level, not file-specific
+        # save_custom_rules([]) was removed to preserve user-imported rules
 
         # Save to a temporary file and process
         with tempfile.NamedTemporaryFile(delete=False, suffix='.ifc') as tmp:
@@ -896,13 +895,32 @@ def import_rules_endpoint():
         # Get merge flag from form data
         merge = request.form.get("merge", "true").lower() == "true"
         
-        # Call import_rules
+        # Call import_rules (saves to custom_rules.json)
         status = import_rules(rules_to_import, merge=merge)
+        logger.info(f"[IMPORT] Imported {status.get('added', 0)} rules, skipped {status.get('skipped', 0)}")
+        
+        # Immediately load the imported rules into reasoning_engine
+        if status.get('added', 0) > 0:
+            try:
+                from pathlib import Path
+                backend_dir = Path(__file__).parent
+                project_root = backend_dir.parent
+                custom_rules_path = str(project_root / "rules_config" / "custom_rules.json")
+                logger.info(f"[IMPORT] Loading rules into reasoning engine from: {custom_rules_path}")
+                
+                result = reasoning_engine.load_rules_from_file(custom_rules_path, rule_type='custom')
+                if result.get('success'):
+                    logger.info(f"[IMPORT] ✓ Successfully loaded {result['rules_loaded']} rules into reasoning engine")
+                else:
+                    logger.warning(f"[IMPORT] Failed to load rules into reasoning engine: {result.get('error')}")
+            except Exception as load_err:
+                logger.error(f"[IMPORT] Error loading rules into reasoning engine: {load_err}")
         
         # Mark that rules have been imported in this session
         global rules_imported_in_session
         if status.get("total_imported", 0) > 0:
             rules_imported_in_session = True
+            logger.info(f"[IMPORT] ✓ rules_imported_in_session = True")
         
         return jsonify({
             "success": True,
@@ -1337,10 +1355,30 @@ def import_catalogue():
         # Save updated rules
         save_custom_rules(final_rules)
         
+        logger.info(f"[IMPORT-CATALOGUE] Imported {added_count} rules in '{mode}' mode, skipped {skipped_count}")
+        
+        # Immediately load the imported rules into reasoning_engine
+        if added_count > 0:
+            try:
+                from pathlib import Path
+                backend_dir = Path(__file__).parent
+                project_root = backend_dir.parent
+                custom_rules_path = str(project_root / "rules_config" / "custom_rules.json")
+                logger.info(f"[IMPORT-CATALOGUE] Loading rules into reasoning engine from: {custom_rules_path}")
+                
+                result = reasoning_engine.load_rules_from_file(custom_rules_path, rule_type='custom')
+                if result.get('success'):
+                    logger.info(f"[IMPORT-CATALOGUE] ✓ Successfully loaded {result['rules_loaded']} rules into reasoning engine")
+                else:
+                    logger.warning(f"[IMPORT-CATALOGUE] Failed to load rules into reasoning engine: {result.get('error')}")
+            except Exception as load_err:
+                logger.error(f"[IMPORT-CATALOGUE] Error loading rules into reasoning engine: {load_err}")
+        
         # Mark that rules have been imported in this session
         global rules_imported_in_session
         if added_count > 0:
             rules_imported_in_session = True
+            logger.info(f"[IMPORT-CATALOGUE] ✓ rules_imported_in_session = True")
         
         return jsonify({
             "success": True,
@@ -1900,7 +1938,10 @@ def not_found(error):
 
 @app.route("/api/reports/generate-compliance", methods=["POST"])
 def generate_compliance_report_endpoint():
-    """Generate comprehensive compliance report."""
+    """Generate comprehensive compliance report.
+    
+    Reloads rules from file each time to reflect any updates (deletions, modifications).
+    """
     try:
         body = request.get_json()
         graph = body.get("graph")
@@ -1908,8 +1949,40 @@ def generate_compliance_report_endpoint():
         if not graph:
             return jsonify({"success": False, "error": "No graph provided"}), 400
         
-        # Generate report
-        report = generate_compliance_report(graph)
+        # CRITICAL: Reload rules from file each time to reflect user updates
+        # This ensures rule deletions/modifications are immediately reflected
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
+        
+        if not rules_file.exists():
+            return jsonify({
+                "success": False,
+                "error": "No rules loaded. Please import regulatory rules first."
+            }), 400
+        
+        # Load rules from file (fresh, not cached)
+        with open(rules_file, 'r', encoding='utf-8') as f:
+            loaded_rules_data = json.load(f)
+        
+        rules_list = loaded_rules_data.get('rules', []) if isinstance(loaded_rules_data, dict) else (loaded_rules_data if isinstance(loaded_rules_data, list) else [])
+        
+        if not rules_list:
+            return jsonify({
+                "success": False,
+                "error": "No rules available. Please import regulatory rules first."
+            }), 400
+        
+        # Convert list to dict format if needed
+        rules_dict = {}
+        for rule in rules_list:
+            rule_id = rule.get('id')
+            if rule_id:
+                rules_dict[rule_id] = rule
+        
+        logger.info(f"[COMPLIANCE REPORT] Reloaded {len(rules_dict)} rules from {rules_file}")
+        
+        # Pass fresh rules to generator
+        generator = ComplianceReportGenerator(rules=rules_dict)
+        report = generator.generate_report(graph)
         
         return jsonify({"success": True, "report": report}), 200
     
@@ -1918,24 +1991,130 @@ def generate_compliance_report_endpoint():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/reports/export-compliance", methods=["POST"])
+def export_compliance_report_endpoint():
+    """Export compliance report as JSON file.
+    
+    Request:
+        {
+            "report": dict (the compliance report object),
+            "graph_name": str (optional, for filename)
+        }
+    
+    Response:
+        File download (compliance-report-TIMESTAMP.json)
+    """
+    try:
+        from datetime import datetime
+        import os
+        
+        body = request.get_json()
+        report = body.get("report")
+        graph_name = body.get("graph_name", "compliance")
+        
+        if not report:
+            return jsonify({"success": False, "error": "report required"}), 400
+        
+        # Create export data with metadata
+        export_data = {
+            "metadata": {
+                "exported_at": datetime.now().isoformat(),
+                "format_version": "1.0",
+                "graph_name": graph_name
+            },
+            "report": report
+        }
+        
+        # Create temporary file with report data
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"compliance-report_{graph_name}_{timestamp}.json"
+        
+        # Create temp file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+            json.dump(export_data, tmp, indent=2, ensure_ascii=False)
+            tmp_path = tmp.name
+        
+        try:
+            # Send file as download
+            return send_file(
+                tmp_path,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/json'
+            )
+        finally:
+            # Clean up temp file after download
+            try:
+                os.unlink(tmp_path)
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp file {tmp_path}: {e}")
+    
+    except Exception as e:
+        logger.error(f"Error exporting compliance report: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route("/api/rules/check-compliance", methods=["POST"])
 def check_rules_compliance():
-    """Check IFC rules compliance against regulatory rules."""
+    """Check IFC rules compliance against regulatory rules.
+    
+    Uses ONLY rules that have been explicitly imported by the user in this session.
+    Reloads rules from file each time to reflect any updates (deletions, modifications).
+    """
     try:
         body = request.get_json()
         graph = body.get("graph")
-        rules_manifest_path = body.get("rules_manifest_path")
         
         if not graph:
             return jsonify({"success": False, "error": "No graph provided"}), 400
         
-        # Check compliance
-        result = check_rule_compliance(graph, rules_manifest_path)
+        # CRITICAL: Reload rules from file each time to reflect user updates
+        # This ensures rule deletions/modifications are immediately reflected
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
+        
+        if not rules_file.exists():
+            return jsonify({
+                "success": False, 
+                "error": "No rules loaded. Please import regulatory rules first.",
+                "compliance": None
+            }), 400
+        
+        # Load rules from file (fresh, not cached)
+        with open(rules_file, 'r', encoding='utf-8') as f:
+            loaded_rules_data = json.load(f)
+        
+        rules_list = loaded_rules_data.get('rules', []) if isinstance(loaded_rules_data, dict) else (loaded_rules_data if isinstance(loaded_rules_data, list) else [])
+        
+        if not rules_list:
+            return jsonify({
+                "success": False, 
+                "error": "No rules available. Please import regulatory rules first.",
+                "compliance": None
+            }), 400
+        
+        # Create engine and set the fresh rules
+        engine = UnifiedComplianceEngine()
+        engine.rules = rules_list
+        
+        logger.info(f"[COMPLIANCE CHECK] Reloaded {len(engine.rules)} rules from {rules_file}")
+        logger.info(f"[COMPLIANCE CHECK] Rule IDs: {[r.get('id', 'N/A') for r in engine.rules[:5]]}")
+        
+        # Check compliance using the fresh rules
+        result = engine.check_compliance(graph, rules_manifest_path=None)
+        
+        # Log summary
+        if result.get("summary"):
+            summary = result["summary"]
+            logger.info(f"[COMPLIANCE CHECK] Summary: {summary['total_rules']} rules, {summary['components_checked']} components checked, {summary['total_evaluations']} evaluations")
+            
+            # Log results per rule
+            for rule_result in result.get("rules", [])[:5]:
+                logger.info(f"[COMPLIANCE CHECK] Rule {rule_result['rule_id']}: {rule_result['passed']} passed, {rule_result['failed']} failed")
         
         return jsonify({"success": True, "compliance": result}), 200
     
     except Exception as e:
-        logger.error(f"Error checking rule compliance: {e}")
+        logger.error(f"Error checking rule compliance: {e}", exc_info=True)
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1962,29 +2141,64 @@ def validate_ifc_endpoint():
 
 @app.route("/api/rules/check-status", methods=["GET"])
 def check_rules_status():
-    """Check if regulatory rules are loaded and available."""
+    """Check if regulatory rules are loaded and available.
+    
+    This endpoint:
+    1. Checks if rules are in reasoning_engine.rules
+    2. If not, but rules exist on disk, auto-loads them
+    3. Returns current status
+    
+    Query parameters:
+    - refresh=true: Force reload rules from disk
+    """
     try:
-        global rules_imported_in_session
+        # Check if we should refresh/reload rules from disk
+        refresh = request.args.get('refresh', 'false').lower() == 'true'
         
-        # Rules are considered loaded only if they've been imported in this session
-        if not rules_imported_in_session:
-            return jsonify({
-                "success": True,
-                "rules_loaded": False,
-                "rule_count": 0,
-                "rules": []
-            }), 200
+        # Check if rules are in the reasoning_engine (user-imported rules)
+        rules_dict = reasoning_engine.rules if hasattr(reasoning_engine, 'rules') else {}
         
-        from backend.compliance_report_generator import ComplianceReportGenerator
+        # Convert dict to list if needed
+        if isinstance(rules_dict, dict):
+            rules_list = list(rules_dict.values())
+        else:
+            rules_list = rules_dict if rules_dict else []
         
-        generator = ComplianceReportGenerator()
-        rules_loaded = len(generator.regulatory_rules) > 0
+        rules_loaded = len(rules_list) > 0
+        
+        # If refresh requested or no rules in memory but they exist on disk, reload them
+        if refresh or not rules_loaded:
+            from pathlib import Path
+            backend_dir = Path(__file__).parent
+            project_root = backend_dir.parent
+            custom_rules_path = project_root / "rules_config" / "custom_rules.json"
+            
+            if custom_rules_path.exists():
+                try:
+                    if refresh:
+                        logger.info(f"[CHECK-STATUS] Refresh requested. Reloading rules from {custom_rules_path}")
+                    else:
+                        logger.info(f"[CHECK-STATUS] Rules not in memory. Auto-loading from {custom_rules_path}")
+                    
+                    # Always clear before loading to ensure we get the current state from disk
+                    result = reasoning_engine.load_rules_from_file(str(custom_rules_path), rule_type='custom', clear_existing=True)
+                    if result.get('success'):
+                        logger.info(f"[CHECK-STATUS] ✓ Loaded {result['rules_loaded']} rules")
+                        # Update rules_list after loading
+                        rules_dict = reasoning_engine.rules if hasattr(reasoning_engine, 'rules') else {}
+                        if isinstance(rules_dict, dict):
+                            rules_list = list(rules_dict.values())
+                        else:
+                            rules_list = rules_dict if rules_dict else []
+                        rules_loaded = len(rules_list) > 0
+                except Exception as e:
+                    logger.warning(f"[CHECK-STATUS] Failed to load rules: {e}")
         
         return jsonify({
             "success": True,
             "rules_loaded": rules_loaded,
-            "rule_count": len(generator.regulatory_rules),
-            "rules": [{"id": r.get("id"), "name": r.get("name")} for r in generator.regulatory_rules]
+            "rule_count": len(rules_list),
+            "rules": [{"id": r.get("id"), "name": r.get("name")} for r in rules_list]
         }), 200
     
     except Exception as e:
@@ -2458,6 +2672,17 @@ def load_regulations_endpoint():
                 "success": False,
                 "error": "rule_type must be 'regulatory' or 'custom'"
             }), 400
+        
+        # Resolve file_path relative to project root
+        # If path is relative, resolve from project root (parent of backend/)
+        from pathlib import Path
+        if not Path(file_path).is_absolute():
+            # Get project root (parent of backend directory)
+            backend_dir = Path(__file__).parent
+            project_root = backend_dir.parent
+            file_path = str(project_root / file_path)
+        
+        logger.info(f"[APP] Loading {rule_type} rules from: {file_path}")
         
         # Call the reasoning engine to load rules on-demand
         result = reasoning_engine.load_rules_from_file(file_path, rule_type=rule_type)

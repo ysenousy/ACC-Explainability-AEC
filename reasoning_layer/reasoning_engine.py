@@ -115,7 +115,7 @@ class ReasoningEngine:
         
         logger.info("[REASONING LAYER] Initialized without rules - waiting for user to import/select rules")
     
-    def load_rules_from_file(self, rules_file: str, rule_type: str = 'regulatory') -> Dict[str, Any]:
+    def load_rules_from_file(self, rules_file: str, rule_type: str = 'regulatory', clear_existing: bool = False) -> Dict[str, Any]:
         """
         Load rules on-demand when user imports or selects them.
         
@@ -127,11 +127,19 @@ class ReasoningEngine:
         Args:
             rules_file: Path to rules JSON file
             rule_type: 'regulatory' or 'custom'
+            clear_existing: If True, clears all existing rules before loading
             
         Returns:
             Dict with loading status and loaded rules count
         """
         try:
+            # Clear existing rules if requested (for refresh operations)
+            if clear_existing:
+                self.rules = {}
+                self.regulatory_rules = {}
+                self.custom_rules = {}
+                logger.info(f"[REASONING LAYER] Cleared existing rules for refresh")
+            
             result = self._load_rules_from_file(rules_file, rule_type=rule_type)
             
             # Track loaded files

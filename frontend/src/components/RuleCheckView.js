@@ -41,10 +41,11 @@ function RuleCheckView({ graph }) {
     }
   }, [graph, rulesLoaded]);
 
-  const checkRulesStatus = async () => {
+  const checkRulesStatus = async (forceRefresh = false) => {
     setCheckingRules(true);
     try {
-      const response = await fetch('/api/rules/check-status');
+      const url = `/api/rules/check-status${forceRefresh ? '?refresh=true' : ''}`;
+      const response = await fetch(url);
       const data = await response.json();
       console.log('Rules status check result:', data);
       setRulesLoaded(data.rules_loaded || false);
@@ -156,15 +157,26 @@ function RuleCheckView({ graph }) {
     );
   }
 
-  // Filter rules based on severity
+  // Filter rules based on compliance status
   const filterRules = (rules) => {
     if (!rules) return [];
-    return rules.filter(rule => {
-      if (severityFilter !== 'all' && rule.severity?.toLowerCase() !== severityFilter.toLowerCase()) {
-        return false;
+    const filtered = rules.filter(rule => {
+      if (severityFilter === 'all') {
+        return true;
+      } else if (severityFilter === 'error') {
+        // Show only rules with failures
+        return rule.failed > 0;
+      } else if (severityFilter === 'warning') {
+        // Show only rules with all components passing (no failures, but evaluated some)
+        return rule.failed === 0 && rule.passed > 0;
       }
       return true;
     });
+    console.log(`[FILTER] severityFilter=${severityFilter}, total=${rules.length}, filtered=${filtered.length}`, { 
+      sample_rules: rules.slice(0, 2).map(r => ({ name: r.rule_name, passed: r.passed, failed: r.failed })),
+      filtered_sample: filtered.slice(0, 2).map(r => ({ name: r.rule_name, passed: r.passed, failed: r.failed }))
+    });
+    return filtered;
   };
 
   const filteredRules = filterRules(complianceResults?.rules || []);
@@ -243,7 +255,7 @@ function RuleCheckView({ graph }) {
               )}
             </div>
             <button
-              onClick={checkRulesStatus}
+              onClick={() => checkRulesStatus(true)}
               disabled={checkingRules}
               style={{
                 padding: '0.75rem 1.5rem',
@@ -395,7 +407,10 @@ function RuleCheckView({ graph }) {
               {['all', 'error', 'warning'].map(sev => (
                 <button
                   key={sev}
-                  onClick={() => setSeverityFilter(sev)}
+                  onClick={() => {
+                    console.log(`[BUTTON CLICK] Setting severity filter to: ${sev}`);
+                    setSeverityFilter(sev);
+                  }}
                   style={{
                     padding: '0.5rem 1rem',
                     backgroundColor: severityFilter === sev ? getSeverityColor(sev) : '#e5e7eb',

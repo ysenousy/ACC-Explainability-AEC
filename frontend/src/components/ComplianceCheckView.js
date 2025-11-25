@@ -7,6 +7,7 @@ function ComplianceCheckView({ graph }) {
   const [selectedRuleFilter, setSelectedRuleFilter] = useState(null);
   const [severityFilter, setSeverityFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // 'passed', 'failed', 'unable'
+  const [dataStatusFilter, setDataStatusFilter] = useState(null); // 'complete', 'partial', 'missing'
   const [showSummary, setShowSummary] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,6 +17,24 @@ function ComplianceCheckView({ graph }) {
       case 'WARNING': return '#f59e0b';
       case 'INFO': return '#3b82f6';
       default: return '#6b7280';
+    }
+  };
+
+  const getDataStatusColor = (status) => {
+    switch (status) {
+      case 'complete': return '#10b981'; // green
+      case 'partial': return '#f59e0b';  // amber
+      case 'missing': return '#ef4444';  // red
+      default: return '#6b7280';         // gray
+    }
+  };
+
+  const getDataStatusLabel = (status) => {
+    switch (status) {
+      case 'complete': return '✓ Complete';
+      case 'partial': return '◐ Partial';
+      case 'missing': return '✗ Missing';
+      default: return '? Unknown';
     }
   };
 
@@ -99,6 +118,9 @@ function ComplianceCheckView({ graph }) {
       if (statusFilter === 'unable') return r.passed === null;
       return true;
     });
+  }
+  if (dataStatusFilter) {
+    filteredResults = filteredResults.filter(r => r.data_status === dataStatusFilter);
   }
 
   return (
@@ -277,6 +299,23 @@ function ComplianceCheckView({ graph }) {
                   <option value="WARNING">Warning</option>
                   <option value="INFO">Info</option>
                 </select>
+
+                <select
+                  value={dataStatusFilter || ''}
+                  onChange={(e) => setDataStatusFilter(e.target.value || null)}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">All Data Status</option>
+                  <option value="complete">✓ Complete Data</option>
+                  <option value="partial">◐ Partial Data</option>
+                  <option value="missing">✗ Missing Data</option>
+                </select>
               </div>
 
               {/* Results Table */}
@@ -297,6 +336,8 @@ function ComplianceCheckView({ graph }) {
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Rule</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Element</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Severity</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Data Status</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Data Source</th>
                       <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Explanation</th>
                     </tr>
                   </thead>
@@ -343,6 +384,25 @@ function ComplianceCheckView({ graph }) {
                             {getSeverityIcon(result.severity)}
                             {result.severity}
                           </span>
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.25rem 0.5rem',
+                            backgroundColor: getDataStatusColor(result.data_status),
+                            color: '#fff',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.7rem',
+                            fontWeight: 'bold',
+                            title: result.data_status ? `Data Status: ${result.data_status}` : 'No data status'
+                          }}>
+                            {getDataStatusLabel(result.data_status)}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.75rem', fontSize: '0.75rem', fontFamily: 'monospace', color: '#6b7280', maxWidth: '200px', title: result.data_source || 'N/A' }}>
+                          {result.data_source || 'N/A'}
                         </td>
                         <td style={{ padding: '0.75rem', maxWidth: '300px' }}>
                           <div style={{ color: '#4b5563', lineHeight: '1.4' }}>

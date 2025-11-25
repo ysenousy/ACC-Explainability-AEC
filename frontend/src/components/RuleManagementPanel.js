@@ -149,12 +149,11 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
         // Load the rules into the reasoning engine (lazy-loading)
         // This triggers the backend to load rules on-demand, not at startup
         try {
-          const rulesFile = file.name;
           const loadResponse = await fetch('/api/rules/load-regulations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              file_path: `rules_config/${rulesFile}`,
+              file_path: 'rules_config/custom_rules.json',  // Import always saves to custom_rules.json
               rule_type: 'custom'
             })
           });

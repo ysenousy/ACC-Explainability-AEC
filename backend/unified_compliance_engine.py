@@ -23,14 +23,19 @@ class UnifiedComplianceEngine:
     """Unified compliance checking engine supporting all rule formats."""
 
     def __init__(self, rules_file: Optional[str] = None):
-        """Initialize the engine with optional rules file."""
+        """Initialize the engine with optional rules file.
+        
+        IMPORTANT: This engine should NOT automatically load rules from files.
+        Rules should be explicitly set via the 'rules' attribute or passed via rules_file parameter.
+        This ensures the engine only uses rules explicitly provided by the user.
+        """
         self.rules = []
         self.results = []
         if rules_file:
             self._load_rules(rules_file)
-        else:
-            # Try to load from default locations
-            self._load_default_rules()
+        # NOTE: We do NOT call _load_default_rules() here anymore.
+        # Rules must be explicitly provided, not loaded from cached files.
+        logger.info("[COMPLIANCE ENGINE] Initialized with 0 rules. Rules must be explicitly set.")
 
     def _load_rules(self, rules_file: str) -> bool:
         """Load rules from JSON file."""
@@ -45,18 +50,22 @@ class UnifiedComplianceEngine:
             return False
 
     def _load_default_rules(self) -> bool:
-        """Try to load rules from default locations (custom_rules.json first, then enhanced-regulation-rules.json)."""
+        """Try to load rules from default locations (enhanced-regulation-rules.json first, then custom_rules.json).
+        
+        Note: This loads from the repository's rule files. For user-imported rules, 
+        they should be passed via rules_manifest_path parameter in check_compliance().
+        """
         from pathlib import Path
         
-        # Try custom rules first (generated rules)
-        custom_rules_file = Path(__file__).parent.parent / "rules_config" / "custom_rules.json"
-        if custom_rules_file.exists():
-            return self._load_rules(str(custom_rules_file))
-        
-        # Fall back to regulatory rules
+        # Prefer enhanced rules (which contain the latest regulatory rules with fallback sources)
         regulatory_rules_file = Path(__file__).parent.parent / "rules_config" / "enhanced-regulation-rules.json"
         if regulatory_rules_file.exists():
             return self._load_rules(str(regulatory_rules_file))
+        
+        # Fall back to custom rules if enhanced not found
+        custom_rules_file = Path(__file__).parent.parent / "rules_config" / "custom_rules.json"
+        if custom_rules_file.exists():
+            return self._load_rules(str(custom_rules_file))
         
         logger.warning("No rules files found in default locations")
         return False
@@ -103,6 +112,55 @@ class UnifiedComplianceEngine:
             return element.get(spec.get("attribute_name"))
 
         return None
+
+    def _extract_value_with_source(self, element: Dict, spec: Dict, parameters: Dict = None) -> Optional[tuple]:
+        """
+        Extract value from element and return which source was actually used.
+        
+        Returns: (value, source_used) tuple or None
+        
+        Supports fallback_sources for trying alternative properties if primary fails.
+        """
+        if parameters is None:
+            parameters = {}
+        
+        # Try primary source
+        value = self._extract_value(element, spec, parameters)
+        if value is not None:
+            source_name = self._get_source_name(spec)
+            return (value, source_name)
+        
+        # Try fallback sources if primary failed
+        fallback_sources = spec.get('fallback_sources', [])
+        for fallback_spec in fallback_sources:
+            value = self._extract_value(element, fallback_spec, parameters)
+            if value is not None:
+                source_name = self._get_source_name(fallback_spec)
+                return (value, source_name)
+        
+        # No value found in primary or fallback sources
+        return None
+    
+    def _get_source_name(self, spec: Dict) -> str:
+        """Get human-readable name for a source specification."""
+        source = spec.get('source')
+        if source == 'pset':
+            pset = spec.get('pset_name', spec.get('pset', ''))
+            prop = spec.get('property_name', spec.get('property', ''))
+            return f"{pset}.{prop}"
+        elif source == 'qto':
+            qto = spec.get('qto_name', '')
+            quant = spec.get('quantity', '')
+            return f"{qto}:{quant}"
+        elif source == 'attribute':
+            attr = spec.get('attribute', spec.get('attribute_name', ''))
+            return f"attr:{attr}"
+        elif source == 'parameter':
+            param = spec.get('param', '')
+            return f"parameter:{param}"
+        elif source == 'constant':
+            return "constant"
+        return "unknown"
 
     def _extract_from_qto(self, element: Dict, spec: Dict) -> Optional[float]:
         """Extract value from QTO (Quantity Take-Off).
@@ -346,7 +404,9 @@ class UnifiedComplianceEngine:
             'section': rule.get('provenance', {}).get('section'),
             'actual_value': None,
             'required_value': None,
-            'unit': None
+            'unit': None,
+            'data_source': None,
+            'data_status': 'unknown'
         }
 
         # Evaluate condition
@@ -356,31 +416,38 @@ class UnifiedComplianceEngine:
         operator = condition.get('op', '>=')
 
         # Extract LHS value
-        lhs_value = self._extract_value(element, lhs_source, rule.get('parameters', {}))
-        if lhs_value is None:
+        lhs_result = self._extract_value_with_source(element, lhs_source, rule.get('parameters', {}))
+        if lhs_result is None:
             # MORE LENIENT: Mark as "Unable" but still try to pass if element doesn't have required properties
             # This prevents false negatives when IFC data isn't fully populated
             result['passed'] = None
             result['explanation'] = f"Unable to extract property '{lhs_source.get('quantity', 'unknown')}' from element - insufficient data"
+            result['data_status'] = 'missing'
             logger.debug(f"Rule {rule.get('id')}: Could not extract LHS from element {element.get('name', 'unknown')}")
             return result
+        
+        lhs_value, lhs_source_used = lhs_result
 
         # Extract RHS value
         if rhs_source.get('source') == 'parameter':
             rhs_value = rule.get('parameters', {}).get(rhs_source.get('param'))
+            rhs_source_used = f"parameter:{rhs_source.get('param')}"
         else:
-            rhs_value = self._extract_value(element, rhs_source, rule.get('parameters', {}))
-
-        if rhs_value is None:
-            result['passed'] = None
-            result['explanation'] = "Unable to extract comparison value from rule"
-            logger.debug(f"Rule {rule.get('id')}: Could not extract RHS")
-            return result
+            rhs_result = self._extract_value_with_source(element, rhs_source, rule.get('parameters', {}))
+            if rhs_result is None:
+                result['passed'] = None
+                result['explanation'] = "Unable to extract comparison value from rule"
+                result['data_status'] = 'missing'
+                logger.debug(f"Rule {rule.get('id')}: Could not extract RHS")
+                return result
+            rhs_value, rhs_source_used = rhs_result
 
         # Store actual and required values for reasoning
         result['actual_value'] = lhs_value
         result['required_value'] = rhs_value
         result['unit'] = lhs_source.get('unit', '')
+        result['data_source'] = lhs_source_used
+        result['data_status'] = 'complete'
 
         # Evaluate
         result['passed'] = self._compare(lhs_value, operator, rhs_value)
@@ -464,13 +531,40 @@ class UnifiedComplianceEngine:
     # =========================================================================
 
     def _extract_all_components(self, graph: Dict) -> Dict[str, List[Dict]]:
-        """Extract all IFC components organized by type (modern format)."""
+        """Extract all IFC components organized by type (modern format).
+        
+        Note: The graph has inconsistent key naming:
+        - Doors and spaces use PLURAL: "doors", "spaces"
+        - Other elements use SINGULAR: "wall", "slab", "column", etc.
+        """
         elements = graph.get("elements", {})
         components = {}
 
-        for comp_type_plural in ["doors", "spaces", "windows", "walls", "slabs", "columns", "stairs", "beams"]:
-            comp_list = elements.get(comp_type_plural, [])
-            comp_type = comp_type_plural.rstrip('s')
+        # Map component types to their actual keys in the graph
+        # Doors and spaces are plural, others are singular
+        type_to_key = {
+            "door": "doors",
+            "space": "spaces",
+            "window": "windows",  # Could be plural or singular, try both
+            "wall": "wall",
+            "slab": "slab",
+            "column": "column",
+            "stair": "stair",
+            "beam": "beam"
+        }
+        
+        for comp_type, graph_key in type_to_key.items():
+            # Try the mapped key first
+            comp_list = elements.get(graph_key, [])
+            
+            # If not found and it's typically singular, try plural
+            if not comp_list and graph_key == graph_key.lower() and not graph_key.endswith('s'):
+                comp_list = elements.get(graph_key + 's', [])
+            
+            # If not found and it's typically plural, try singular
+            if not comp_list and graph_key.endswith('s'):
+                comp_list = elements.get(graph_key[:-1], [])
+            
             components[comp_type] = []
 
             for comp in comp_list:
@@ -493,52 +587,148 @@ class UnifiedComplianceEngine:
                         elif key == "Area" and "area_m2" not in properties:
                             properties["area_m2"] = val
 
+                # Extract property_sets and attributes for use by _extract_pset_value and _extract_attribute_value
+                psets = comp.get("attributes", {}).get("property_sets", {})
+                attributes = comp.get("attributes", {}).get("attributes", {})
+
                 components[comp_type].append({
                     "name": comp.get("name", f"{comp_type}"),
                     "id": comp.get("ifc_guid", comp.get("id", "")),
                     "properties": properties,
                     "attributes": comp.get("attributes", {}),
+                    "data": {
+                        "psets": psets,
+                        "attributes": attributes
+                    },
                     "full_object": comp
                 })
+        
+        # Debug logging
+        for comp_type, comps in components.items():
+            if comps:
+                logger.info(f"[EXTRACT] {comp_type}: {len(comps)} components, Sample psets: {list(comps[0].get('data', {}).get('psets', {}).keys())[:3]}")
 
         return components
 
     def _extract_rule_value(self, component: Dict, lhs_spec: Dict) -> Optional[float]:
-        """Extract value from component based on rule LHS specification (modern format)."""
+        """Extract value from component based on rule LHS specification (modern format).
+        
+        Supports:
+        - qto: Quantities (e.g., Qto_DoorBaseQuantities.ClearWidth)
+        - pset: Property Sets with fallback sources (e.g., Pset_WallCommon.FireRating)
+        - attribute: Direct attributes on component
+        
+        Returns the first value found from primary source or fallback sources.
+        """
         if not lhs_spec:
             return None
 
         source = lhs_spec.get("source")
-        if source != "qto":
-            return None
-
-        quantity = lhs_spec.get("quantity", "")
         properties = component.get("properties", {})
 
-        # Map IFC quantity names to property dict keys
-        direct_mapping = {
-            "ClearWidth": "width_mm",
-            "Width": "width_mm",
-            "Height": "height_mm",
-            "ClearHeight": "height_mm",
-            "FloorArea": "area_m2",
-            "NetFloorArea": "area_m2",
-            "GrossFloorArea": "area_m2",
-            "Area": "area_m2"
-        }
+        # Handle QTO (Quantities)
+        if source == "qto":
+            quantity = lhs_spec.get("quantity", "")
 
-        prop_name = direct_mapping.get(quantity)
-        if prop_name and prop_name in properties:
-            val = properties[prop_name]
-            if isinstance(val, (int, float)):
-                return float(val)
+            # Map IFC quantity names to property dict keys
+            direct_mapping = {
+                "ClearWidth": "width_mm",
+                "Width": "width_mm",
+                "Height": "height_mm",
+                "ClearHeight": "height_mm",
+                "FloorArea": "area_m2",
+                "NetFloorArea": "area_m2",
+                "GrossFloorArea": "area_m2",
+                "Area": "area_m2"
+            }
 
-        # Try quantity name directly
-        if quantity in properties:
-            val = properties[quantity]
-            if isinstance(val, (int, float)):
-                return float(val)
+            prop_name = direct_mapping.get(quantity)
+            if prop_name and prop_name in properties:
+                val = properties[prop_name]
+                if isinstance(val, (int, float)):
+                    return float(val)
 
+            # Try quantity name directly
+            if quantity in properties:
+                val = properties[quantity]
+                if isinstance(val, (int, float)):
+                    return float(val)
+
+            return None
+
+        # Handle PSET (Property Sets) with fallback sources
+        elif source == "pset":
+            pset = lhs_spec.get("pset", "")
+            property_name = lhs_spec.get("property", "")
+            
+            # Try primary source
+            val = self._extract_pset_value(component, pset, property_name)
+            if val is not None:
+                return val
+            
+            # Try fallback sources
+            fallback_sources = lhs_spec.get("fallback_sources", [])
+            for fallback in fallback_sources:
+                fb_source = fallback.get("source", "")
+                
+                if fb_source == "pset":
+                    fb_pset = fallback.get("pset", "")
+                    fb_prop = fallback.get("property", "")
+                    val = self._extract_pset_value(component, fb_pset, fb_prop)
+                    if val is not None:
+                        return val
+                
+                elif fb_source == "attribute":
+                    fb_attr = fallback.get("attribute", "")
+                    val = self._extract_attribute_value(component, fb_attr)
+                    if val is not None:
+                        return val
+            
+            return None
+
+        # Handle ATTRIBUTE (Direct attributes)
+        elif source == "attribute":
+            attribute = lhs_spec.get("attribute", "")
+            return self._extract_attribute_value(component, attribute)
+
+        return None
+
+    def _extract_pset_value(self, component: Dict, pset: str, property_name: str) -> Optional[float]:
+        """Extract value from a property set. Returns None if not found."""
+        component_data = component.get("data", {})
+        psets = component_data.get("psets", {})
+        
+        if pset in psets:
+            pset_data = psets[pset]
+            if property_name in pset_data:
+                val = pset_data[property_name]
+                # Try to convert to float
+                try:
+                    if isinstance(val, (int, float)):
+                        return float(val)
+                    elif isinstance(val, str):
+                        return float(val)
+                except (ValueError, TypeError):
+                    pass
+        
+        return None
+
+    def _extract_attribute_value(self, component: Dict, attribute: str) -> Optional[float]:
+        """Extract value from direct component attribute. Returns None if not found."""
+        component_data = component.get("data", {})
+        attributes = component_data.get("attributes", {})
+        
+        if attribute in attributes:
+            val = attributes[attribute]
+            # Try to convert to float
+            try:
+                if isinstance(val, (int, float)):
+                    return float(val)
+                elif isinstance(val, str):
+                    return float(val)
+            except (ValueError, TypeError):
+                pass
+        
         return None
 
     def check_component_against_rule(self, component: Dict, rule: Dict) -> Tuple[str, str]:
@@ -551,7 +741,7 @@ class UnifiedComplianceEngine:
             # Extract LHS
             lhs_val = self._extract_rule_value(component, condition.get("lhs"))
             if lhs_val is None:
-                return ("fail", "Required property not found")
+                return ("unknown", "Required property not found - cannot determine compliance")
 
             # Extract RHS
             rhs_val = rule.get("parameters", {}).get(condition.get("rhs", {}).get("param"))
@@ -592,8 +782,12 @@ class UnifiedComplianceEngine:
             if not self.rules and rules_manifest_path:
                 self._load_rules(rules_manifest_path)
 
+            logger.info(f"[COMPLIANCE CHECK] Rules loaded: {len(self.rules)}")
+            logger.info(f"[COMPLIANCE CHECK] First 3 rule IDs: {[r.get('id', 'N/A') for r in self.rules[:3]]}")
+
             # Extract components
             all_components = self._extract_all_components(graph)
+            logger.info(f"[COMPLIANCE CHECK] Components extracted: {[(k, len(v)) for k, v in all_components.items() if v]}")
 
             # Evaluate each rule
             rule_results = []
@@ -614,7 +808,7 @@ class UnifiedComplianceEngine:
             }
 
         except Exception as e:
-            logger.error(f"Error checking compliance: {e}")
+            logger.error(f"Error checking compliance: {e}", exc_info=True)
             return {
                 "summary": {"total_rules": 0, "components_checked": 0, "total_evaluations": 0},
                 "rules": [],
@@ -635,6 +829,12 @@ class UnifiedComplianceEngine:
 
         rule_type = ifc_class_to_type.get(ifc_class, "")
         all_components = components.get(rule_type, [])
+        
+        # Debug logging
+        rule_name = rule.get("name", "Unknown")
+        logger.info(f"[RULE EVAL] Rule: {rule_name}, IFC Class: {ifc_class}, Rule Type: {rule_type}, Components Available: {len(all_components)}")
+        if all_components:
+            logger.info(f"[RULE EVAL] Sample component: {all_components[0].get('name', 'N/A')}")
 
         # Apply filters
         selector = target.get("selector", {})
@@ -653,6 +853,8 @@ class UnifiedComplianceEngine:
                 applicable_components = all_components
         else:
             applicable_components = all_components
+        
+        logger.info(f"[RULE EVAL] {rule_name}: Applicable components = {len(applicable_components)}")
 
         # Evaluate components
         component_results = []

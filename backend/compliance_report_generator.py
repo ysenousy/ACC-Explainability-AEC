@@ -10,9 +10,18 @@ logger = logging.getLogger(__name__)
 class ComplianceReportGenerator:
     """Generates comprehensive compliance reports."""
 
-    def __init__(self):
-        """Initialize report generator."""
-        self.regulatory_rules = self._load_regulatory_rules()
+    def __init__(self, rules: Optional[Dict] = None):
+        """Initialize report generator.
+        
+        Args:
+            rules: Optional user-imported rules dict. If not provided, loads defaults.
+        """
+        if rules is not None:
+            # Use user-imported rules (list of rule dicts)
+            self.regulatory_rules = list(rules.values()) if isinstance(rules, dict) else rules
+        else:
+            # Fall back to default rules file
+            self.regulatory_rules = self._load_regulatory_rules()
 
     def generate_report(self, graph: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -435,15 +444,21 @@ class ComplianceReportGenerator:
             status = "unknown"
             message = f"Error evaluating rule: {str(e)}"
         
-        return {
+        # Extract basic details for compliance reporting only
+        provenance = rule.get("provenance", {})
+        
+        # Build minimal report entry - no reasoning, benefits, or remediation
+        result_dict = {
             "rule_id": rule_id,
             "rule_name": rule_name,
             "status": status,
             "message": message,
             "severity": rule.get("severity", "warning"),
-            "code_reference": rule.get("provenance", {}).get("section", ""),
+            "code_reference": provenance.get("section", ""),
             "description": rule.get("description", "")
         }
+        
+        return result_dict
     
     def _extract_rule_value(self, item: Dict, lhs_spec: Dict) -> Optional[float]:
         """Extract value from item based on rule LHS specification."""

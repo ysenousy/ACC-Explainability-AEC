@@ -83,7 +83,8 @@ export const enrichComplianceWithReasoning = async (complianceResults) => {
  * Check compliance and include reasoning
  */
 export const checkComplianceWithReasoning = async (graph) => {
-  const response = await fetch(`${API_BASE}/compliance/check`, {
+  // Use the user-imported rules from the session, not fresh file load
+  const response = await fetch(`${API_BASE}/rules/check-compliance`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ graph })
@@ -99,14 +100,54 @@ export const checkComplianceWithReasoning = async (graph) => {
     throw new Error(complianceData.error || 'Compliance check failed');
   }
 
-  // Optionally enrich with reasoning
-  try {
-    const enriched = await enrichComplianceWithReasoning(complianceData);
-    if (enriched.success) {
-      return enriched.enriched_results;
+  // Convert the format from /api/rules/check-compliance to the expected format
+  // The endpoint returns component-level results grouped by rule
+  // We need to flatten it to element-level results for the reasoning layer
+  if (complianceData.compliance) {
+    const compliance = complianceData.compliance;
+    const results = [];
+    
+    // Flatten the component results into element results
+    if (compliance.rules && Array.isArray(compliance.rules)) {
+      let totalPassed = 0;
+      let totalFailed = 0;
+      
+      compliance.rules.forEach(ruleResult => {
+        const ruleId = ruleResult.rule_id;
+        const ruleName = ruleResult.rule_name || ruleResult.rule_id;
+        
+        if (ruleResult.components && Array.isArray(ruleResult.components)) {
+          ruleResult.components.forEach(component => {
+            const isPassed = component.status === 'pass';
+            if (isPassed) totalPassed++;
+            else totalFailed++;
+            
+            results.push({
+              rule_id: ruleId,
+              rule_name: ruleName,
+              element_guid: component.id,
+              element_type: ruleResult.rule_type || 'component',
+              element_name: component.name || component.id || '',
+              passed: isPassed,
+              actual_value: component.properties?.actual_value || null,
+              required_value: component.properties?.required_value || null,
+              unit: component.properties?.unit || '',
+              severity: ruleResult.severity || 'warning',
+              explanation: component.message || ''
+            });
+          });
+        }
+      });
+      
+      return {
+        success: true,
+        results: results,
+        total_checks: compliance.summary?.total_evaluations || results.length,
+        passed: totalPassed,
+        failed: totalFailed,
+        unable: 0
+      };
     }
-  } catch (err) {
-    console.warn('Could not enrich with reasoning:', err);
   }
 
   return complianceData;

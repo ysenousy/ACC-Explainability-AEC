@@ -4,6 +4,7 @@ import { FileText, CheckCircle, AlertCircle, AlertTriangle, Download, RefreshCw,
 function ComplianceReportView({ graph }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
   const [typeFilter, setTypeFilter] = useState('all'); // 'all', 'pass', 'fail', 'partial'
@@ -42,10 +43,11 @@ function ComplianceReportView({ graph }) {
     }
   }, [graph, rulesLoaded]);
 
-  const checkRulesStatus = async () => {
+  const checkRulesStatus = async (forceRefresh = false) => {
     setCheckingRules(true);
     try {
-      const response = await fetch('/api/rules/check-status');
+      const url = `/api/rules/check-status${forceRefresh ? '?refresh=true' : ''}`;
+      const response = await fetch(url);
       const data = await response.json();
       console.log('Rules status check result:', data);
       setRulesLoaded(data.rules_loaded || false);
@@ -91,6 +93,55 @@ function ComplianceReportView({ graph }) {
     // Always re-check rules status before generating report
     // (in case rules were generated/imported after initial check)
     await checkRulesStatus();
+  };
+
+  const exportReport = async () => {
+    if (!report) {
+      alert('No report to export');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const response = await fetch('/api/reports/export-compliance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report: report,
+          graph_name: report.ifc_file || 'compliance'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export report');
+      }
+
+      // Get filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'compliance-report.json';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+?)"/);
+        if (filenameMatch) filename = filenameMatch[1];
+      }
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      console.log('Report exported successfully:', filename);
+    } catch (err) {
+      console.error('Error exporting report:', err);
+      alert('Failed to export report: ' + err.message);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const getComplianceColor = (status) => {
@@ -190,7 +241,7 @@ function ComplianceReportView({ graph }) {
               )}
             </div>
             <button
-              onClick={checkRulesStatus}
+              onClick={() => checkRulesStatus(true)}
               disabled={checkingRules}
               style={{
                 padding: '0.75rem 1.5rem',
@@ -616,6 +667,7 @@ function ComplianceReportView({ graph }) {
                                   fontSize: '0.85rem'
                                 }}
                               >
+                                {/* Rule Header */}
                                 <div style={{
                                   display: 'flex',
                                   gap: '0.5rem',
@@ -653,6 +705,7 @@ function ComplianceReportView({ graph }) {
                                   </span>
                                 </div>
 
+                                {/* Evaluation Message */}
                                 <div style={{
                                   fontSize: '0.8rem',
                                   color: '#4b5563',
@@ -661,15 +714,88 @@ function ComplianceReportView({ graph }) {
                                   {rule.message}
                                 </div>
 
+                                {/* Code Reference */}
                                 <div style={{
                                   fontSize: '0.75rem',
                                   color: '#6b7280',
                                   padding: '0.4rem 0.5rem',
                                   backgroundColor: 'rgba(0,0,0,0.05)',
-                                  borderRadius: '0.25rem'
+                                  borderRadius: '0.25rem',
+                                  marginBottom: '0.5rem'
                                 }}>
                                   <strong>Code:</strong> {rule.code_reference}
                                 </div>
+
+                                {/* Reasoning Layer */}
+                                {rule.reasoning && (
+                                  <div style={{
+                                    marginBottom: '0.5rem',
+                                    padding: '0.4rem 0.5rem',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                                    borderLeft: '3px solid #3b82f6',
+                                    borderRadius: '0.25rem'
+                                  }}>
+                                    <strong style={{ color: '#1e40af', fontSize: '0.75rem' }}>📚 Reasoning:</strong>
+                                    <div style={{ fontSize: '0.75rem', color: '#1e3a8a', marginTop: '0.3rem' }}>
+                                      <p style={{ margin: '0.2rem 0' }}>
+                                        <strong>Explanation:</strong> {rule.reasoning.short_explanation}
+                                      </p>
+                                      {rule.reasoning.regulatory_basis && (
+                                        <p style={{ margin: '0.2rem 0' }}>
+                                          <strong>Regulation:</strong> {rule.reasoning.regulatory_basis}
+                                          {rule.reasoning.jurisdiction && ` (${rule.reasoning.jurisdiction})`}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Remediation for Failed Rules */}
+                                {rule.status === 'fail' && rule.remediation && (
+                                  <div style={{
+                                    marginBottom: '0.5rem',
+                                    padding: '0.4rem 0.5rem',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                    borderLeft: '3px solid #ef4444',
+                                    borderRadius: '0.25rem'
+                                  }}>
+                                    <strong style={{ color: '#991b1b', fontSize: '0.75rem' }}>🔧 Recommended Fix:</strong>
+                                    <div style={{ fontSize: '0.75rem', color: '#7f1d1d', marginTop: '0.3rem' }}>
+                                      <p style={{ margin: '0.2rem 0' }}>
+                                        {rule.remediation.recommended_fix}
+                                      </p>
+                                      {rule.remediation.estimated_effort && (
+                                        <p style={{ margin: '0.2rem 0' }}>
+                                          <strong>Estimated Effort:</strong> {rule.remediation.estimated_effort}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Benefits */}
+                                {(rule.benefits || (rule.remediation && rule.remediation.benefits)) && (
+                                  <div style={{
+                                    padding: '0.4rem 0.5rem',
+                                    backgroundColor: 'rgba(34, 197, 94, 0.05)',
+                                    borderLeft: '3px solid #22c55e',
+                                    borderRadius: '0.25rem'
+                                  }}>
+                                    <strong style={{ color: '#15803d', fontSize: '0.75rem' }}>✓ Benefits:</strong>
+                                    <ul style={{
+                                      fontSize: '0.75rem',
+                                      color: '#166534',
+                                      margin: '0.3rem 0 0 0',
+                                      paddingLeft: '1.2rem'
+                                    }}>
+                                      {(rule.benefits || rule.remediation.benefits).slice(0, 3).map((benefit, bIdx) => (
+                                        <li key={bIdx} style={{ margin: '0.1rem 0' }}>
+                                          {benefit}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -682,7 +808,7 @@ function ComplianceReportView({ graph }) {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <button
                 onClick={generateReport}
                 style={{
@@ -701,6 +827,28 @@ function ComplianceReportView({ graph }) {
               >
                 <RefreshCw size={16} />
                 Regenerate Report
+              </button>
+
+              <button
+                onClick={exportReport}
+                disabled={exporting || !report}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: exporting || !report ? '#d1d5db' : '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: exporting || !report ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                title={!report ? 'Generate a report first' : 'Export report as JSON'}
+              >
+                <Download size={16} />
+                {exporting ? 'Exporting...' : 'Export as JSON'}
               </button>
             </div>
           </>

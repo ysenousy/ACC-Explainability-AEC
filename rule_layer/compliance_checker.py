@@ -48,9 +48,54 @@ class ComplianceChecker:
                         return elem
         return None
 
-    def extract_quantity(self, element: Dict, source: Dict) -> Optional[Tuple[float, str]]:
+    def extract_quantity(self, element: Dict, source: Dict) -> Optional[Tuple[float, str, str]]:
         """
-        Extract quantity value from element.
+        Extract quantity value from element with fallback support.
+        
+        Returns: (value, unit, source_used) tuple or None
+        
+        Supports fallback_sources for checking alternative properties if primary fails.
+        """
+        # Try primary source first
+        result = self._try_extract_from_source(element, source)
+        if result:
+            value, unit = result
+            source_name = self._get_source_name(source)
+            return (value, unit, source_name)
+        
+        # Try fallback sources if primary failed
+        fallback_sources = source.get('fallback_sources', [])
+        for fallback_source in fallback_sources:
+            result = self._try_extract_from_source(element, fallback_source)
+            if result:
+                value, unit = result
+                source_name = self._get_source_name(fallback_source)
+                return (value, unit, source_name)
+        
+        # No value found in primary or any fallback sources
+        return None
+    
+    def _get_source_name(self, source: Dict) -> str:
+        """Get human-readable name for a source."""
+        if source.get('source') == 'pset':
+            pset = source.get('pset', source.get('pset_name', ''))
+            prop = source.get('property', '')
+            return f"{pset}.{prop}"
+        elif source.get('source') == 'qto':
+            qto = source.get('qto_name', '')
+            quant = source.get('quantity', '')
+            return f"{qto}:{quant}"
+        elif source.get('source') == 'attribute':
+            attr = source.get('attribute', '')
+            return f"attr:{attr}"
+        elif source.get('source') == 'parameter':
+            param = source.get('param', '')
+            return f"param:{param}"
+        return "unknown"
+    
+    def _try_extract_from_source(self, element: Dict, source: Dict) -> Optional[Tuple[float, str]]:
+        """
+        Try to extract quantity from a single source.
         
         Returns: (value, unit) tuple or None
         """
@@ -70,7 +115,7 @@ class ComplianceChecker:
             return None
         
         elif source.get('source') == 'pset':
-            pset_name = source.get('pset_name')
+            pset_name = source.get('pset_name', source.get('pset'))
             prop_name = source.get('property')
             unit = source.get('unit', 'unknown')
             
@@ -104,7 +149,9 @@ class ComplianceChecker:
             'lhs_value': float,
             'rhs_value': float,
             'unit': str,
-            'message': str
+            'operator': str,
+            'lhs_source': str,
+            'rhs_source': str
         } or None if evaluation not possible
         """
         condition = rule.get('condition', {})
@@ -116,7 +163,7 @@ class ComplianceChecker:
         lhs_result = self.extract_quantity(element, lhs_source)
         if not lhs_result:
             return None
-        lhs_value, lhs_unit = lhs_result
+        lhs_value, lhs_unit, lhs_source_used = lhs_result
 
         # Extract RHS value
         if rhs_source.get('source') == 'parameter':
@@ -125,11 +172,12 @@ class ComplianceChecker:
             if rhs_value is None:
                 return None
             rhs_value = float(rhs_value)
+            rhs_source_used = f"param:{param_name}"
         else:
             rhs_result = self.extract_quantity(element, rhs_source)
             if not rhs_result:
                 return None
-            rhs_value, _ = rhs_result
+            rhs_value, _, rhs_source_used = rhs_result
 
         # Evaluate condition
         passed = self._evaluate_operator(lhs_value, operator, rhs_value)
@@ -139,7 +187,9 @@ class ComplianceChecker:
             'lhs_value': lhs_value,
             'rhs_value': rhs_value,
             'unit': lhs_unit,
-            'operator': operator
+            'operator': operator,
+            'lhs_source': lhs_source_used,
+            'rhs_source': rhs_source_used
         }
 
     def _evaluate_operator(self, lhs: float, op: str, rhs: float) -> bool:
