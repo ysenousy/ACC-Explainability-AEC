@@ -206,7 +206,7 @@ function App() {
         <div className="header-content">
           <div className="header-left">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-              <img src="/ace-x-logo.svg" alt="ACE-X" style={{ height: '50px', width: 'auto' }} />
+              <img src="/ace-x-logo.png" alt="ACE-X" style={{ height: '60px', width: 'auto' }} />
               <p style={{ margin: 0, fontSize: '0.75rem', color: 'white', fontWeight: '500', textAlign: 'center' }}>The AEC Compliance Explainability Framework</p>
             </div>
           </div>
