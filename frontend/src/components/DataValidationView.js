@@ -5,7 +5,6 @@ function DataValidationView({ graph }) {
   const [validationResults, setValidationResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [severityFilter, setSeverityFilter] = useState('all'); // 'all', 'error', 'warning', 'info'
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pass', 'fail'
   const [expandedTypes, setExpandedTypes] = useState({});
   const [expandedElements, setExpandedElements] = useState({});
@@ -44,17 +43,6 @@ function DataValidationView({ graph }) {
     }
   };
 
-  const getSeverityIcon = (severity) => {
-    switch (severity?.toLowerCase()) {
-      case 'error':
-        return <AlertCircle size={14} />;
-      case 'warning':
-        return <AlertTriangle size={14} />;
-      default:
-        return <Info size={14} />;
-    }
-  };
-
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
       case 'error':
@@ -86,9 +74,6 @@ function DataValidationView({ graph }) {
   const filterProperties = (properties) => {
     if (!properties) return [];
     return properties.filter(prop => {
-      if (severityFilter !== 'all' && prop.severity?.toLowerCase() !== severityFilter) {
-        return false;
-      }
       if (statusFilter !== 'all' && prop.status !== statusFilter) {
         return false;
       }
@@ -98,13 +83,11 @@ function DataValidationView({ graph }) {
 
   // Calculate statistics
   const calculateStats = () => {
-    if (!validationResults) return { total: 0, passed: 0, failed: 0, errors: 0, warnings: 0 };
+    if (!validationResults) return { total: 0, passed: 0, failed: 0 };
 
     let total = 0;
     let passed = 0;
     let failed = 0;
-    let errors = 0;
-    let warnings = 0;
 
     Object.values(validationResults.by_element_type || {}).forEach(elemTypeData => {
       (elemTypeData.elements || []).forEach(elem => {
@@ -112,14 +95,11 @@ function DataValidationView({ graph }) {
           total++;
           if (prop.status === 'pass') passed++;
           else failed++;
-
-          if (prop.severity === 'error') errors++;
-          else if (prop.severity === 'warning') warnings++;
         });
       });
     });
 
-    return { total, passed, failed, errors, warnings };
+    return { total, passed, failed };
   };
 
   const stats = calculateStats();
@@ -201,34 +181,6 @@ function DataValidationView({ graph }) {
                   {stats.failed}
                 </div>
               </div>
-
-              <div style={{
-                padding: '1rem',
-                backgroundColor: '#fef3c7',
-                borderRadius: '0.5rem',
-                border: '1px solid #fde68a'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: '#92400e', fontWeight: '600', marginBottom: '0.5rem' }}>
-                  WARNINGS
-                </div>
-                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#f59e0b' }}>
-                  {stats.warnings}
-                </div>
-              </div>
-
-              <div style={{
-                padding: '1rem',
-                backgroundColor: '#fee2e2',
-                borderRadius: '0.5rem',
-                border: '1px solid #fecaca'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: '#991b1b', fontWeight: '600', marginBottom: '0.5rem' }}>
-                  ERRORS
-                </div>
-                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#ef4444' }}>
-                  {stats.errors}
-                </div>
-              </div>
             </div>
 
             {/* Filters */}
@@ -236,32 +188,11 @@ function DataValidationView({ graph }) {
               display: 'flex',
               gap: '1rem',
               marginBottom: '1.5rem',
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
+              alignItems: 'center'
             }}>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <Filter size={16} />
-                <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Severity:</span>
-              </div>
-              {['all', 'error', 'warning', 'info'].map(level => (
-                <button
-                  key={level}
-                  onClick={() => setSeverityFilter(level)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: severityFilter === level ? getSeverityColor(level) : '#e5e7eb',
-                    color: severityFilter === level ? 'white' : '#1f2937',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </button>
-              ))}
-
-              <div style={{ borderLeft: '1px solid #d1d5db', marginLeft: '1rem', paddingLeft: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Status:</span>
               </div>
               {['all', 'pass', 'fail'].map(status => (
@@ -325,6 +256,10 @@ function DataValidationView({ graph }) {
                       <div>
                         {elements.map((element, elemIdx) => {
                           const filteredProps = filterProperties(element.properties);
+                          const allProps = element.properties || [];
+                          const passCount = allProps.filter(p => p.status === 'pass').length;
+                          const failCount = allProps.filter(p => p.status === 'fail').length;
+                          
                           return (
                             <div key={elemIdx} style={{ borderTop: elemIdx > 0 ? '1px solid #e5e7eb' : 'none' }}>
                               {/* Element Header */}
@@ -335,13 +270,14 @@ function DataValidationView({ graph }) {
                                 }))}
                                 style={{
                                   padding: '0.75rem 1rem',
-                                  backgroundColor: '#f9fafb',
+                                  backgroundColor: failCount > 0 ? '#fef2f2' : '#f9fafb',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
                                   marginLeft: '1rem',
-                                  borderRadius: '0.25rem'
+                                  borderRadius: '0.25rem',
+                                  borderLeft: failCount > 0 ? '4px solid #ef4444' : '4px solid #10b981'
                                 }}
                               >
                                 <div>
@@ -350,9 +286,21 @@ function DataValidationView({ graph }) {
                                     ID: {element.guid}
                                   </span>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem' }}>
+                                    {passCount > 0 && (
+                                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>
+                                        ✓ {passCount} pass
+                                      </span>
+                                    )}
+                                    {failCount > 0 && (
+                                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>
+                                        ✗ {failCount} fail
+                                      </span>
+                                    )}
+                                  </div>
                                   <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                                    {filteredProps.length} properties
+                                    {filteredProps.length} shown
                                   </span>
                                   <span>{expandedElements[`${elemType}-${elemIdx}`] ? '▼' : '▶'}</span>
                                 </div>
@@ -361,7 +309,27 @@ function DataValidationView({ graph }) {
                               {/* Properties */}
                               {expandedElements[`${elemType}-${elemIdx}`] && (
                                 <div>
-                                  {filteredProps.map((prop, propIdx) => (
+                                  {filteredProps.length === 0 ? (
+                                    <div style={{
+                                      padding: '1rem',
+                                      color: '#6b7280',
+                                      textAlign: 'center',
+                                      fontSize: '0.85rem',
+                                      backgroundColor: '#f9fafb',
+                                      borderTop: '1px solid #f3f4f6'
+                                    }}>
+                                      No properties match the current filter.
+                                      {allProps.length > 0 && (
+                                        <>
+                                          <br />
+                                          <span style={{ fontSize: '0.75rem' }}>
+                                            (Total: {allProps.length} properties - {passCount} passed, {failCount} failed)
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    filteredProps.map((prop, propIdx) => (
                                     <div
                                       key={propIdx}
                                       style={{
@@ -411,22 +379,6 @@ function DataValidationView({ graph }) {
                                           }}>
                                             {prop.status.toUpperCase()}
                                           </span>
-                                          {prop.severity && (
-                                            <span style={{
-                                              display: 'inline-flex',
-                                              alignItems: 'center',
-                                              gap: '0.25rem',
-                                              padding: '0.2rem 0.4rem',
-                                              backgroundColor: getSeverityColor(prop.severity),
-                                              color: 'white',
-                                              borderRadius: '0.25rem',
-                                              fontSize: '0.65rem',
-                                              fontWeight: 'bold'
-                                            }}>
-                                              {getSeverityIcon(prop.severity)}
-                                              {prop.severity.toUpperCase()}
-                                            </span>
-                                          )}
                                         </div>
 
                                         {/* Actual vs Required */}
@@ -480,14 +432,15 @@ function DataValidationView({ graph }) {
                                             padding: '0.4rem 0.5rem',
                                             backgroundColor: '#f3f4f6',
                                             borderRadius: '0.25rem',
-                                            borderLeft: `3px solid ${getSeverityColor(prop.severity)}`
+                                            borderLeft: `3px solid ${prop.status === 'pass' ? '#10b981' : '#ef4444'}`
                                           }}>
                                             <strong>Reason:</strong> {prop.reason}
                                           </div>
                                         )}
                                       </div>
                                     </div>
-                                  ))}
+                                    ))
+                                  )}
                                 </div>
                               )}
                             </div>

@@ -1,15 +1,36 @@
 """Data validation for IFC graphs."""
 import logging
-from typing import Dict, Any, List
+import json
+from pathlib import Path
+from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class DataValidator:
-    """Validates IFC data completeness and quality."""
+    """Validates IFC data QUALITY and COMPLETENESS - NOT regulatory compliance.
+    
+    This is an INITIAL SANITY CHECK that ensures:
+    1. Required properties are extracted and present
+    2. Data types are correct (string, number, etc.)
+    3. Values are physically possible (e.g., positive dimensions)
+    
+    Regulatory compliance checking is done by the Rule Layer / Compliance Engine.
+    """
+    
+    def __init__(self):
+        """Initialize validator.
+        
+        Note: This validator does NOT load regulatory rules.
+        It performs purely structural validation of extracted IFC data.
+        """
+        pass
+
 
     def validate_ifc_data(self, graph: Dict[str, Any]) -> Dict[str, Any]:
         """Validate all properties extracted from IFC graph.
+        
+        This performs DATA QUALITY checks only (pass/fail), NOT regulatory compliance.
         
         Args:
             graph: The data-layer graph
@@ -25,10 +46,10 @@ class DataValidator:
                                     {
                                         "property": "width_mm",
                                         "actual_value": 900,
-                                        "required_value": "> 800",
+                                        "required_value": "100-5000 mm",
                                         "status": "pass",
-                                        "severity": "error",
-                                        "message": "Width is valid"
+                                        "message": "Width is valid",
+                                        "reason": "Property meets all constraints"
                                     }
                                 ]
                             }
@@ -50,7 +71,10 @@ class DataValidator:
                 "slabs": self._get_slab_rules(),
                 "columns": self._get_column_rules(),
                 "stairs": self._get_stair_rules(),
-                "beams": self._get_beam_rules()
+                "beams": self._get_beam_rules(),
+                "roofs": self._get_roof_rules(),
+                "furniture": self._get_furniture_rules(),
+                "equipment": self._get_equipment_rules()
             }
 
             # Validate each element type
@@ -109,7 +133,10 @@ class DataValidator:
         }
 
     def _validate_property(self, prop_name: str, value: Any, constraints: Dict, element: Dict, is_required: bool = True) -> Dict:
-        """Validate a single property."""
+        """Validate a single property - DATA QUALITY CHECK ONLY (pass/fail).
+        
+        Returns simple pass/fail status without regulatory severity.
+        """
         
         # Check if property is missing
         if value is None or value == "":
@@ -118,9 +145,8 @@ class DataValidator:
                 "actual_value": "N/A",
                 "required_value": constraints.get("description", "Expected value"),
                 "status": "fail",
-                "severity": "error" if is_required else "warning",
                 "message": f"Missing {prop_name}",
-                "reason": f"Required property not found" if is_required else "Optional property not provided"
+                "reason": f"Required property not extracted from IFC" if is_required else "Optional property not provided"
             }
 
         # Type validation
@@ -131,7 +157,6 @@ class DataValidator:
                 "actual_value": str(value),
                 "required_value": f"{expected_type} type",
                 "status": "fail",
-                "severity": "error",
                 "message": f"Invalid type for {prop_name}",
                 "reason": f"Expected {expected_type}, got {type(value).__name__}"
             }
@@ -147,9 +172,8 @@ class DataValidator:
                     "actual_value": str(value),
                     "required_value": f">= {min_val}",
                     "status": "fail",
-                    "severity": "error",
-                    "message": f"{prop_name} below minimum",
-                    "reason": f"Value {value} is less than minimum {min_val}"
+                    "message": f"{prop_name} below sanity check minimum",
+                    "reason": f"Value {value} is less than physically reasonable minimum {min_val}"
                 }
 
             if max_val is not None and value > max_val:
@@ -158,9 +182,8 @@ class DataValidator:
                     "actual_value": str(value),
                     "required_value": f"<= {max_val}",
                     "status": "fail",
-                    "severity": "warning",
-                    "message": f"{prop_name} above maximum",
-                    "reason": f"Value {value} exceeds maximum {max_val}"
+                    "message": f"{prop_name} above sanity check maximum",
+                    "reason": f"Value {value} exceeds physically reasonable maximum {max_val}"
                 }
 
         # All validations passed
@@ -179,9 +202,8 @@ class DataValidator:
             "actual_value": str(value),
             "required_value": constraints.get("description", f"{expected_type or 'value'}{range_desc}"),
             "status": "pass",
-            "severity": "info",
             "message": f"{prop_name} is valid",
-            "reason": "Property meets all constraints"
+            "reason": "Property meets all sanity check constraints"
         }
 
     def _check_type(self, value: Any, expected_type: str) -> bool:
@@ -203,23 +225,32 @@ class DataValidator:
     # Element-specific validation rules based on actual extracted properties
     
     def _get_door_rules(self) -> Dict:
-        """Validation rules for doors."""
+        """Validation rules for doors - SANITY CHECKS ONLY.
+        
+        Doors are extracted with name (required) and optional dimensional properties.
+        These are physically/logically reasonable ranges for door dimensions.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
-                "width_mm": {
-                    "type": "number",
-                    "min": 600,
-                    "max": 2000,
-                    "description": "Width in mm (600-2000)"
-                },
-                "height_mm": {
-                    "type": "number",
-                    "min": 1800,
-                    "max": 3000,
-                    "description": "Height in mm (1800-3000)"
+                "name": {
+                    "type": "string",
+                    "description": "Door name/identifier"
                 }
             },
             "optional": {
+                "width_mm": {
+                    "type": "number",
+                    "min": 100,           # Minimum physically possible door width
+                    "max": 5000,          # Maximum physically possible door width
+                    "description": "Door width in mm (100-5000, sanity check only)"
+                },
+                "height_mm": {
+                    "type": "number",
+                    "min": 500,           # Minimum physically possible door height
+                    "max": 5000,          # Maximum physically possible door height
+                    "description": "Door height in mm (500-5000, sanity check only)"
+                },
                 "fire_rating": {
                     "type": "string",
                     "description": "Fire rating classification"
@@ -232,55 +263,48 @@ class DataValidator:
         }
 
     def _get_space_rules(self) -> Dict:
-        """Validation rules for spaces."""
+        """Validation rules for spaces - SANITY CHECKS ONLY.
+        
+        Spaces are extracted with area_m2 as the primary dimensional property.
+        These are physically reasonable ranges for space dimensions.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
                 "area_m2": {
                     "type": "number",
-                    "min": 1.0,
-                    "max": 5000,
-                    "description": "Area in m² (1-5000)"
+                    "min": 0.1,           # Minimum physically possible space area
+                    "max": 100000,        # Maximum physically possible space area
+                    "description": "Space area in m² (0.1-100000, sanity check only)"
                 }
             },
-            "optional": {
-                "usage_type": {
-                    "type": "string",
-                    "description": "Space usage type"
-                },
-                "storey_name": {
-                    "type": "string",
-                    "description": "Storey/level name"
-                }
-            }
+            "optional": {}
         }
 
     def _get_window_rules(self) -> Dict:
-        """Validation rules for windows."""
+        """Validation rules for windows - SANITY CHECKS ONLY.
+        
+        Windows are extracted as generic elements with only name property.
+        Dimensional data is available in property_sets for compliance rules.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
-                "width_mm": {
-                    "type": "number",
-                    "min": 400,
-                    "max": 3000,
-                    "description": "Width in mm (400-3000)"
-                },
-                "height_mm": {
-                    "type": "number",
-                    "min": 400,
-                    "max": 3000,
-                    "description": "Height in mm (400-3000)"
+                "name": {
+                    "type": "string",
+                    "description": "Window name/identifier"
                 }
             },
-            "optional": {
-                "storey_name": {
-                    "type": "string",
-                    "description": "Storey/level name"
-                }
-            }
+            "optional": {}
         }
 
     def _get_wall_rules(self) -> Dict:
-        """Validation rules for walls."""
+        """Validation rules for walls - SANITY CHECKS ONLY.
+        
+        Walls are extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
                 "name": {
@@ -288,18 +312,16 @@ class DataValidator:
                     "description": "Wall name/identifier"
                 }
             },
-            "optional": {
-                "height_mm": {
-                    "type": "number",
-                    "min": 1000,
-                    "max": 10000,
-                    "description": "Height in mm"
-                }
-            }
+            "optional": {}
         }
 
     def _get_slab_rules(self) -> Dict:
-        """Validation rules for slabs."""
+        """Validation rules for slabs - SANITY CHECKS ONLY.
+        
+        Slabs are extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
                 "name": {
@@ -307,17 +329,16 @@ class DataValidator:
                     "description": "Slab name/identifier"
                 }
             },
-            "optional": {
-                "area_m2": {
-                    "type": "number",
-                    "min": 1.0,
-                    "description": "Slab area in m²"
-                }
-            }
+            "optional": {}
         }
 
     def _get_column_rules(self) -> Dict:
-        """Validation rules for columns."""
+        """Validation rules for columns - SANITY CHECKS ONLY.
+        
+        Columns are extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
                 "name": {
@@ -325,17 +346,16 @@ class DataValidator:
                     "description": "Column name/identifier"
                 }
             },
-            "optional": {
-                "height_mm": {
-                    "type": "number",
-                    "min": 1000,
-                    "description": "Column height in mm"
-                }
-            }
+            "optional": {}
         }
 
     def _get_stair_rules(self) -> Dict:
-        """Validation rules for stairs."""
+        """Validation rules for stairs - SANITY CHECKS ONLY.
+        
+        Stairs are extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
                 "name": {
@@ -343,18 +363,16 @@ class DataValidator:
                     "description": "Stair name/identifier"
                 }
             },
-            "optional": {
-                "height_mm": {
-                    "type": "number",
-                    "min": 0,
-                    "max": 10000,
-                    "description": "Total stair height in mm"
-                }
-            }
+            "optional": {}
         }
 
     def _get_beam_rules(self) -> Dict:
-        """Validation rules for beams."""
+        """Validation rules for beams - SANITY CHECKS ONLY.
+        
+        Beams are extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
         return {
             "required": {
                 "name": {
@@ -362,13 +380,58 @@ class DataValidator:
                     "description": "Beam name/identifier"
                 }
             },
-            "optional": {
-                "length_mm": {
-                    "type": "number",
-                    "min": 1000,
-                    "description": "Beam length in mm"
+            "optional": {}
+        }
+
+    def _get_roof_rules(self) -> Dict:
+        """Validation rules for roofs - SANITY CHECKS ONLY.
+        
+        Roofs are extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
+        return {
+            "required": {
+                "name": {
+                    "type": "string",
+                    "description": "Roof name/identifier"
                 }
-            }
+            },
+            "optional": {}
+        }
+
+    def _get_furniture_rules(self) -> Dict:
+        """Validation rules for furniture - SANITY CHECKS ONLY.
+        
+        Furniture is extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
+        return {
+            "required": {
+                "name": {
+                    "type": "string",
+                    "description": "Furniture name/identifier"
+                }
+            },
+            "optional": {}
+        }
+
+    def _get_equipment_rules(self) -> Dict:
+        """Validation rules for equipment - SANITY CHECKS ONLY.
+        
+        Equipment is extracted as generic elements.
+        Only basic name property is extracted; no dimensional data.
+        NOT regulatory compliance checks (that's handled by Rule Layer).
+        """
+        return {
+            "required": {
+                "name": {
+                    "type": "string",
+                    "description": "Equipment name/identifier"
+                }
+            },
+            "optional": {}
         }
 
 

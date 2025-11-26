@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+try:
+    import inflect
+    _inflect_engine = inflect.engine()
+except ImportError:
+    _inflect_engine = None
+
 from rule_layer.base import BaseRule
 from rule_layer.models import RuleResult, RuleSeverity, RuleStatus
 
@@ -97,8 +103,12 @@ class ParametricRule(BaseRule):
             elif val == "building":
                 key = None
             elif val:
-                # generalized: treat val as element type and look for corresponding pluralized key
-                key = f"{val}s" if not val.endswith("s") else val
+                # Use inflect for proper pluralization if available
+                if _inflect_engine:
+                    key = _inflect_engine.plural(val)
+                else:
+                    # Fallback: treat val as element type and pluralize with 's'
+                    key = f"{val}s" if not val.endswith("s") else val
             if key:
                 targets = graph.get("elements", {}).get(key, []) or []
         

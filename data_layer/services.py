@@ -8,6 +8,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
+try:
+    import inflect
+    _inflect_engine = inflect.engine()
+except ImportError:
+    _inflect_engine = None
+
 from .exceptions import IFCLoadError
 from .extract_core import extract_doors, extract_spaces, extract_all_elements
 from .load_ifc import load_ifc, preview_ifc
@@ -66,7 +72,14 @@ class DataLayerService:
         for ifc_type, elements in all_elements.items():
             # Skip if already added (spaces and doors are primary)
             if ifc_type not in ("IfcSpace", "IfcDoor"):
-                key = ifc_type.replace("Ifc", "").lower()  # e.g., IfcWall -> wall
+                # Convert IFC type to plural form (e.g., IfcWall -> walls)
+                base_name = ifc_type.replace("Ifc", "").lower()
+                # Use inflect for proper pluralization if available, else simple 's' suffix
+                if _inflect_engine:
+                    key = _inflect_engine.plural(base_name)
+                else:
+                    # Fallback: add 's' unless already ends with 's'
+                    key = base_name if base_name.endswith('s') else f"{base_name}s"
                 elements_dict[key] = [elem.to_dict() for elem in elements]
 
         graph: Dict[str, Any] = {

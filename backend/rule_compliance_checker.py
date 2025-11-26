@@ -4,6 +4,12 @@ import json
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
+try:
+    import inflect
+    _inflect_engine = inflect.engine()
+except ImportError:
+    _inflect_engine = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -85,7 +91,11 @@ class RuleComplianceChecker:
         # Extract all component types with full attributes
         for comp_type_plural in ["doors", "spaces", "windows", "walls", "slabs", "columns", "stairs", "beams"]:
             comp_list = elements.get(comp_type_plural, [])
-            comp_type = comp_type_plural.rstrip('s')  # Singularize: doors -> door
+            # Use inflect for proper singularization if available, else simple rstrip('s')
+            if _inflect_engine:
+                comp_type = _inflect_engine.singular(comp_type_plural)
+            else:
+                comp_type = comp_type_plural.rstrip('s')  # Fallback: doors -> door
             components[comp_type] = []
             
             for comp in comp_list:
