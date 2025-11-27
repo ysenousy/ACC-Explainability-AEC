@@ -1119,73 +1119,6 @@ def analyze_extraction_strategies():
         }), 500
 
 
-@app.route("/api/rules/generate", methods=["POST"])
-def generate_rules():
-    """Generate rules from IFC graph using selected extraction strategies.
-    
-    Request:
-        {
-            "graph": dict (the data-layer graph),
-            "strategies": list (["pset", "statistical", "metadata"])
-        }
-    
-    Response:
-        {
-            "success": bool,
-            "rules_count": int,
-            "rules": list,
-            "error": str or null
-        }
-    """
-    try:
-        from data_layer.extract_rules import extract_rules_from_graph
-        
-        data = request.get_json()
-        graph = data.get("graph")
-        strategies = data.get("strategies", ["pset", "statistical", "metadata"])
-        
-        if not graph:
-            return jsonify({"success": False, "error": "graph required"}), 400
-        
-        if not isinstance(strategies, list) or len(strategies) == 0:
-            return jsonify({"success": False, "error": "strategies must be a non-empty list"}), 400
-        
-        # Validate strategy names
-        valid_strategies = {"pset", "statistical", "metadata"}
-        if not all(s in valid_strategies for s in strategies):
-            return jsonify({"success": False, "error": f"Invalid strategies. Must be one of: {valid_strategies}"}), 400
-        
-        logger.info(f"Generating rules with strategies: {strategies}")
-        
-        # Extract rules using selected strategies
-        result = extract_rules_from_graph(graph, strategies=strategies)
-        rules = result.get("rules", [])
-        
-        # Save to custom_rules.json
-        save_custom_rules(rules)
-        
-        # Mark that rules have been generated/activated in this session
-        global rules_imported_in_session
-        if len(rules) > 0:
-            rules_imported_in_session = True
-        
-        return jsonify({
-            "success": True,
-            "rules_count": len(rules),
-            "rules": rules,
-            "error": None
-        })
-    
-    except Exception as e:
-        logger.exception("Rule generation failed")
-        return jsonify({
-            "success": False,
-            "rules_count": 0,
-            "rules": None,
-            "error": str(e)
-        }), 500
-
-
 @app.route("/api/rules/check-against-ifc", methods=["POST"])
 def check_rules_against_ifc():
     """Check selected rules against an IFC file.
@@ -2700,6 +2633,559 @@ def load_regulations_endpoint():
         return jsonify({
             "success": False,
             "error": str(e)
+        }), 500
+
+
+# ===== Unified Configuration Management Endpoints =====
+
+@app.route("/api/config/load", methods=["GET"])
+def load_unified_config():
+    """Load the unified rules mapping configuration."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        config = manager.load_config()
+        
+        if not config:
+            logger.error("Config returned empty")
+            return jsonify({
+                "success": False,
+                "config": None,
+                "error": "Configuration is empty or could not be loaded"
+            }), 500
+        
+        logger.info(f"Successfully loaded config with {len(config.get('rule_mappings', []))} mappings")
+        return jsonify({
+            "success": True,
+            "config": config,
+            "error": None
+        })
+    except Exception as e:
+        logger.exception("Error loading unified config")
+        return jsonify({
+            "success": False,
+            "config": None,
+            "error": f"Error loading config: {str(e)}"
+        }), 500
+
+
+@app.route("/api/config/save", methods=["POST"])
+def save_unified_config():
+    """Save the unified rules mapping configuration."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "config" not in data:
+            return jsonify({
+                "success": False,
+                "error": "config object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.save_config(data["config"])
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception("Error saving unified config")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/validate", methods=["POST"])
+def validate_unified_config():
+    """Validate the unified rules mapping configuration."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "config" not in data:
+            return jsonify({
+                "success": False,
+                "error": "config object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        is_valid, errors = manager.validate_config(data["config"])
+        
+        return jsonify({
+            "success": is_valid,
+            "is_valid": is_valid,
+            "errors": errors
+        })
+    except Exception as e:
+        logger.exception("Error validating unified config")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/check-mappings", methods=["POST"])
+def check_config_mappings():
+    """Check how many IFC elements are mapped to rules in the configuration.
+    
+    Expects JSON POST with:
+    - graph: The IFC graph object (from data layer)
+    
+    Returns statistics on element counts per element type and rule mapping coverage.
+    """
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        graph = data.get("graph") if data else None
+        
+        if not graph:
+            return jsonify({
+                "success": False,
+                "error": "graph object required in request body"
+            }), 400
+        
+        # Extract elements from the graph
+        elements = graph.get("elements", {}) or {}
+        
+        # Load the config to get mappings
+        manager = get_config_manager()
+        config = manager.load_config()
+        if not config:
+            return jsonify({
+                "success": False,
+                "error": "Failed to load configuration"
+            }), 500
+        
+        # config is the actual config dict, not wrapped in a response object
+        rule_mappings = config.get("rule_mappings", [])
+        
+        # Build mapping statistics
+        mapping_stats = {}
+        total_elements_by_type = {}
+        
+        # Count total elements by type in IFC
+        for element_type, element_list in elements.items():
+            if isinstance(element_list, list):
+                total_elements_by_type[element_type] = len(element_list)
+        
+        logger.info(f"IFC element types found: {list(total_elements_by_type.keys())}")
+        
+        # Create normalized mapping (lowercase + singularize for common plurals)
+        def normalize_element_type(type_str):
+            """Normalize element type: lowercase and remove trailing 's' for common cases"""
+            normalized = type_str.lower()
+            # Remove trailing 's' for common plurals: doors->door, spaces->space, stairs->stair, etc.
+            if normalized.endswith('s') and len(normalized) > 1:
+                # Keep singulars: "glass", "columns", "walls", "slabs", "windows"
+                # Remove 's': "doors"→"door", "spaces"→"space", "stairs"→"stair"
+                singular = normalized[:-1]  # Remove the 's'
+                return singular
+            return normalized
+        
+        elements_by_type_normalized = {normalize_element_type(k): v for k, v in total_elements_by_type.items()}
+        logger.info(f"Normalized element types: {list(elements_by_type_normalized.keys())}")
+        
+        # For each rule mapping, count how many elements of that type exist
+        for mapping in rule_mappings:
+            if not mapping.get("enabled", True):
+                continue
+            
+            mapping_id = mapping.get("mapping_id", "unknown")
+            element_type = mapping.get("element_type", "").lower()  # Normalize to lowercase
+            rule_id = mapping.get("rule_reference", {}).get("rule_id", "")
+            
+            # Case and plural-insensitive lookup
+            element_count = elements_by_type_normalized.get(element_type, 0)
+            logger.debug(f"Mapping {mapping_id}: looking for '{element_type}' -> found {element_count} elements")
+            
+            mapping_stats[mapping_id] = {
+                "mapping_id": mapping_id,
+                "rule_id": rule_id,
+                "element_type": element_type,
+                "elements_in_ifc": element_count,
+                "enabled": mapping.get("enabled", True)
+            }
+        
+        # Summary statistics
+        # Count unique elements that have at least one mapping
+        element_types_with_mappings = set()
+        for mapping in rule_mappings:
+            if mapping.get("enabled", True):
+                element_types_with_mappings.add(normalize_element_type(mapping.get("element_type", "")))
+        
+        # Count total elements that have at least one mapping
+        mapped_elements = sum(
+            v for k, v in elements_by_type_normalized.items() 
+            if k in element_types_with_mappings
+        )
+        
+        summary = {
+            "total_elements": sum(total_elements_by_type.values()),
+            "elements_by_type": total_elements_by_type,
+            "total_mappings": len([m for m in rule_mappings if m.get("enabled", True)]),
+            "mapped_elements": mapped_elements,  # Elements that have at least one mapping
+            "coverage_percentage": int((mapped_elements / sum(total_elements_by_type.values()) * 100)) if sum(total_elements_by_type.values()) > 0 else 0
+        }
+        
+        return jsonify({
+            "success": True,
+            "summary": summary,
+            "mappings": mapping_stats
+        })
+    except Exception as e:
+        logger.exception("Error checking config mappings")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/ifc-elements", methods=["GET"])
+def get_ifc_elements():
+    """Get all IFC element type mappings."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        elements = manager.get_ifc_element_mappings()
+        
+        return jsonify({
+            "success": True,
+            "elements": elements
+        })
+    except Exception as e:
+        logger.exception("Error getting IFC element mappings")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/element-attributes/<element_type>", methods=["GET"])
+def get_element_attributes(element_type):
+    """Get attributes for a specific IFC element type."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        attributes = manager.get_element_attributes(element_type)
+        
+        return jsonify({
+            "success": True,
+            "element_type": element_type,
+            "attributes": attributes
+        })
+    except Exception as e:
+        logger.exception(f"Error getting attributes for element {element_type}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/element-attributes/<element_type>", methods=["POST"])
+def add_element_attribute(element_type):
+    """Add a new attribute to an element type."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "attribute" not in data:
+            return jsonify({
+                "success": False,
+                "error": "attribute object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.add_element_attribute(element_type, data["attribute"])
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception(f"Error adding attribute to element {element_type}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/element-attributes/<element_type>/<attribute_name>", methods=["PUT"])
+def update_element_attribute(element_type, attribute_name):
+    """Update an attribute in an element type."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "attribute" not in data:
+            return jsonify({
+                "success": False,
+                "error": "attribute object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.update_element_attribute(
+            element_type, attribute_name, data["attribute"]
+        )
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception(f"Error updating attribute {attribute_name} in element {element_type}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/element-attributes/<element_type>/<attribute_name>", methods=["DELETE"])
+def delete_element_attribute(element_type, attribute_name):
+    """Delete an attribute from an element type."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        success, message = manager.delete_element_attribute(element_type, attribute_name)
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception(f"Error deleting attribute {attribute_name} from element {element_type}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/rule-mappings", methods=["GET"])
+def get_rule_mappings():
+    """Get all rule mappings."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        mappings = manager.get_rule_mappings()
+        
+        return jsonify({
+            "success": True,
+            "mappings": mappings
+        })
+    except Exception as e:
+        logger.exception("Error getting rule mappings")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/rule-mappings", methods=["POST"])
+def add_rule_mapping():
+    """Add a new rule mapping."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "mapping" not in data:
+            return jsonify({
+                "success": False,
+                "error": "mapping object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.add_rule_mapping(data["mapping"])
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception("Error adding rule mapping")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/rule-mappings/<mapping_id>", methods=["PUT"])
+def update_rule_mapping(mapping_id):
+    """Update a rule mapping."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "mapping" not in data:
+            return jsonify({
+                "success": False,
+                "error": "mapping object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.update_rule_mapping(mapping_id, data["mapping"])
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception(f"Error updating rule mapping {mapping_id}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/rule-mappings/<mapping_id>", methods=["DELETE"])
+def delete_rule_mapping(mapping_id):
+    """Delete a rule mapping."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        success, message = manager.delete_rule_mapping(mapping_id)
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception(f"Error deleting rule mapping {mapping_id}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/rule-mappings/<mapping_id>/toggle", methods=["PUT"])
+def toggle_rule_mapping(mapping_id):
+    """Enable or disable a rule mapping."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "enabled" not in data:
+            return jsonify({
+                "success": False,
+                "error": "enabled boolean required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.enable_rule_mapping(mapping_id, data["enabled"])
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception(f"Error toggling rule mapping {mapping_id}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/import", methods=["POST"])
+def import_config():
+    """Import and merge configuration."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        data = request.get_json()
+        if not data or "config" not in data:
+            return jsonify({
+                "success": False,
+                "error": "config object required in request body"
+            }), 400
+        
+        manager = get_config_manager()
+        success, message = manager.import_config(data["config"])
+        
+        return jsonify({
+            "success": success,
+            "message": message,
+            "error": None if success else message
+        }), (200 if success else 400)
+    except Exception as e:
+        logger.exception("Error importing config")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/config/export", methods=["GET"])
+def export_config():
+    """Export current configuration."""
+    try:
+        from backend.unified_config_manager import get_config_manager
+        
+        manager = get_config_manager()
+        config = manager.export_config()
+        
+        return jsonify({
+            "success": True,
+            "config": config
+        })
+    except Exception as e:
+        logger.exception("Error exporting config")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/rules/available", methods=["GET"])
+def get_available_rules():
+    """Get available regulatory rules from enhanced-regulation-rules.json."""
+    try:
+        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        
+        if not rules_file.exists():
+            logger.warning(f"Rules file not found: {rules_file}")
+            return jsonify({
+                "success": False,
+                "error": "Regulatory rules file not found",
+                "rules": []
+            }), 404
+        
+        with open(rules_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        rules = data.get('rules', [])
+        
+        return jsonify({
+            "success": True,
+            "rules": [
+                {
+                    "id": rule.get('id'),
+                    "name": rule.get('name'),
+                    "description": rule.get('description')
+                }
+                for rule in rules
+            ]
+        })
+    except Exception as e:
+        logger.exception("Error loading available rules")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "rules": []
         }), 500
 
 

@@ -1,0 +1,654 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "execution_config": {
+    "cache_attributes": true,
+    "continue_on_error": true,
+    "log_level": "INFO",
+    "parallel_execution": true,
+    "strict_mode": false
+  },
+  "global_settings": {
+    "conflict_resolution_strategy": "use_strictest_severity",
+    "default_unit": "mm",
+    "enable_cross_format_validation": true,
+    "rule_resolution_priority": [
+      "regulation",
+      "generated",
+      "custom"
+    ],
+    "severity_hierarchy": [
+      "ERROR",
+      "WARNING",
+      "INFO"
+    ],
+    "strict_mode": false
+  },
+  "ifc_element_mappings": {
+    "wall": {
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "pset_name": "Pset_WallCommon",
+          "property_name": "FireRating",
+          "required": true,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "acoustic_rating",
+          "pset_name": "Pset_WallCommon",
+          "property_name": "AcousticRating",
+          "required": false,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "is_load_bearing",
+          "pset_name": "Pset_WallCommon",
+          "property_name": "LoadBearing",
+          "required": false,
+          "source": "pset",
+          "unit": "boolean"
+        },
+        {
+          "name": "thickness_mm",
+          "qto_name": "Qto_WallBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcWall",
+      "required_psets": ["Pset_WallCommon", "Qto_WallBaseQuantities"]
+    },
+    "slab": {
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "pset_name": "Pset_SlabCommon",
+          "property_name": "FireRating",
+          "required": true,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "thickness_mm",
+          "qto_name": "Qto_SlabBaseQuantities",
+          "quantity_name": "Thickness",
+          "required": true,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "area_m2",
+          "qto_name": "Qto_SlabBaseQuantities",
+          "quantity_name": "GrossArea",
+          "required": false,
+          "source": "qto",
+          "unit": "m2"
+        },
+        {
+          "name": "is_fire_separation",
+          "pset_name": "Pset_SlabCommon",
+          "property_name": "IsFireSeparation",
+          "required": false,
+          "source": "pset",
+          "unit": "boolean"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcSlab",
+      "required_psets": ["Pset_SlabCommon", "Qto_SlabBaseQuantities"]
+    },
+    "door": {
+      "attributes": [
+        {
+          "name": "width_mm",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "height_mm",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity_name": "Height",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "clear_width_mm",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity_name": "ClearWidth",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "is_accessible",
+          "property_name": "IsAccessible",
+          "pset_name": "Pset_DoorCommon",
+          "required": false,
+          "source": "pset",
+          "type": "boolean"
+        },
+        {
+          "name": "is_fire_exit",
+          "property_name": "FireExit",
+          "pset_name": "Pset_DoorCommon",
+          "required": false,
+          "source": "pset",
+          "type": "boolean"
+        },
+        {
+          "name": "fire_rating",
+          "property_name": "FireRating",
+          "pset_name": "Pset_DoorCommon",
+          "required": false,
+          "source": "pset",
+          "type": "string"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcDoor",
+      "required_psets": [
+        "Pset_DoorCommon",
+        "Qto_DoorBaseQuantities"
+      ]
+    },
+    "space": {
+      "attributes": [
+        {
+          "name": "area_m2",
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity_name": "GrossFloorArea",
+          "required": true,
+          "source": "qto",
+          "unit": "m2"
+        },
+        {
+          "name": "volume_m3",
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity_name": "Volume",
+          "required": false,
+          "source": "qto",
+          "unit": "m3"
+        },
+        {
+          "name": "occupancy",
+          "property_name": "Occupancy",
+          "pset_name": "Pset_SpaceCommon",
+          "required": false,
+          "source": "pset",
+          "type": "integer"
+        },
+        {
+          "name": "storey_name",
+          "property_name": "storey_name",
+          "required": false,
+          "source": "element",
+          "type": "string"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcSpace",
+      "required_psets": [
+        "Pset_SpaceCommon",
+        "Qto_SpaceBaseQuantities"
+      ]
+    },
+    "stair": {
+      "attributes": [
+        {
+          "name": "width_mm",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "Width",
+          "required": true,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "height_mm",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "Height",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "number_of_risers",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "NumberOfRisers",
+          "required": false,
+          "source": "qto",
+          "unit": "count"
+        },
+        {
+          "name": "tread_length_mm",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "TreadLength",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcStairFlight",
+      "required_psets": [
+        "Qto_StairFlightBaseQuantities"
+      ]
+    },
+    "window": {
+      "attributes": [
+        {
+          "name": "width_mm",
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "height_mm",
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity_name": "Height",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "frame_depth_mm",
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity_name": "FrameDepth",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcWindow",
+      "required_psets": [
+        "Qto_WindowBaseQuantities"
+      ]
+    }
+  },
+  "metadata": {
+    "description": "Declarative configuration that maps IFC attributes to compliance rules (both generated and regulation). Provides single source of truth for rule resolution, parameter binding, and multi-format rule orchestration.",
+    "last_updated": "2025-11-27T17:00:50.184527",
+    "maintainer": "ACC Explainability Team",
+    "supported_standards": [
+      "ADA 2010 Standards",
+      "IBC 2018",
+      "Custom/Organization Rules",
+      "IFC-extracted Rules"
+    ],
+    "title": "Unified Rules Configuration & Mapping"
+  },
+  "notes": {
+    "design_notes": "This configuration provides a single source of truth that bridges generated rules (from IFC extraction) and regulation rules (user-provided). It eliminates the need for adapters by defining declaratively how to map IFC data to compliance requirements.",
+    "future_extensions": [
+      "Support for custom rule types (DSL-based)",
+      "Machine learning confidence scores",
+      "Dynamic parameter binding from external APIs",
+      "Multi-jurisdiction conflict resolution",
+      "Rule versioning and change tracking"
+    ],
+    "usage_example": "UnifiedRuleEngine.from_config('unified_rules_mapping.json') reads both rule formats and orchestrates execution transparently."
+  },
+  "rule_groups": {
+    "accessibility": {
+      "applicable_standards": [
+        "ADA 2010 Standards"
+      ],
+      "description": "ADA and accessibility-related rules",
+      "jurisdiction": "US",
+      "name": "Accessibility Compliance",
+      "rules": [
+        "MAP_ADA_DOOR_CLEAR_WIDTH"
+      ]
+    },
+    "egress": {
+      "applicable_standards": [
+        "IBC 2018"
+      ],
+      "description": "IBC egress and emergency exit requirements",
+      "jurisdiction": "US",
+      "name": "Egress & Life Safety",
+      "rules": [
+        "MAP_IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "MAP_IBC_STAIR_MIN_WIDTH",
+        "MAP_IBC_WALL_FIRE_RATING",
+        "MAP_IBC_SLAB_FIRE_SEPARATION"
+      ]
+    },
+    "space_planning": {
+      "applicable_standards": [
+        "Custom Organization Policy"
+      ],
+      "description": "Space area and occupancy rules",
+      "jurisdiction": "Global",
+      "name": "Space Planning",
+      "rules": [
+        "MAP_IFC_SPACE_MIN_AREA",
+        "MAP_OCCUPANCY_PER_STOREY"
+      ]
+    }
+  },
+  "rule_mappings": [
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "height_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_exit_height_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_fire_exit",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Fire exit door {target_id} has height {lhs} mm, below the required {rhs} mm (IBC 1010.1.1).",
+        "on_pass": "Fire exit door {target_id} meets the IBC minimum height requirement ({lhs} mm ≥ {rhs} mm, IBC 1010.1.1).",
+        "short": "Fire exit doors must provide a clear height of at least 2032 mm (80 in)."
+      },
+      "mapping_id": "MAP_IBC_FIRE_EXIT_DOOR_HEIGHT",
+      "parameter_bindings": {
+        "min_exit_height_mm": {
+          "default_value": 2032,
+          "description": "IBC minimum height for fire exit doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1010.1.1",
+        "source": "regulation",
+        "title": "Door Size"
+      },
+      "required_attributes": [
+        "height_mm",
+        "is_fire_exit"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_stair_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "stair",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Stair flight {target_id} has width {lhs} mm, below the required {rhs} mm (IBC 1011.2).",
+        "on_pass": "Stair flight {target_id} meets the IBC minimum width requirement ({lhs} mm ≥ {rhs} mm, IBC 1011.2).",
+        "short": "Stairways (for typical occupant loads) must have a minimum clear width of 1118 mm (44 in)."
+      },
+      "mapping_id": "MAP_IBC_STAIR_MIN_WIDTH",
+      "parameter_bindings": {
+        "min_stair_width_mm": {
+          "default_value": 1118,
+          "description": "IBC minimum stair width for occupant load >= 50",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1011.2",
+        "source": "regulation",
+        "title": "Width and Capacity"
+      },
+      "required_attributes": [
+        "width_mm"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IBC_STAIR_MIN_WIDTH",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "aggregation": {
+          "group_by": "storey_name",
+          "method": "sum_by_storey",
+          "sum_attribute": "occupancy"
+        },
+        "lhs": {
+          "expression": "sum(occupancy) per storey",
+          "source": "computed"
+        },
+        "operator": "<=",
+        "rhs": {
+          "parameter": "max_occupancy_per_storey"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "occupancy",
+            "operator": "!=",
+            "value": null
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "space",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Storey {target_id} total occupancy {lhs} exceeds maximum {rhs} persons.",
+        "on_pass": "Storey {target_id} occupancy {lhs} is within acceptable limits (≤ {rhs} persons).",
+        "short": "Storey occupancy must not exceed maximum threshold."
+      },
+      "mapping_id": "MAP_OCCUPANCY_PER_STOREY",
+      "parameter_bindings": {
+        "max_occupancy_per_storey": {
+          "default_value": 500,
+          "description": "Maximum allowed occupancy per storey",
+          "source": "organization_policy",
+          "type": "fixed",
+          "unit": "persons"
+        }
+      },
+      "provenance": {
+        "organization": "ACC Project",
+        "policy_version": "1.0",
+        "source": "organization_policy"
+      },
+      "required_attributes": [
+        "occupancy",
+        "storey_name"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "OCCUPANCY_MAX_PER_STOREY",
+        "source_file": "custom_rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "operator": ">="
+      },
+      "element_type": "door",
+      "enabled": true,
+      "mapping_id": "MAP_ADA_DOOR_MIN_CLEAR_WIDTH",
+      "rule_reference": {
+        "format": "regulation",
+        "rule_id": "ADA_DOOR_MIN_CLEAR_WIDTH"
+      }
+    },
+    {
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_AREA",
+      "element_type": "window",
+      "enabled": true,
+      "rule_reference": {
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_AREA"
+      },
+      "attribute_extraction": {
+        "operator": ">="
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc",
+          "unit": "rating"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "required_rating"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "wall",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Wall {target_id} does not have a fire rating assigned.",
+        "on_pass": "Wall {target_id} has fire rating {lhs}.",
+        "short": "All walls must have a fire rating designation."
+      },
+      "mapping_id": "MAP_IBC_WALL_FIRE_RATING",
+      "parameter_bindings": {
+        "required_rating": {
+          "default_value": "1-2H",
+          "description": "IBC required fire rating for walls",
+          "source": "regulation_rule",
+          "type": "variable",
+          "unit": "rating"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "717",
+        "source": "regulation",
+        "title": "Fire Walls"
+      },
+      "required_attributes": [
+        "fire_rating"
+      ],
+      "rule_reference": {
+        "format": "regulation",
+        "rule_id": "IBC_WALL_FIRE_RATING",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc",
+          "unit": "rating"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "required_slab_rating"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_fire_separation",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "slab",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Fire separation slab {target_id} does not have a fire rating assigned.",
+        "on_pass": "Fire separation slab {target_id} has fire rating {lhs}.",
+        "short": "Fire separation slabs must have a fire rating designation."
+      },
+      "mapping_id": "MAP_IBC_SLAB_FIRE_SEPARATION",
+      "parameter_bindings": {
+        "required_slab_rating": {
+          "default_value": "2H",
+          "description": "IBC minimum fire rating for fire separation slabs",
+          "source": "regulation_rule",
+          "type": "variable",
+          "unit": "rating"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "706",
+        "source": "regulation",
+        "title": "Fire Separation Assemblies"
+      },
+      "required_attributes": [
+        "fire_rating",
+        "is_fire_separation"
+      ],
+      "rule_reference": {
+        "format": "regulation",
+        "rule_id": "IBC_SLAB_FIRE_SEPARATION",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    }
+  ],
+  "validation_rules": {
+    "missing_attribute_behavior": "skip_rule",
+    "null_attribute_behavior": "not_applicable",
+    "require_all_attributes": false,
+    "type_coercion_enabled": true,
+    "unit_conversion_enabled": true
+  },
+  "version": "1.0.0"
+}

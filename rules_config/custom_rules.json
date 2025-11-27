@@ -670,8 +670,52 @@
           "US"
         ]
       }
+    },
+    {
+      "id": "DOOR_MAINTENANCE_WARNING",
+      "name": "Door Maintenance and Condition Check",
+      "rule_type": "attribute_comparison",
+      "description": "Doors should be in good condition and properly maintained for safety and functionality.",
+      "target": {
+        "ifc_class": "IfcDoor",
+        "selector": {
+          "filters": []
+        }
+      },
+      "condition": {
+        "op": ">=",
+        "lhs": {
+          "source": "pset",
+          "pset_name": "Pset_DoorCommon",
+          "property": "Condition",
+          "unit": "count"
+        },
+        "rhs": {
+          "source": "parameter",
+          "param": "min_condition_score"
+        }
+      },
+      "parameters": {
+        "min_condition_score": 70
+      },
+      "severity": "WARNING",
+      "explanation": {
+        "short": "Doors should be maintained in good working condition.",
+        "on_fail": "Door {guid} has condition score {lhs}, below recommended threshold {rhs}.",
+        "on_pass": "Door {guid} meets maintenance condition recommendations ({lhs} >= {rhs})."
+      },
+      "provenance": {
+        "source": "regulation",
+        "regulation": "Building Maintenance Standards",
+        "section": "5.1",
+        "title": "Door Maintenance",
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US"
+        ]
+      }
     }
   ],
-  "saved_at": "2025-11-26T16:48:14.817569",
+  "saved_at": "2025-11-27T16:40:53.056696",
   "version": 1
 }

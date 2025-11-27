@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Database, CheckCircle, Zap, Network, FileText, AlertCircle, Download, BarChart3 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Database, CheckCircle, Network, FileText, AlertCircle, Download, BarChart3, Settings } from 'lucide-react';
 
 function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
   const [expandedGroups, setExpandedGroups] = useState({
@@ -24,7 +24,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
     ],
     ruleLayer: [
       { id: 'rule-layer', label: 'Regulatory Rules', icon: CheckCircle, description: 'Compliance rules' },
-      { id: 'rule-generate', label: 'Generate Rule', icon: Zap, description: 'Generate new rules' },
+      { id: 'rule-config', label: 'Rule Config', icon: Settings, description: 'Manage unified rule configuration' },
       { id: 'rule-check', label: 'Check Compliance', icon: CheckCircle, description: 'Check IFC compliance against rules' },
       { id: 'compliance-report', label: 'Compliance Report', icon: FileText, description: 'Generate comprehensive compliance report' },
     ],
