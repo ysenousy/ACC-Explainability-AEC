@@ -269,6 +269,11 @@ class RuleComplianceChecker:
             # Extract LHS value from IFC properties
             lhs_val = self._extract_rule_value(component, condition.get("lhs"))
             if lhs_val is None:
+                # For "exists" operator, if property not found, return unknown (not fail)
+                # This allows optional properties to not fail the entire item
+                op = condition.get("op", ">=")
+                if op == "exists":
+                    return ("unknown", "Property not found (not evaluated)")
                 return ("fail", "Required property not found")
             
             # Get RHS value (parameter)
@@ -306,6 +311,14 @@ class RuleComplianceChecker:
             return None
         
         source = lhs_spec.get("source")
+        attribute = lhs_spec.get("attribute")
+        
+        # First, try to get the attribute directly from top-level component
+        # This handles dataLayer elements which have width_mm, height_mm, area_m2 at top level
+        if attribute and attribute in component:
+            val = component[attribute]
+            if isinstance(val, (int, float)):
+                return float(val)
         
         if source == "qto":
             quantity = lhs_spec.get("quantity", "")

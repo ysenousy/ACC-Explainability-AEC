@@ -467,7 +467,29 @@ class ComplianceReportGenerator:
         
         source = lhs_spec.get("source")
         
-        if source == "qto":
+        # Handle IFC attribute extraction (from converted rules)
+        if source == "ifc":
+            attribute = lhs_spec.get("attribute", "")
+            if not attribute:
+                return None
+            
+            # Look in properties first (extracted at top-level by _extract_all_items)
+            properties = item.get("properties", {})
+            if attribute in properties:
+                val = properties[attribute]
+                if isinstance(val, (int, float)):
+                    return float(val)
+            
+            # Also check in full_object for direct access
+            full_obj = item.get("full_object", {})
+            if attribute in full_obj:
+                val = full_obj[attribute]
+                if isinstance(val, (int, float)):
+                    return float(val)
+            
+            return None
+        
+        elif source == "qto":
             # Extract from QTO (Quantity) path
             qto_name = lhs_spec.get("qto_name", "")
             quantity = lhs_spec.get("quantity", "")
@@ -531,26 +553,61 @@ class ComplianceReportGenerator:
         return False
 
     def _determine_item_status(self, rules_results: List[Dict]) -> str:
-        """Determine overall compliance status of item."""
+        """Determine overall compliance status of item.
+        
+        Logic:
+        - If any REQUIRED rule (ERROR severity) fails → "fail"
+        - If any OPTIONAL rule (WARNING severity) fails → "partial"
+        - If all required rules pass → "pass"
+        - If only unknown (optional properties not found) → "pass" (still compliant)
+        """
         if not rules_results:
             return "no_rules"
         
         statuses = [r["status"] for r in rules_results]
+        severities = {}  # Map status to severity
+        for rule in rules_results:
+            status = rule["status"]
+            severity = rule.get("severity", "ERROR")
+            if status not in severities:
+                severities[status] = []
+            severities[status].append(severity)
         
+        # If any REQUIRED (ERROR) rule fails, item fails
         if "fail" in statuses:
-            return "fail"
-        elif "unknown" in statuses:
+            failed_rules = [r for r in rules_results if r["status"] == "fail"]
+            if any(r.get("severity") == "ERROR" for r in failed_rules):
+                return "fail"
+            # If only WARNING rules fail, mark as partial
             return "partial"
-        else:
+        
+        # If only "unknown" (optional properties) remain, still pass
+        if all(s == "unknown" for s in statuses):
             return "pass"
+        
+        # If only "unknown" and "pass", still pass
+        if all(s in ["unknown", "pass"] for s in statuses):
+            return "pass"
+        
+        # Otherwise pass (all critical rules passed)
+        return "pass"
 
     def _calculate_compliance_percentage(self, rules_results: List[Dict]) -> float:
-        """Calculate compliance percentage."""
+        """Calculate compliance percentage.
+        
+        Percentage is based on pass/fail rules, excluding "unknown" (optional properties not evaluated).
+        """
         if not rules_results:
             return 0.0
         
-        passed = sum(1 for r in rules_results if r["status"] == "pass")
-        return (passed / len(rules_results)) * 100
+        # Only count rules that were actually evaluated (pass/fail), not "unknown" (optional)
+        evaluated_rules = [r for r in rules_results if r["status"] != "unknown"]
+        
+        if not evaluated_rules:
+            return 0.0  # No rules were evaluated
+        
+        passed = sum(1 for r in evaluated_rules if r["status"] == "pass")
+        return (passed / len(evaluated_rules)) * 100
 
     def _calculate_summary(self, evaluated_items: List[Dict], items_report: Dict) -> Dict:
         """Calculate report summary statistics."""
@@ -643,9 +700,22 @@ class ComplianceReportGenerator:
         }
 
     def _load_regulatory_rules(self) -> List[Dict]:
-        """Load regulatory rules from enhanced JSON file."""
+        """Load regulatory rules from custom_rules.json if available, otherwise from enhanced-regulation-rules.json."""
         from pathlib import Path
         
+        # Try to load custom rules first (these are converted from Rule Config and have proper IFC extraction)
+        custom_rules_file = Path(__file__).parent.parent / "rules_config" / "custom_rules.json"
+        if custom_rules_file.exists():
+            try:
+                with open(custom_rules_file, 'r') as f:
+                    data = json.load(f)
+                    rules = data.get("rules", [])
+                    logger.info(f"Loaded {len(rules)} custom rules from Rule Config conversion")
+                    return rules
+            except Exception as e:
+                logger.warning(f"Error loading custom rules: {e}, falling back to catalogue rules")
+        
+        # Fall back to catalogue rules
         rules_file = Path(__file__).parent.parent / "rules_config" / "enhanced-regulation-rules.json"
         
         if not rules_file.exists():
@@ -656,7 +726,7 @@ class ComplianceReportGenerator:
             with open(rules_file, 'r') as f:
                 data = json.load(f)
                 rules = data.get("rules", [])
-                logger.info(f"Loaded {len(rules)} regulatory rules from enhanced file")
+                logger.info(f"Loaded {len(rules)} regulatory rules from enhanced file (catalogue)")
                 return rules
                 
         except Exception as e:

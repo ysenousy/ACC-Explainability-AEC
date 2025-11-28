@@ -62,6 +62,11 @@ class UnifiedConfigManager:
             self.load_config()
         return self._config or self._get_default_config()
 
+    def reload(self) -> Dict[str, Any]:
+        """Force reload configuration from file, clearing cache."""
+        self._config = None
+        return self.load_config()
+
     def validate_config(self, config: Dict[str, Any]) -> Tuple[bool, List[str]]:
         """Validate configuration schema."""
         errors = []

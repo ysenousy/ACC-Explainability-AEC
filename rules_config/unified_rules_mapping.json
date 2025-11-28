@@ -61,7 +61,10 @@
       ],
       "filters": [],
       "ifc_class": "IfcWall",
-      "required_psets": ["Pset_WallCommon", "Qto_WallBaseQuantities"]
+      "required_psets": [
+        "Pset_WallCommon",
+        "Qto_WallBaseQuantities"
+      ]
     },
     "slab": {
       "attributes": [
@@ -100,7 +103,10 @@
       ],
       "filters": [],
       "ifc_class": "IfcSlab",
-      "required_psets": ["Pset_SlabCommon", "Qto_SlabBaseQuantities"]
+      "required_psets": [
+        "Pset_SlabCommon",
+        "Qto_SlabBaseQuantities"
+      ]
     },
     "door": {
       "attributes": [
@@ -278,7 +284,7 @@
   },
   "metadata": {
     "description": "Declarative configuration that maps IFC attributes to compliance rules (both generated and regulation). Provides single source of truth for rule resolution, parameter binding, and multi-format rule orchestration.",
-    "last_updated": "2025-11-27T17:00:50.184527",
+    "last_updated": "2025-11-28T15:16:35.530739",
     "maintainer": "ACC Explainability Team",
     "supported_standards": [
       "ADA 2010 Standards",
@@ -365,7 +371,7 @@
       "enabled": true,
       "explanation": {
         "on_fail": "Fire exit door {target_id} has height {lhs} mm, below the required {rhs} mm (IBC 1010.1.1).",
-        "on_pass": "Fire exit door {target_id} meets the IBC minimum height requirement ({lhs} mm ≥ {rhs} mm, IBC 1010.1.1).",
+        "on_pass": "Fire exit door {target_id} meets the IBC minimum height requirement ({lhs} mm â‰¥ {rhs} mm, IBC 1010.1.1).",
         "short": "Fire exit doors must provide a clear height of at least 2032 mm (80 in)."
       },
       "mapping_id": "MAP_IBC_FIRE_EXIT_DOOR_HEIGHT",
@@ -402,60 +408,6 @@
     },
     {
       "attribute_extraction": {
-        "lhs": {
-          "attribute": "width_mm",
-          "source": "ifc",
-          "unit": "mm"
-        },
-        "operator": ">=",
-        "rhs": {
-          "parameter": "min_stair_width_mm"
-        }
-      },
-      "element_filter": {
-        "filters": [],
-        "logic": "AND"
-      },
-      "element_type": "stair",
-      "enabled": true,
-      "explanation": {
-        "on_fail": "Stair flight {target_id} has width {lhs} mm, below the required {rhs} mm (IBC 1011.2).",
-        "on_pass": "Stair flight {target_id} meets the IBC minimum width requirement ({lhs} mm ≥ {rhs} mm, IBC 1011.2).",
-        "short": "Stairways (for typical occupant loads) must have a minimum clear width of 1118 mm (44 in)."
-      },
-      "mapping_id": "MAP_IBC_STAIR_MIN_WIDTH",
-      "parameter_bindings": {
-        "min_stair_width_mm": {
-          "default_value": 1118,
-          "description": "IBC minimum stair width for occupant load >= 50",
-          "source": "regulation_rule",
-          "type": "fixed",
-          "unit": "mm"
-        }
-      },
-      "provenance": {
-        "jurisdiction": "US",
-        "jurisdiction_scope": [
-          "US",
-          "IBC"
-        ],
-        "regulation": "International Building Code (IBC) 2018",
-        "section": "1011.2",
-        "source": "regulation",
-        "title": "Width and Capacity"
-      },
-      "required_attributes": [
-        "width_mm"
-      ],
-      "rule_reference": {
-        "alternative_ids": [],
-        "format": "regulation",
-        "rule_id": "IBC_STAIR_MIN_WIDTH",
-        "source_file": "enhanced-regulation-rules.json"
-      }
-    },
-    {
-      "attribute_extraction": {
         "aggregation": {
           "group_by": "storey_name",
           "method": "sum_by_storey",
@@ -484,7 +436,7 @@
       "enabled": true,
       "explanation": {
         "on_fail": "Storey {target_id} total occupancy {lhs} exceeds maximum {rhs} persons.",
-        "on_pass": "Storey {target_id} occupancy {lhs} is within acceptable limits (≤ {rhs} persons).",
+        "on_pass": "Storey {target_id} occupancy {lhs} is within acceptable limits (â‰¤ {rhs} persons).",
         "short": "Storey occupancy must not exceed maximum threshold."
       },
       "mapping_id": "MAP_OCCUPANCY_PER_STOREY",
@@ -511,30 +463,6 @@
         "format": "regulation",
         "rule_id": "OCCUPANCY_MAX_PER_STOREY",
         "source_file": "custom_rules.json"
-      }
-    },
-    {
-      "attribute_extraction": {
-        "operator": ">="
-      },
-      "element_type": "door",
-      "enabled": true,
-      "mapping_id": "MAP_ADA_DOOR_MIN_CLEAR_WIDTH",
-      "rule_reference": {
-        "format": "regulation",
-        "rule_id": "ADA_DOOR_MIN_CLEAR_WIDTH"
-      }
-    },
-    {
-      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_AREA",
-      "element_type": "window",
-      "enabled": true,
-      "rule_reference": {
-        "format": "regulation",
-        "rule_id": "IRC_EGRESS_WINDOW_MIN_AREA"
-      },
-      "attribute_extraction": {
-        "operator": ">="
       }
     },
     {
@@ -582,7 +510,7 @@
       ],
       "rule_reference": {
         "format": "regulation",
-        "rule_id": "IBC_WALL_FIRE_RATING",
+        "rule_id": "IBC_WALL_FIRE_PARTITION_MIN_RATING",
         "source_file": "enhanced-regulation-rules.json"
       }
     },
@@ -638,7 +566,513 @@
       ],
       "rule_reference": {
         "format": "regulation",
-        "rule_id": "IBC_SLAB_FIRE_SEPARATION",
+        "rule_id": "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "clear_width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_clear_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_accessible",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Accessible door {target_id} has clear width {lhs} mm, below the required {rhs} mm (ADA 404.2.3).",
+        "on_pass": "Accessible door {target_id} meets the ADA minimum clear width requirement ({lhs} mm â‰¥ {rhs} mm, ADA 404.2.3).",
+        "short": "Accessible doors on accessible routes must have a clear opening width of at least 815 mm (32 in)."
+      },
+      "mapping_id": "MAP_ADA_DOOR_MIN_CLEAR_WIDTH",
+      "parameter_bindings": {
+        "min_clear_width_mm": {
+          "default_value": 815,
+          "description": "ADA minimum clear width for accessible doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "ADA"
+        ],
+        "regulation": "2010 ADA Standards for Accessible Design",
+        "section": "404.2.3",
+        "source": "regulation",
+        "title": "Clear Width"
+      },
+      "required_attributes": [
+        "clear_width_mm",
+        "is_accessible"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "area_m2",
+          "source": "ifc",
+          "unit": "m2"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_area_m2"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "window",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Egress window {target_id} has clear opening area {lhs} mÂ², below the required {rhs} mÂ² (IRC R310.2.1).",
+        "on_pass": "Egress window {target_id} meets the minimum clear opening area ({lhs} mÂ² â‰¥ {rhs} mÂ², IRC R310.2.1).",
+        "short": "Egress windows must provide a minimum net clear opening area of 0.53 mÂ² (5.7 ftÂ²)."
+      },
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_AREA",
+      "parameter_bindings": {
+        "min_egress_area_m2": {
+          "default_value": 0.53,
+          "description": "IRC minimum egress window area",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "m2"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.1",
+        "source": "regulation",
+        "title": "Minimum Opening Area"
+      },
+      "required_attributes": [
+        "area_m2"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_AREA",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "height_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_height_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "window",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Egress window {target_id} has clear opening height {lhs} mm, below the required {rhs} mm (IRC R310.2.2).",
+        "on_pass": "Egress window {target_id} meets the minimum clear opening height ({lhs} mm â‰¥ {rhs} mm, IRC R310.2.2).",
+        "short": "Egress windows must provide a minimum net clear opening height of 610 mm (24 in)."
+      },
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_HEIGHT",
+      "parameter_bindings": {
+        "min_egress_height_mm": {
+          "default_value": 610,
+          "description": "IRC minimum egress window height",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.2",
+        "source": "regulation",
+        "title": "Minimum Opening Height"
+      },
+      "required_attributes": [
+        "height_mm"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "window",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Egress window {target_id} has clear opening width {lhs} mm, below the required {rhs} mm (IRC R310.2.3).",
+        "on_pass": "Egress window {target_id} meets the minimum clear opening width ({lhs} mm â‰¥ {rhs} mm, IRC R310.2.3).",
+        "short": "Egress windows must provide a minimum net clear opening width of 508 mm (20 in)."
+      },
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_WIDTH",
+      "parameter_bindings": {
+        "min_egress_width_mm": {
+          "default_value": 508,
+          "description": "IRC minimum egress window width",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.3",
+        "source": "regulation",
+        "title": "Minimum Opening Width"
+      },
+      "required_attributes": [
+        "width_mm"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "area_m2",
+          "source": "ifc",
+          "unit": "m2"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_bedroom_area_m2"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "space",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Bedroom space {target_id} has area {lhs} mÂ², below the required {rhs} mÂ² (IRC R304.1/R304.2).",
+        "on_pass": "Bedroom space {target_id} meets the minimum floor area requirement ({lhs} mÂ² â‰¥ {rhs} mÂ², IRC R304.1/R304.2).",
+        "short": "Bedrooms must have a minimum floor area of 6.5 mÂ² (70 ftÂ²)."
+      },
+      "mapping_id": "MAP_IRC_BEDROOM_MIN_AREA",
+      "parameter_bindings": {
+        "min_bedroom_area_m2": {
+          "default_value": 6.5,
+          "description": "IRC minimum bedroom floor area",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "m2"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R304.1 / R304.2",
+        "source": "regulation",
+        "title": "Minimum Room Areas"
+      },
+      "required_attributes": [
+        "area_m2"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_BEDROOM_MIN_AREA",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "clear_width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_accessible",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Accessible door {target_id} has clear width {lhs} mm, below the UK requirement of {rhs} mm (Approved Document M).",
+        "on_pass": "Accessible door {target_id} meets the UK minimum clear width requirement ({lhs} mm â‰¥ {rhs} mm, Approved Document M).",
+        "short": "UK regulations require an effective clear opening width of at least 775 mm for accessible doors in new dwellings."
+      },
+      "mapping_id": "MAP_UK_DOOR_WIDTH_ACCESSIBLE",
+      "parameter_bindings": {
+        "min_width_mm": {
+          "default_value": 775,
+          "description": "UK minimum door width for accessible doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "UK",
+        "jurisdiction_scope": [
+          "UK",
+          "ADM"
+        ],
+        "regulation": "UK Building Regulations â€“ Approved Document M",
+        "section": "Access to and Use of Buildings",
+        "source": "regulation",
+        "title": "Minimum Effective Clear Widths of Doors"
+      },
+      "required_attributes": [
+        "clear_width_mm",
+        "is_accessible"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "UK_DOOR_WIDTH_ACCESSIBLE",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "clear_width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_accessible",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Accessible door {target_id} has clear width {lhs} mm, below the Canadian requirement of {rhs} mm (NBC/CSA B651).",
+        "on_pass": "Accessible door {target_id} meets the minimum Canadian clear width requirement ({lhs} mm â‰¥ {rhs} mm, NBC/CSA B651).",
+        "short": "Canadian accessibility guidance typically requires a minimum door clear opening width of 850 mm on accessible routes."
+      },
+      "mapping_id": "MAP_CA_DOOR_WIDTH_ACCESSIBLE",
+      "parameter_bindings": {
+        "min_width_mm": {
+          "default_value": 850,
+          "description": "Canadian minimum door width for accessible doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "CA",
+        "jurisdiction_scope": [
+          "CA",
+          "NBC",
+          "CSA B651"
+        ],
+        "regulation": "National Building Code of Canada + CSA B651",
+        "section": "NBC 3.8 / CSA B651-18 5.2.1",
+        "source": "regulation",
+        "title": "Door Clear Opening Width"
+      },
+      "required_attributes": [
+        "clear_width_mm",
+        "is_accessible"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "CA_DOOR_WIDTH_ACCESSIBLE",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "operator": "exists",
+        "lhs": {
+          "attribute": "condition",
+          "source": "ifc"
+        },
+        "rhs": {
+          "parameter": "min_condition_score"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Door {target_id} has condition score {lhs}, below recommended threshold {rhs}.",
+        "on_pass": "Door {target_id} meets maintenance condition recommendations ({lhs} >= {rhs}).",
+        "short": "Doors should be maintained in good working condition."
+      },
+      "mapping_id": "MAP_DOOR_MAINTENANCE_WARNING",
+      "parameter_bindings": {
+        "min_condition_score": {
+          "default_value": 70,
+          "description": "Recommended minimum door condition score",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "score"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US"
+        ],
+        "regulation": "Building Maintenance Standards",
+        "section": "5.1",
+        "source": "regulation",
+        "title": "Door Maintenance"
+      },
+      "required_attributes": [
+        "condition"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "DOOR_MAINTENANCE_WARNING",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc",
+          "unit": "h"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_column_rating_h"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "column",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Column {target_id} is marked as requiring fire protection but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 704.1/704.2).",
+        "on_pass": "Column {target_id} meets the minimum fire-resistance requirement ({lhs} h â‰¥ {rhs} h, IBC 704.1/704.2).",
+        "short": "Columns that are required to be fire-resistance rated must achieve at least the specified minimum rating."
+      },
+      "mapping_id": "MAP_IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+      "parameter_bindings": {
+        "min_column_rating_h": {
+          "default_value": 1.0,
+          "description": "IBC minimum fire-resistance rating for columns",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "h"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "704.1 / 704.2",
+        "source": "regulation",
+        "title": "Fire-Resistance Rating of Structural Members / Column Protection"
+      },
+      "required_attributes": [
+        "fire_rating"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
         "source_file": "enhanced-regulation-rules.json"
       }
     }

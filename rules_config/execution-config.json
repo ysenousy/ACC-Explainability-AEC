@@ -1,0 +1,585 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "2.0",
+  "metadata": {
+    "description": "Engine Configuration - Execution logic and IFC mappings (references enhanced-regulation-rules.json by ID)",
+    "last_updated": "2025-11-28",
+    "separation_of_concerns": "Rules contain legal text only. Execution config contains engine behavior."
+  },
+  "execution_config": {
+    "cache_attributes": true,
+    "continue_on_error": true,
+    "log_level": "INFO",
+    "parallel_execution": true,
+    "strict_mode": false
+  },
+  "global_settings": {
+    "conflict_resolution_strategy": "use_strictest_severity",
+    "default_unit": "mm",
+    "enable_cross_format_validation": true,
+    "rule_resolution_priority": [
+      "regulation",
+      "generated",
+      "custom"
+    ],
+    "severity_hierarchy": [
+      "ERROR",
+      "WARNING",
+      "INFO"
+    ],
+    "strict_mode": false
+  },
+  "ifc_element_mappings": {
+    "door": {
+      "ifc_class": "IfcDoor",
+      "attributes": [
+        {
+          "name": "width_mm",
+          "source": "ifc",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "name": "height_mm",
+          "source": "ifc",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "name": "fire_rating",
+          "source": "ifc",
+          "unit": "rating",
+          "required": false
+        },
+        {
+          "name": "is_fire_exit",
+          "source": "ifc",
+          "unit": "boolean",
+          "required": false
+        },
+        {
+          "name": "condition",
+          "source": "ifc",
+          "unit": "score",
+          "required": false
+        }
+      ]
+    },
+    "space": {
+      "ifc_class": "IfcSpace",
+      "attributes": [
+        {
+          "name": "area_m2",
+          "source": "ifc",
+          "unit": "m2",
+          "required": false
+        },
+        {
+          "name": "occupancy",
+          "source": "ifc",
+          "unit": "persons",
+          "required": false
+        },
+        {
+          "name": "storey_name",
+          "source": "ifc",
+          "unit": "text",
+          "required": false
+        }
+      ]
+    },
+    "window": {
+      "ifc_class": "IfcWindow",
+      "attributes": [
+        {
+          "name": "width_mm",
+          "source": "ifc",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "name": "height_mm",
+          "source": "ifc",
+          "unit": "mm",
+          "required": false
+        },
+        {
+          "name": "area_m2",
+          "source": "ifc",
+          "unit": "m2",
+          "required": false
+        },
+        {
+          "name": "operability",
+          "source": "ifc",
+          "unit": "percent",
+          "required": false
+        }
+      ]
+    },
+    "wall": {
+      "ifc_class": "IfcWall",
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "source": "ifc",
+          "unit": "rating",
+          "required": false
+        },
+        {
+          "name": "thickness_mm",
+          "source": "ifc",
+          "unit": "mm",
+          "required": false
+        }
+      ]
+    },
+    "slab": {
+      "ifc_class": "IfcSlab",
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "source": "ifc",
+          "unit": "rating",
+          "required": false
+        },
+        {
+          "name": "area_m2",
+          "source": "ifc",
+          "unit": "m2",
+          "required": false
+        },
+        {
+          "name": "thickness_mm",
+          "source": "ifc",
+          "unit": "mm",
+          "required": false
+        }
+      ]
+    },
+    "column": {
+      "ifc_class": "IfcColumn",
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "source": "ifc",
+          "unit": "rating",
+          "required": false
+        }
+      ]
+    }
+  },
+  "rule_groups": {
+    "accessibility": [
+      "ADA_DOOR_MIN_CLEAR_WIDTH",
+      "UK_DOOR_WIDTH_ACCESSIBLE",
+      "CA_DOOR_WIDTH_ACCESSIBLE"
+    ],
+    "fire_safety": [
+      "IBC_FIRE_EXIT_DOOR_HEIGHT",
+      "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+      "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+      "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING"
+    ],
+    "egress": [
+      "IRC_EGRESS_WINDOW_MIN_AREA",
+      "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+      "IRC_EGRESS_WINDOW_MIN_WIDTH"
+    ],
+    "habitability": [
+      "IRC_BEDROOM_MIN_AREA"
+    ],
+    "maintenance": [
+      "WINDOW_OPERATION_WARNING",
+      "DOOR_MAINTENANCE_WARNING"
+    ],
+    "organizational_policy": [
+      "OCCUPANCY_MAX_PER_STOREY"
+    ]
+  },
+  "rule_mappings": [
+    {
+      "mapping_id": "MAP_IBC_FIRE_EXIT_DOOR_HEIGHT",
+      "rule_id": "IBC_FIRE_EXIT_DOOR_HEIGHT",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "door",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "height_mm",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_exit_height_mm"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": [
+          {
+            "attribute": "is_fire_exit",
+            "operator": "==",
+            "value": true
+          }
+        ]
+      },
+      "required_attributes": [
+        "height_mm",
+        "is_fire_exit"
+      ]
+    },
+    {
+      "mapping_id": "MAP_ADA_DOOR_MIN_CLEAR_WIDTH",
+      "rule_id": "ADA_DOOR_MIN_CLEAR_WIDTH",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "door",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_clear_width_mm"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "width_mm"
+      ]
+    },
+    {
+      "mapping_id": "MAP_UK_DOOR_WIDTH_ACCESSIBLE",
+      "rule_id": "UK_DOOR_WIDTH_ACCESSIBLE",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "door",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_width_mm"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "width_mm"
+      ]
+    },
+    {
+      "mapping_id": "MAP_CA_DOOR_WIDTH_ACCESSIBLE",
+      "rule_id": "CA_DOOR_WIDTH_ACCESSIBLE",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "door",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_width_mm"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "width_mm"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_AREA",
+      "rule_id": "IRC_EGRESS_WINDOW_MIN_AREA",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "window",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "area_m2",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_area_m2"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "area_m2"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_HEIGHT",
+      "rule_id": "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "window",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "height_mm",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_height_mm"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "height_mm"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_WIDTH",
+      "rule_id": "IRC_EGRESS_WINDOW_MIN_WIDTH",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "window",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_width_mm"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "width_mm"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IRC_BEDROOM_MIN_AREA",
+      "rule_id": "IRC_BEDROOM_MIN_AREA",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "space",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "area_m2",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_bedroom_area_m2"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "area_m2"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IBC_WALL_FIRE_PARTITION_MIN_RATING",
+      "rule_id": "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "wall",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "required_rating"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "fire_rating"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+      "rule_id": "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "slab",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "required_slab_rating"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "fire_rating"
+      ]
+    },
+    {
+      "mapping_id": "MAP_IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+      "rule_id": "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "column",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_column_rating_h"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "fire_rating"
+      ]
+    },
+    {
+      "mapping_id": "MAP_WINDOW_OPERATION_WARNING",
+      "rule_id": "WINDOW_OPERATION_WARNING",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "window",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "operability",
+          "source": "ifc"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "min_operable_pct"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "operability"
+      ]
+    },
+    {
+      "mapping_id": "MAP_DOOR_MAINTENANCE_WARNING",
+      "rule_id": "DOOR_MAINTENANCE_WARNING",
+      "rule_source": "enhanced-regulation-rules.json",
+      "element_type": "door",
+      "enabled": true,
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "condition",
+          "source": "ifc"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "min_condition_score"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": []
+      },
+      "required_attributes": [
+        "condition"
+      ]
+    },
+    {
+      "mapping_id": "MAP_OCCUPANCY_MAX_PER_STOREY",
+      "rule_id": "OCCUPANCY_MAX_PER_STOREY",
+      "rule_source": "custom_rules.json",
+      "element_type": "space",
+      "enabled": true,
+      "attribute_extraction": {
+        "aggregation": {
+          "method": "sum_by_storey",
+          "group_by": "storey_name",
+          "sum_attribute": "occupancy"
+        },
+        "lhs": {
+          "source": "computed",
+          "expression": "sum(occupancy) per storey"
+        },
+        "operator": "<=",
+        "rhs": {
+          "parameter": "max_occupancy_per_storey"
+        }
+      },
+      "element_filter": {
+        "logic": "AND",
+        "filters": [
+          {
+            "attribute": "occupancy",
+            "operator": "!=",
+            "value": null
+          }
+        ]
+      },
+      "required_attributes": [
+        "occupancy",
+        "storey_name"
+      ]
+    }
+  ],
+  "validation_rules": {
+    "cross_rule_validation": [
+      {
+        "name": "fire_exit_consistency",
+        "description": "All fire exit doors must meet both height and width requirements",
+        "rules": [
+          "IBC_FIRE_EXIT_DOOR_HEIGHT",
+          "ADA_DOOR_MIN_CLEAR_WIDTH"
+        ],
+        "validation_type": "co_occurrence",
+        "severity": "WARNING"
+      }
+    ],
+    "parameter_validation": {
+      "min_clear_width_mm": {
+        "min": 500,
+        "max": 1500,
+        "type": "number",
+        "unit": "mm"
+      },
+      "min_egress_area_m2": {
+        "min": 0.1,
+        "max": 10,
+        "type": "number",
+        "unit": "m2"
+      }
+    }
+  }
+}

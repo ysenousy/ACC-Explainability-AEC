@@ -3150,6 +3150,53 @@ def export_config():
         }), 500
 
 
+@app.route("/api/config/validate-mappings", methods=["POST"])
+def validate_mappings_endpoint():
+    """Validate Rule Config mappings against catalogue and cleanup orphaned mappings."""
+    try:
+        from validate_mappings import validate_mappings, cleanup_orphaned_mappings
+        
+        base_path = Path(__file__).parent.parent / 'rules_config'
+        catalogue_path = str(base_path / 'enhanced-regulation-rules.json')
+        config_path = str(base_path / 'unified_rules_mapping.json')
+        
+        # Validate
+        orphaned, total, valid = validate_mappings(catalogue_path, config_path)
+        
+        result = {
+            "success": True,
+            "catalogue_rules": len(set(rule['id'] for rule in 
+                json.load(open(catalogue_path))['rules'])),
+            "total_mappings": total,
+            "valid_mappings": valid,
+            "orphaned_mappings": len(orphaned),
+            "orphaned_list": orphaned
+        }
+        
+        # Auto-cleanup if orphaned mappings found
+        if orphaned:
+            removed = cleanup_orphaned_mappings(config_path, orphaned)
+            result["removed_mappings"] = removed
+            result["message"] = f"Found and removed {removed} orphaned mapping(s)"
+            logger.info(f"Cleaned up {removed} orphaned mappings from Rule Config")
+            
+            # Reload config manager to reflect changes
+            config_manager.reload()
+        else:
+            result["message"] = "All mappings are valid"
+            result["removed_mappings"] = 0
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        logger.exception("Error validating mappings")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "Validation failed"
+        }), 500
+
+
 @app.route("/api/rules/available", methods=["GET"])
 def get_available_rules():
     """Get available regulatory rules from enhanced-regulation-rules.json."""
@@ -3188,6 +3235,8 @@ def get_available_rules():
             "rules": []
         }), 500
 
+
+@app.route("/api/rules/verify-sync", methods=["GET"])
 
 @app.errorhandler(500)
 def server_error(error):
