@@ -20,7 +20,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'data-layer', label: 'Model Summary', icon: Database, description: 'IFC structure & elements' },
       { id: 'elements', label: 'Model Elements', icon: FileText, description: 'Spaces & Doors' },
       { id: 'model-visualization', label: 'Model Visualization', icon: Network, description: '3D model viewer' },
-      { id: 'validation', label: 'Data Validation', icon: CheckCircle, description: 'Validate IFC data properties' },
+      { id: 'validation', label: 'Model Validation', icon: CheckCircle, description: 'Validate IFC model properties' },
       { id: 'export', label: 'Export JSON Graph', icon: Download, description: 'Export JSON graph' },
     ],
     ruleLayer: [

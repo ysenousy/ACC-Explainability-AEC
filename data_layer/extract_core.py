@@ -4,9 +4,11 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from pathlib import Path
 
 from .exceptions import ExtractionError
 from .models import DoorElement, DoorSpaceConnection, SpaceElement, GenericElement
+from .configured_extractor import ConfiguredExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -356,3 +358,28 @@ def extract_all_elements(model) -> Dict[str, List[GenericElement]]:
             elements_by_type[ifc_type] = elements_out
     
     return elements_by_type
+
+
+def extract_configured_elements(
+    model,
+    config_path: Optional[str | Path] = None,
+) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Extract all IFC elements using configuration-driven approach.
+    
+    This is the new generalized extraction method that works with
+    extraction_config.json to support any IFC element type.
+    
+    Args:
+        model: ifcopenshell model
+        config_path: Path to extraction_config.json
+                     Defaults to data_layer/extraction_config.json
+    
+    Returns:
+        Dict mapping output_key (e.g., 'doors', 'windows') to list of elements
+    """
+    if config_path is None:
+        config_path = Path(__file__).parent / "extraction_config.json"
+    
+    extractor = ConfiguredExtractor(config_path)
+    return extractor.extract_all_by_config(model)

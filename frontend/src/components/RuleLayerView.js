@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, BookOpen, Plus, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { CheckCircle, BookOpen, Plus, AlertCircle, AlertTriangle, Info, ExternalLink } from 'lucide-react';
 import RuleCatalogueModal from './RuleCatalogueModal';
 import RuleManagementPanel from './RuleManagementPanel';
 
@@ -25,7 +25,9 @@ function RuleLayerView({ graph }) {
   };
 
   const getSeverityIcon = (severity) => {
-    switch (severity) {
+    // Handle case where severity is an object instead of string
+    const severityStr = typeof severity === 'string' ? severity : 'info';
+    switch (severityStr.toLowerCase()) {
       case 'error': return <AlertCircle size={14} />;
       case 'warning': return <AlertTriangle size={14} />;
       case 'info': return <Info size={14} />;
@@ -34,7 +36,9 @@ function RuleLayerView({ graph }) {
   };
 
   const getSeverityColor = (severity) => {
-    switch (severity) {
+    // Handle case where severity is an object instead of string
+    const severityStr = typeof severity === 'string' ? severity : 'info';
+    switch (severityStr.toLowerCase()) {
       case 'error': return '#ef4444';
       case 'warning': return '#f59e0b';
       case 'info': return '#3b82f6';
@@ -191,7 +195,7 @@ function RuleLayerView({ graph }) {
                         fontWeight: 'bold'
                       }}>
                         {getSeverityIcon(rule.severity)}
-                        {rule.severity.toUpperCase()}
+                        {typeof rule.severity === 'string' ? rule.severity.toUpperCase() : 'INFO'}
                       </span>
                     )}
                   </div>
@@ -237,6 +241,36 @@ function RuleLayerView({ graph }) {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {rule.provenance && rule.provenance.source_link && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      marginTop: '0.75rem',
+                      paddingTop: '0.75rem',
+                      borderTop: '1px solid #e5e7eb'
+                    }}>
+                      <a
+                        href={rule.provenance.source_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.375rem',
+                          color: '#0284c7',
+                          textDecoration: 'none',
+                          fontWeight: '500',
+                          transition: 'color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#0369a1'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#0284c7'}
+                      >
+                        {rule.provenance.regulation}
+                        {rule.provenance.section && ` - Section ${rule.provenance.section}`}
+                        <ExternalLink size={12} />
+                      </a>
                     </div>
                   )}
                 </div>

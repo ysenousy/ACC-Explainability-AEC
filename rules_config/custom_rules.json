@@ -49,7 +49,8 @@
         "jurisdiction_scope": [
           "US",
           "ADA"
-        ]
+        ],
+        "source_link": "https://www.ada.gov/regs2010/2010ADAStandards/2010ADAstandards.htm#sec404"
       }
     },
     {
@@ -101,7 +102,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress"
       }
     },
     {
@@ -146,7 +148,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress"
       }
     },
     {
@@ -198,7 +201,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR304"
       }
     },
     {
@@ -250,7 +254,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR310.2.1"
       }
     },
     {
@@ -302,7 +307,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR310.2.2"
       }
     },
     {
@@ -354,7 +360,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR310.2.3"
       }
     },
     {
@@ -406,7 +413,8 @@
         "jurisdiction_scope": [
           "UK",
           "ADM"
-        ]
+        ],
+        "source_link": "https://www.gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m"
       }
     },
     {
@@ -459,7 +467,8 @@
           "CA",
           "NBC",
           "CSA B651"
-        ]
+        ],
+        "source_link": "https://nrc.canada.ca/en/certifications-evaluations-standards/codes-canada"
       }
     },
     {
@@ -514,7 +523,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-7-fire-and-smoke-protection-features"
       }
     },
     {
@@ -569,7 +579,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-7-fire-and-smoke-protection-features"
       }
     },
     {
@@ -624,98 +635,117 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-7-fire-and-smoke-protection-features"
       }
     },
     {
-      "id": "WINDOW_OPERATION_WARNING",
-      "name": "Window Operation Quality Check",
+      "id": "IBC_CORRIDOR_MIN_WIDTH",
+      "name": "Corridor Minimum Width",
       "rule_type": "attribute_comparison",
-      "description": "Windows should be operable and properly maintained for building functionality and user comfort.",
+      "description": "Corridors serving occupant loads must maintain a minimum width of 1067 mm (42 inches) for unobstructed passage and means of egress in accordance with IBC Section 1018.2.",
       "target": {
-        "ifc_class": "IfcWindow",
+        "ifc_class": "IfcSpace",
         "selector": {
-          "filters": []
+          "filters": [
+            {
+              "pset": "Pset_SpaceCommon",
+              "property": "UsageType",
+              "op": "=",
+              "value": "Corridor"
+            }
+          ]
         }
       },
       "condition": {
         "op": ">=",
         "lhs": {
-          "source": "pset",
-          "pset_name": "Pset_WindowCommon",
-          "property": "Operability",
-          "unit": "count"
+          "source": "qto",
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity": "Width",
+          "unit": "mm"
         },
         "rhs": {
           "source": "parameter",
-          "param": "min_operable_pct"
+          "param": "min_corridor_width_mm"
         }
       },
       "parameters": {
-        "min_operable_pct": 80
+        "min_corridor_width_mm": 1067
       },
-      "severity": "WARNING",
+      "severity": "ERROR",
       "explanation": {
-        "short": "Windows should maintain operational functionality for ventilation and user control.",
-        "on_fail": "Window {guid} has operability rating {lhs}%, below recommended threshold {rhs}%.",
-        "on_pass": "Window {guid} meets window operability recommendations ({lhs}% >= {rhs}%)."
+        "short": "Corridors must provide a minimum width of 1067 mm (42 in) for safe passage and egress.",
+        "on_fail": "Corridor space {guid} has width {lhs} mm, below the required {rhs} mm (IBC 1018.2).",
+        "on_pass": "Corridor space {guid} meets the minimum width requirement ({lhs} mm ≥ {rhs} mm, IBC 1018.2)."
       },
       "provenance": {
         "source": "regulation",
-        "regulation": "Building Performance Standards",
-        "section": "6.2.1",
-        "title": "Window Operability",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1018.2",
+        "title": "Corridor Width",
         "jurisdiction": "US",
         "jurisdiction_scope": [
-          "US"
-        ]
+          "US",
+          "IBC"
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress"
       }
     },
     {
-      "id": "DOOR_MAINTENANCE_WARNING",
-      "name": "Door Maintenance and Condition Check",
+      "id": "ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "name": "ADA Door Accessibility Height Requirement",
       "rule_type": "attribute_comparison",
-      "description": "Doors should be in good condition and properly maintained for safety and functionality.",
+      "description": "Accessible doors must have a minimum clear height of 2032 mm (80 inches) measured from the floor to the lowest obstruction, in accordance with ADA 2010 Standards Section 404.1.",
       "target": {
         "ifc_class": "IfcDoor",
         "selector": {
-          "filters": []
+          "filters": [
+            {
+              "pset": "Pset_DoorCommon",
+              "property": "IsAccessible",
+              "op": "=",
+              "value": true
+            }
+          ]
         }
       },
       "condition": {
         "op": ">=",
         "lhs": {
-          "source": "pset",
-          "pset_name": "Pset_DoorCommon",
-          "property": "Condition",
-          "unit": "count"
+          "source": "qto",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity": "Height",
+          "unit": "mm"
         },
         "rhs": {
           "source": "parameter",
-          "param": "min_condition_score"
+          "param": "min_accessible_door_height_mm"
         }
       },
       "parameters": {
-        "min_condition_score": 70
+        "min_accessible_door_height_mm": 2032
       },
-      "severity": "WARNING",
+      "severity": "ERROR",
       "explanation": {
-        "short": "Doors should be maintained in good working condition.",
-        "on_fail": "Door {guid} has condition score {lhs}, below recommended threshold {rhs}.",
-        "on_pass": "Door {guid} meets maintenance condition recommendations ({lhs} >= {rhs})."
+        "short": "Accessible doors must provide a minimum clear height of 2032 mm (80 in).",
+        "on_fail": "Accessible door {guid} has height {lhs} mm, below the required {rhs} mm (ADA 404.1).",
+        "on_pass": "Accessible door {guid} meets the minimum height requirement ({lhs} mm ≥ {rhs} mm, ADA 404.1)."
       },
       "provenance": {
         "source": "regulation",
-        "regulation": "Building Maintenance Standards",
-        "section": "5.1",
-        "title": "Door Maintenance",
+        "regulation": "2010 ADA Standards for Accessible Design",
+        "section": "404.1",
+        "title": "Accessible Doors",
         "jurisdiction": "US",
         "jurisdiction_scope": [
-          "US"
-        ]
+          "US",
+          "ADA"
+        ],
+        "source_link": "https://www.ada.gov/regs2010/2010ADAStandards/2010ADAstandards.htm#sec404"
       }
     }
   ],
-  "saved_at": "2025-11-28T17:55:24.262897",
+  "saved_at": "2025-12-01T17:03:30.159969",
   "version": 1
 }

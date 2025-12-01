@@ -15,7 +15,7 @@ except ImportError:
     _inflect_engine = None
 
 from .exceptions import IFCLoadError
-from .extract_core import extract_doors, extract_spaces, extract_all_elements
+from .extract_core import extract_doors, extract_spaces, extract_all_elements, extract_configured_elements
 from .load_ifc import load_ifc, preview_ifc
 from .models import DoorElement, SpaceElement
 from .extract_rules import extract_rules_from_graph
@@ -51,7 +51,10 @@ class DataLayerService:
             raise IFCLoadError(ifc_path)
 
         spaces, doors = self.extract_elements(model)
-        all_elements = extract_all_elements(model)
+        
+        # Use config-driven extraction for all other element types
+        configured_elements = extract_configured_elements(model)
+        
         schema = getattr(model, "schema", None)
         schema_version = getattr(model, "schema", "Unknown")
 
@@ -62,25 +65,17 @@ class DataLayerService:
             "doors_with_width": sum(1 for d in doors if d.width_mm is not None),
         }
 
-        # Build elements dict with spaces, doors, and all other types
+        # Build elements dict with spaces, doors, and all configured types
         elements_dict: Dict[str, Any] = {
             "spaces": [space.to_dict() for space in spaces],
             "doors": [door.to_dict() for door in doors],
         }
         
-        # Add all other element types
-        for ifc_type, elements in all_elements.items():
-            # Skip if already added (spaces and doors are primary)
-            if ifc_type not in ("IfcSpace", "IfcDoor"):
-                # Convert IFC type to plural form (e.g., IfcWall -> walls)
-                base_name = ifc_type.replace("Ifc", "").lower()
-                # Use inflect for proper pluralization if available, else simple 's' suffix
-                if _inflect_engine:
-                    key = _inflect_engine.plural(base_name)
-                else:
-                    # Fallback: add 's' unless already ends with 's'
-                    key = base_name if base_name.endswith('s') else f"{base_name}s"
-                elements_dict[key] = [elem.to_dict() for elem in elements]
+        # Add all configured element types (windows, walls, slabs, columns, stairs, etc)
+        for output_key, elements in configured_elements.items():
+            # Skip if already added by legacy extraction (spaces and doors)
+            if output_key not in ("spaces", "doors"):
+                elements_dict[output_key] = elements
 
         graph: Dict[str, Any] = {
             "building_id": Path(ifc_path).stem,
@@ -92,6 +87,7 @@ class DataLayerService:
                 "schema_version": schema_version,
                 "generated_by": "data-layer-service",
                 "coverage": coverage,
+                "extraction_method": "hybrid (legacy + configured)",
             },
         }
         # Optionally extract rules from the generated graph and embed the

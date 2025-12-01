@@ -245,7 +245,9 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
   );
 
   const getSeverityIcon = (severity) => {
-    switch (severity?.toLowerCase()) {
+    // Handle case where severity is an object instead of string
+    const severityStr = typeof severity === 'string' ? severity : 'info';
+    switch (severityStr.toLowerCase()) {
       case 'error':
         return <AlertCircle size={16} className="severity-error" />;
       case 'warning':
@@ -256,7 +258,9 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
   };
 
   const getSeverityColor = (severity) => {
-    switch (severity?.toLowerCase()) {
+    // Handle case where severity is an object instead of string
+    const severityStr = typeof severity === 'string' ? severity : 'info';
+    switch (severityStr.toLowerCase()) {
       case 'error':
         return '#dc2626';
       case 'warning':
@@ -448,7 +452,7 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
                         border: `1px solid ${getSeverityColor(rule.severity)}`
                       }}>
                         {getSeverityIcon(rule.severity)}
-                        {rule.severity.toUpperCase()}
+                        {typeof rule.severity === 'string' ? rule.severity.toUpperCase() : 'INFO'}
                       </span>
                     )}
                   </span>

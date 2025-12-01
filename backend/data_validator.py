@@ -1,4 +1,4 @@
-"""Data validation for IFC graphs."""
+"""Model validation for IFC graphs."""
 import logging
 import json
 from pathlib import Path

@@ -27,7 +27,7 @@
 | `app.py` | Flask main application | ✅ Active |
 | `unified_compliance_engine.py` | Compliance checking | ✅ Active |
 | `rule_config_manager.py` | Rule management | ✅ Active |
-| `data_validator.py` | Data validation | ✅ Active |
+| `data_validator.py` | Model validation | ✅ Active |
 | `requirements.txt` | Python dependencies | ✅ Active |
 
 ### Data Layer (`data_layer/`)
@@ -67,7 +67,7 @@
 | `ModelVisualizationView.js` | 3D visualization | ✅ Optimized |
 | `RuleLayerView.js` | Rule management UI | ✅ Active |
 | `ComplianceReportView.js` | Compliance reporting | ✅ Active |
-| `DataValidationView.js` | Data validation UI | ✅ Active |
+| `DataValidationView.js` | Model validation UI | ✅ Active |
 
 #### Configuration
 | File | Purpose | Status |

@@ -109,7 +109,7 @@ function DataValidationView({ graph }) {
     <div className="layer-view">
       <div className="layer-header">
         <CheckCircle size={24} />
-        <h2>Data Validation Report</h2>
+        <h2>Model Validation Report</h2>
       </div>
 
       <div className="layer-content">
