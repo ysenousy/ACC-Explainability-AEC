@@ -7,6 +7,7 @@ import PreviewConfirmationModal from './components/PreviewConfirmationModal';
 import Sidebar from './components/Sidebar';
 import DataLayerView from './components/DataLayerView';
 import ElementsView from './components/ElementsView';
+import ModelVisualizationView from './components/ModelVisualizationView';
 import ExportView from './components/ExportView';
 import RuleLayerView from './components/RuleLayerView';
 import CheckRulesView from './components/CheckRulesView';
@@ -275,6 +276,7 @@ function App() {
               {/* Render Layer Views */}
               {activeLayer === 'data-layer' && <DataLayerView graph={currentGraph} summary={currentSummary} />}
               {activeLayer === 'elements' && <ElementsView graph={currentGraph} />}
+              {activeLayer === 'model-visualization' && <ModelVisualizationView graph={currentGraph} />}
               {activeLayer === 'export' && <ExportView graph={currentGraph} />}
               {activeLayer === 'validation' && <DataValidationView graph={currentGraph} />}
               {activeLayer === 'rule-check' && <RuleCheckView graph={currentGraph} />}

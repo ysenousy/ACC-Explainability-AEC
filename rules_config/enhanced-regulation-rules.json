@@ -38,7 +38,7 @@
       "explanation": {
         "short": "Accessible doors on accessible routes must have a clear opening width of at least 815 mm (32 in).",
         "on_fail": "Door {guid} is marked as accessible but has clear width {lhs} mm, below the required {rhs} mm (ADA 404.2.3).",
-        "on_pass": "Door {guid} meets the ADA minimum clear width requirement ({lhs} mm \u2265 {rhs} mm, ADA 404.2.3)."
+        "on_pass": "Door {guid} meets the ADA minimum clear width requirement ({lhs} mm ≥ {rhs} mm, ADA 404.2.3)."
       },
       "provenance": {
         "source": "regulation",
@@ -49,7 +49,8 @@
         "jurisdiction_scope": [
           "US",
           "ADA"
-        ]
+        ],
+        "source_link": "https://www.ada.gov/regs2010/2010ADAStandards/2010ADAstandards.htm#sec404"
       }
     },
     {
@@ -90,7 +91,7 @@
       "explanation": {
         "short": "Fire exit doors must provide a clear height of at least 2032 mm (80 in).",
         "on_fail": "Fire exit door {guid} has height {lhs} mm, below the required {rhs} mm (IBC 1010.1.1).",
-        "on_pass": "Fire exit door {guid} meets the IBC minimum height requirement ({lhs} mm \u2265 {rhs} mm, IBC 1010.1.1)."
+        "on_pass": "Fire exit door {guid} meets the IBC minimum height requirement ({lhs} mm ≥ {rhs} mm, IBC 1010.1.1)."
       },
       "provenance": {
         "source": "regulation",
@@ -101,7 +102,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress#IBC2018_Ch10_Sec1010.1.1"
       }
     },
     {
@@ -135,7 +137,7 @@
       "explanation": {
         "short": "Stairways (for typical occupant loads) must have a minimum clear width of 1118 mm (44 in).",
         "on_fail": "Stair flight {guid} has width {lhs} mm, below the required {rhs} mm (IBC 1011.2).",
-        "on_pass": "Stair flight {guid} meets the IBC minimum width requirement ({lhs} mm \u2265 {rhs} mm, IBC 1011.2)."
+        "on_pass": "Stair flight {guid} meets the IBC minimum width requirement ({lhs} mm ≥ {rhs} mm, IBC 1011.2)."
       },
       "provenance": {
         "source": "regulation",
@@ -146,14 +148,15 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress#IBC2018_Ch10_Sec1011.2"
       }
     },
     {
       "id": "IRC_BEDROOM_MIN_AREA",
       "name": "Bedroom Minimum Floor Area",
       "rule_type": "attribute_comparison",
-      "description": "Habitable rooms such as bedrooms must have a minimum floor area of 6.5 m\u00b2 (70 ft\u00b2) in accordance with IRC Section R304.1/R304.2.",
+      "description": "Habitable rooms such as bedrooms must have a minimum floor area of 6.5 m² (70 ft²) in accordance with IRC Section R304.1/R304.2.",
       "target": {
         "ifc_class": "IfcSpace",
         "selector": {
@@ -185,9 +188,9 @@
       },
       "severity": "ERROR",
       "explanation": {
-        "short": "Bedrooms must have a minimum floor area of 6.5 m\u00b2 (70 ft\u00b2).",
-        "on_fail": "Bedroom space {guid} has area {lhs} m\u00b2, below the required {rhs} m\u00b2 (IRC R304.1/R304.2).",
-        "on_pass": "Bedroom space {guid} meets the minimum floor area requirement ({lhs} m\u00b2 \u2265 {rhs} m\u00b2, IRC R304.1/R304.2)."
+        "short": "Bedrooms must have a minimum floor area of 6.5 m² (70 ft²).",
+        "on_fail": "Bedroom space {guid} has area {lhs} m², below the required {rhs} m² (IRC R304.1/R304.2).",
+        "on_pass": "Bedroom space {guid} meets the minimum floor area requirement ({lhs} m² ≥ {rhs} m², IRC R304.1/R304.2)."
       },
       "provenance": {
         "source": "regulation",
@@ -198,14 +201,15 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR304"
       }
     },
     {
       "id": "IRC_EGRESS_WINDOW_MIN_AREA",
       "name": "Emergency Escape and Rescue Opening – Minimum Area",
       "rule_type": "attribute_comparison",
-      "description": "Emergency escape and rescue openings (egress windows) must provide a minimum net clear opening area of 0.53 m\u00b2 (5.7 ft\u00b2) in accordance with IRC Section R310.2.1.",
+      "description": "Emergency escape and rescue openings (egress windows) must provide a minimum net clear opening area of 0.53 m² (5.7 ft²) in accordance with IRC Section R310.2.1.",
       "target": {
         "ifc_class": "IfcWindow",
         "selector": {
@@ -237,9 +241,9 @@
       },
       "severity": "ERROR",
       "explanation": {
-        "short": "Egress windows must provide a minimum net clear opening area of 0.53 m\u00b2 (5.7 ft\u00b2).",
-        "on_fail": "Egress window {guid} has clear opening area {lhs} m\u00b2, below the required {rhs} m\u00b2 (IRC R310.2.1).",
-        "on_pass": "Egress window {guid} meets the minimum clear opening area ({lhs} m\u00b2 \u2265 {rhs} m\u00b2, IRC R310.2.1)."
+        "short": "Egress windows must provide a minimum net clear opening area of 0.53 m² (5.7 ft²).",
+        "on_fail": "Egress window {guid} has clear opening area {lhs} m², below the required {rhs} m² (IRC R310.2.1).",
+        "on_pass": "Egress window {guid} meets the minimum clear opening area ({lhs} m² ≥ {rhs} m², IRC R310.2.1)."
       },
       "provenance": {
         "source": "regulation",
@@ -250,7 +254,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR310.2.1"
       }
     },
     {
@@ -291,7 +296,7 @@
       "explanation": {
         "short": "Egress windows must provide a minimum net clear opening height of 610 mm (24 in).",
         "on_fail": "Egress window {guid} has clear opening height {lhs} mm, below the required {rhs} mm (IRC R310.2.2).",
-        "on_pass": "Egress window {guid} meets the minimum clear opening height ({lhs} mm \u2265 {rhs} mm, IRC R310.2.2)."
+        "on_pass": "Egress window {guid} meets the minimum clear opening height ({lhs} mm ≥ {rhs} mm, IRC R310.2.2)."
       },
       "provenance": {
         "source": "regulation",
@@ -302,7 +307,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR310.2.2"
       }
     },
     {
@@ -343,7 +349,7 @@
       "explanation": {
         "short": "Egress windows must provide a minimum net clear opening width of 508 mm (20 in).",
         "on_fail": "Egress window {guid} has clear opening width {lhs} mm, below the required {rhs} mm (IRC R310.2.3).",
-        "on_pass": "Egress window {guid} meets the minimum clear opening width ({lhs} mm \u2265 {rhs} mm, IRC R310.2.3)."
+        "on_pass": "Egress window {guid} meets the minimum clear opening width ({lhs} mm ≥ {rhs} mm, IRC R310.2.3)."
       },
       "provenance": {
         "source": "regulation",
@@ -354,7 +360,8 @@
         "jurisdiction_scope": [
           "US",
           "IRC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning#IRC2021_Pt03_Ch03_SecR310.2.3"
       }
     },
     {
@@ -395,7 +402,7 @@
       "explanation": {
         "short": "UK regulations require an effective clear opening width of at least 775 mm for accessible doors in new dwellings.",
         "on_fail": "Accessible door {guid} has clear width {lhs} mm, below the UK requirement of {rhs} mm (Approved Document M).",
-        "on_pass": "Accessible door {guid} meets the UK minimum clear width requirement ({lhs} mm \u2265 {rhs} mm, Approved Document M)."
+        "on_pass": "Accessible door {guid} meets the UK minimum clear width requirement ({lhs} mm ≥ {rhs} mm, Approved Document M)."
       },
       "provenance": {
         "source": "regulation",
@@ -406,7 +413,8 @@
         "jurisdiction_scope": [
           "UK",
           "ADM"
-        ]
+        ],
+        "source_link": "https://www.gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m"
       }
     },
     {
@@ -447,7 +455,7 @@
       "explanation": {
         "short": "Canadian accessibility guidance typically requires a minimum door clear opening width of 850 mm on accessible routes.",
         "on_fail": "Accessible door {guid} has clear width {lhs} mm, below the Canadian requirement of {rhs} mm (NBC/CSA B651).",
-        "on_pass": "Accessible door {guid} meets the minimum Canadian clear width requirement ({lhs} mm \u2265 {rhs} mm, NBC/CSA B651)."
+        "on_pass": "Accessible door {guid} meets the minimum Canadian clear width requirement ({lhs} mm ≥ {rhs} mm, NBC/CSA B651)."
       },
       "provenance": {
         "source": "regulation",
@@ -459,10 +467,10 @@
           "CA",
           "NBC",
           "CSA B651"
-        ]
+        ],
+        "source_link": "https://nrc-publications.canada.ca/eng/view/ft/?id=d5da1f5f-7083-4f88-a254-0df218da1822"
       }
     },
-
     {
       "id": "IBC_WALL_FIRE_PARTITION_MIN_RATING",
       "name": "Fire Partition Wall – Minimum Fire-Resistance Rating",
@@ -504,7 +512,7 @@
       "explanation": {
         "short": "Walls designated as fire partitions should provide at least a 1-hour fire-resistance rating.",
         "on_fail": "Wall {guid} is marked as a fire partition but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 708.3).",
-        "on_pass": "Wall {guid} meets the minimum fire partition rating ({lhs} h \u2265 {rhs} h, IBC 708.3)."
+        "on_pass": "Wall {guid} meets the minimum fire partition rating ({lhs} h ≥ {rhs} h, IBC 708.3)."
       },
       "provenance": {
         "source": "regulation",
@@ -515,7 +523,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-7-fire-and-smoke-protection-features#IBC2018_Ch07_Sec708.3"
       }
     },
     {
@@ -559,7 +568,7 @@
       "explanation": {
         "short": "Floor/ceiling assemblies separating dwelling units must be at least 1/2-hour fire-resistance rated.",
         "on_fail": "Slab {guid} separates dwelling/sleeping units but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 711.2.4.3).",
-        "on_pass": "Slab {guid} meets the minimum horizontal assembly rating ({lhs} h \u2265 {rhs} h, IBC 711.2.4.3)."
+        "on_pass": "Slab {guid} meets the minimum horizontal assembly rating ({lhs} h ≥ {rhs} h, IBC 711.2.4.3)."
       },
       "provenance": {
         "source": "regulation",
@@ -570,7 +579,8 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-7-fire-and-smoke-protection-features#IBC2018_Ch07_Sec711.2.4.3"
       }
     },
     {
@@ -614,7 +624,7 @@
       "explanation": {
         "short": "Columns that are required to be fire-resistance rated must achieve at least the specified minimum rating.",
         "on_fail": "Column {guid} is marked as requiring fire protection but has fire-resistance rating {lhs} h, below the required {rhs} h (IBC 704.1/704.2).",
-        "on_pass": "Column {guid} meets the minimum fire-resistance requirement ({lhs} h \u2265 {rhs} h, IBC 704.1/704.2)."
+        "on_pass": "Column {guid} meets the minimum fire-resistance requirement ({lhs} h ≥ {rhs} h, IBC 704.1/704.2)."
       },
       "provenance": {
         "source": "regulation",
@@ -625,91 +635,114 @@
         "jurisdiction_scope": [
           "US",
           "IBC"
-        ]
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-7-fire-and-smoke-protection-features#IBC2018_Ch07_Sec704.1"
       }
     },
     {
-      "id": "WINDOW_OPERATION_WARNING",
-      "name": "Window Operation Quality Check",
+      "id": "IBC_CORRIDOR_MIN_WIDTH",
+      "name": "Corridor Minimum Width",
       "rule_type": "attribute_comparison",
-      "description": "Windows should be operable and properly maintained for building functionality and user comfort.",
+      "description": "Corridors serving occupant loads must maintain a minimum width of 1067 mm (42 inches) for unobstructed passage and means of egress in accordance with IBC Section 1018.2.",
       "target": {
-        "ifc_class": "IfcWindow",
+        "ifc_class": "IfcSpace",
         "selector": {
-          "filters": []
+          "filters": [
+            {
+              "pset": "Pset_SpaceCommon",
+              "property": "UsageType",
+              "op": "=",
+              "value": "Corridor"
+            }
+          ]
         }
       },
       "condition": {
         "op": ">=",
         "lhs": {
-          "source": "pset",
-          "pset_name": "Pset_WindowCommon",
-          "property": "Operability",
-          "unit": "count"
+          "source": "qto",
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity": "Width",
+          "unit": "mm"
         },
         "rhs": {
           "source": "parameter",
-          "param": "min_operable_pct"
+          "param": "min_corridor_width_mm"
         }
       },
       "parameters": {
-        "min_operable_pct": 80
+        "min_corridor_width_mm": 1067
       },
-      "severity": "WARNING",
+      "severity": "ERROR",
       "explanation": {
-        "short": "Windows should maintain operational functionality for ventilation and user control.",
-        "on_fail": "Window {guid} has operability rating {lhs}%, below recommended threshold {rhs}%.",
-        "on_pass": "Window {guid} meets window operability recommendations ({lhs}% >= {rhs}%)."
+        "short": "Corridors must provide a minimum width of 1067 mm (42 in) for safe passage and egress.",
+        "on_fail": "Corridor space {guid} has width {lhs} mm, below the required {rhs} mm (IBC 1018.2).",
+        "on_pass": "Corridor space {guid} meets the minimum width requirement ({lhs} mm ≥ {rhs} mm, IBC 1018.2)."
       },
       "provenance": {
         "source": "regulation",
-        "regulation": "Building Performance Standards",
-        "section": "6.2.1",
-        "title": "Window Operability",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1018.2",
+        "title": "Corridor Width",
         "jurisdiction": "US",
-        "jurisdiction_scope": ["US"]
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress#IBC2018_Ch10_Sec1018.2"
       }
     },
     {
-      "id": "DOOR_MAINTENANCE_WARNING",
-      "name": "Door Maintenance and Condition Check",
+      "id": "ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "name": "ADA Door Accessibility Height Requirement",
       "rule_type": "attribute_comparison",
-      "description": "Doors should be in good condition and properly maintained for safety and functionality.",
+      "description": "Accessible doors must have a minimum clear height of 2032 mm (80 inches) measured from the floor to the lowest obstruction, in accordance with ADA 2010 Standards Section 404.1.",
       "target": {
         "ifc_class": "IfcDoor",
         "selector": {
-          "filters": []
+          "filters": [
+            {
+              "pset": "Pset_DoorCommon",
+              "property": "IsAccessible",
+              "op": "=",
+              "value": true
+            }
+          ]
         }
       },
       "condition": {
         "op": ">=",
         "lhs": {
-          "source": "pset",
-          "pset_name": "Pset_DoorCommon",
-          "property": "Condition",
-          "unit": "count"
+          "source": "qto",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity": "Height",
+          "unit": "mm"
         },
         "rhs": {
           "source": "parameter",
-          "param": "min_condition_score"
+          "param": "min_accessible_door_height_mm"
         }
       },
       "parameters": {
-        "min_condition_score": 70
+        "min_accessible_door_height_mm": 2032
       },
-      "severity": "WARNING",
+      "severity": "ERROR",
       "explanation": {
-        "short": "Doors should be maintained in good working condition.",
-        "on_fail": "Door {guid} has condition score {lhs}, below recommended threshold {rhs}.",
-        "on_pass": "Door {guid} meets maintenance condition recommendations ({lhs} >= {rhs})."
+        "short": "Accessible doors must provide a minimum clear height of 2032 mm (80 in).",
+        "on_fail": "Accessible door {guid} has height {lhs} mm, below the required {rhs} mm (ADA 404.1).",
+        "on_pass": "Accessible door {guid} meets the minimum height requirement ({lhs} mm ≥ {rhs} mm, ADA 404.1)."
       },
       "provenance": {
         "source": "regulation",
-        "regulation": "Building Maintenance Standards",
-        "section": "5.1",
-        "title": "Door Maintenance",
+        "regulation": "2010 ADA Standards for Accessible Design",
+        "section": "404.1",
+        "title": "Accessible Doors",
         "jurisdiction": "US",
-        "jurisdiction_scope": ["US"]
+        "jurisdiction_scope": [
+          "US",
+          "ADA"
+        ],
+        "source_link": "https://www.ada.gov/regs2010/2010ADAStandards/2010ADAstandards.htm#sec404"
       }
     }
   ],

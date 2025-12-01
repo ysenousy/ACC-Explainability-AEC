@@ -1,0 +1,172 @@
+{
+  "description": "Configuration-driven IFC data extraction mapping. Supports multiple IFC schemas and vendors.",
+  "version": "1.0",
+  "element_types": {
+    "IfcDoor": {
+      "output_key": "doors",
+      "description": "Door elements with dimensions and fire ratings",
+      "top_level_properties": {
+        "width_mm": {
+          "pset_fallbacks": ["Pset_DoorCommon/ClearWidth", "Pset_DoorCommon/OverallWidth"],
+          "attribute_fallbacks": ["OverallWidth"],
+          "normalize_unit": "mm"
+        },
+        "height_mm": {
+          "pset_fallbacks": ["Pset_DoorCommon/ClearHeight"],
+          "attribute_fallbacks": ["OverallHeight"],
+          "normalize_unit": "mm"
+        },
+        "fire_rating": {
+          "pset_fallbacks": ["Pset_DoorCommon/FireRating"],
+          "normalize_unit": null
+        }
+      },
+      "psets_to_extract": [
+        "Pset_DoorCommon",
+        "BaseQuantities",
+        "Qto_DoorBaseQuantities"
+      ]
+    },
+    "IfcWindow": {
+      "output_key": "windows",
+      "description": "Window elements with dimensions",
+      "top_level_properties": {
+        "width_mm": {
+          "pset_fallbacks": ["Pset_WindowCommon/OverallWidth", "BaseQuantities/Width"],
+          "normalize_unit": "mm"
+        },
+        "height_mm": {
+          "pset_fallbacks": ["Pset_WindowCommon/OverallHeight", "BaseQuantities/Height"],
+          "normalize_unit": "mm"
+        },
+        "area_m2": {
+          "pset_fallbacks": ["BaseQuantities/Area", "Pset_WindowCommon/Area"],
+          "normalize_unit": "m2"
+        }
+      },
+      "psets_to_extract": [
+        "Pset_WindowCommon",
+        "BaseQuantities",
+        "Qto_WindowBaseQuantities"
+      ]
+    },
+    "IfcSpace": {
+      "output_key": "spaces",
+      "description": "Space elements with area and usage type",
+      "top_level_properties": {
+        "area_m2": {
+          "pset_fallbacks": ["Qto_SpaceBaseQuantities/NetFloorArea", "Qto_SpaceBaseQuantities/GrossFloorArea", "BaseQuantities/Area"],
+          "normalize_unit": "m2"
+        },
+        "usage_type": {
+          "pset_fallbacks": ["Pset_SpaceCommon/UsageType"],
+          "normalize_unit": null
+        }
+      },
+      "psets_to_extract": [
+        "Pset_SpaceCommon",
+        "BaseQuantities",
+        "Qto_SpaceBaseQuantities"
+      ]
+    },
+    "IfcStairFlight": {
+      "output_key": "stairs",
+      "description": "Stair flight elements with dimensions",
+      "top_level_properties": {
+        "width_mm": {
+          "pset_fallbacks": ["Qto_StairFlightBaseQuantities/Width", "BaseQuantities/Width"],
+          "normalize_unit": "mm"
+        },
+        "height_mm": {
+          "pset_fallbacks": ["Qto_StairFlightBaseQuantities/Height", "BaseQuantities/Height"],
+          "normalize_unit": "mm"
+        }
+      },
+      "psets_to_extract": [
+        "Pset_StairFlightCommon",
+        "BaseQuantities",
+        "Qto_StairFlightBaseQuantities"
+      ]
+    },
+    "IfcWall": {
+      "output_key": "walls",
+      "description": "Wall elements with fire ratings",
+      "top_level_properties": {
+        "fire_rating": {
+          "pset_fallbacks": ["Pset_WallCommon/FireRating"],
+          "normalize_unit": null
+        }
+      },
+      "psets_to_extract": [
+        "Pset_WallCommon",
+        "BaseQuantities"
+      ]
+    },
+    "IfcSlab": {
+      "output_key": "slabs",
+      "description": "Slab elements with fire ratings",
+      "top_level_properties": {
+        "fire_rating": {
+          "pset_fallbacks": ["Pset_SlabCommon/FireRating"],
+          "normalize_unit": null
+        },
+        "area_m2": {
+          "pset_fallbacks": ["BaseQuantities/Area"],
+          "normalize_unit": "m2"
+        }
+      },
+      "psets_to_extract": [
+        "Pset_SlabCommon",
+        "BaseQuantities",
+        "Qto_SlabBaseQuantities"
+      ]
+    },
+    "IfcColumn": {
+      "output_key": "columns",
+      "description": "Column elements with fire ratings",
+      "top_level_properties": {
+        "fire_rating": {
+          "pset_fallbacks": ["Pset_ColumnCommon/FireRating"],
+          "normalize_unit": null
+        }
+      },
+      "psets_to_extract": [
+        "Pset_ColumnCommon",
+        "BaseQuantities"
+      ]
+    },
+    "IfcBeam": {
+      "output_key": "beams",
+      "description": "Beam elements",
+      "psets_to_extract": [
+        "Pset_BeamCommon",
+        "BaseQuantities"
+      ]
+    },
+    "IfcRamp": {
+      "output_key": "ramps",
+      "description": "Ramp elements with slope",
+      "top_level_properties": {
+        "slope": {
+          "pset_fallbacks": ["Pset_RampCommon/Slope"],
+          "normalize_unit": null
+        }
+      },
+      "psets_to_extract": [
+        "Pset_RampCommon",
+        "BaseQuantities"
+      ]
+    }
+  },
+  "unit_conversions": {
+    "mm": {
+      "from_m": 1000,
+      "from_cm": 10,
+      "threshold": 10
+    },
+    "m2": {
+      "threshold": 0.1
+    }
+  },
+  "notes": "Add new element types by extending element_types dict. Each type needs output_key and psets_to_extract. Optional top_level_properties for normalized fields with fallback chains."
+}
