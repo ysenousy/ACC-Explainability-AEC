@@ -391,6 +391,7 @@ class UnifiedComplianceEngine:
 
     def check_element_against_rule(self, element: Dict, rule: Dict) -> Dict[str, Any]:
         """Check single element against single rule (legacy format)."""
+        provenance = rule.get('provenance', {})
         result = {
             'rule_id': rule.get('id'),
             'element_guid': element.get('guid') or element.get('id'),
@@ -400,8 +401,11 @@ class UnifiedComplianceEngine:
             'passed': False,
             'explanation': '',
             'severity': rule.get('severity', 'WARNING'),
-            'code_reference': rule.get('provenance', {}).get('regulation'),
-            'section': rule.get('provenance', {}).get('section'),
+            'regulation': provenance.get('regulation'),
+            'section': provenance.get('section'),
+            'jurisdiction': provenance.get('jurisdiction'),
+            'source_link': provenance.get('source_link'),
+            'code_reference': provenance.get('regulation'),
             'actual_value': None,
             'required_value': None,
             'unit': None,
@@ -477,19 +481,26 @@ class UnifiedComplianceEngine:
         results = []
         stats = {'passed': 0, 'failed': 0, 'unable': 0}
 
+        logger.info(f"[check_graph START] Graph top-level keys: {list(graph.keys())}")
+        logger.info(f"[check_graph START] Graph size: {len(str(graph))} chars")
+
         # Get elements from graph
         elements = []
         for section in ['elements', 'objects', 'entities']:
             if section in graph:
                 section_data = graph[section]
+                logger.info(f"[check_graph] Found '{section}' in graph, type: {type(section_data).__name__}")
                 # Handle both list format and dict format
                 if isinstance(section_data, dict):
                     # Modern format: {"doors": [...], "spaces": [...], ...}
+                    logger.info(f"[check_graph] '{section}' is dict with keys: {list(section_data.keys())}")
                     for comp_type, comp_list in section_data.items():
                         if isinstance(comp_list, list):
+                            logger.info(f"[check_graph] Adding {len(comp_list)} {comp_type}")
                             elements.extend(comp_list)
                 elif isinstance(section_data, list):
                     # Legacy format: [element1, element2, ...]
+                    logger.info(f"[check_graph] '{section}' is list with {len(section_data)} items")
                     elements.extend(section_data)
 
         # Filter to specific IFC classes if requested
@@ -516,9 +527,13 @@ class UnifiedComplianceEngine:
                 else:
                     stats['unable'] += 1
 
+        logger.info(f"[check_graph] FINAL: Extracted {len(elements)} total elements from graph")
+        logger.info(f"[check_graph] Results: {len(results)} checks, Passed: {stats['passed']}, Failed: {stats['failed']}, Unable: {stats['unable']}")
+        
         return {
             'timestamp': datetime.now().isoformat(),
             'total_checks': len(results),
+            'total_elements': len(elements),
             'passed': stats['passed'],
             'failed': stats['failed'],
             'unable': stats['unable'],
@@ -789,6 +804,9 @@ class UnifiedComplianceEngine:
             all_components = self._extract_all_components(graph)
             logger.info(f"[COMPLIANCE CHECK] Components extracted: {[(k, len(v)) for k, v in all_components.items() if v]}")
 
+            # Count total elements for percentage calculations
+            total_elements_in_model = sum(len(comps) for comps in all_components.values())
+
             # Evaluate each rule
             rule_results = []
             for rule in self.rules:
@@ -799,6 +817,7 @@ class UnifiedComplianceEngine:
             summary = {
                 "total_rules": len(rule_results),
                 "components_checked": sum(len(comps) for comps in all_components.values()),
+                "total_elements": total_elements_in_model,
                 "total_evaluations": sum(r["components_evaluated"] for r in rule_results)
             }
 

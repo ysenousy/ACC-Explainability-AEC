@@ -1424,10 +1424,14 @@ def check_compliance():
         logger.info(f"Compliance check: Received graph with keys: {list(graph.keys())}")
         if 'elements' in graph:
             elements = graph.get('elements', {})
-            logger.info(f"Compliance check: Graph has elements section with keys: {list(elements.keys() if isinstance(elements, dict) else [])}")
+            logger.info(f"Compliance check: Graph has elements section with type: {type(elements).__name__}")
             if isinstance(elements, dict):
-                for elem_type, elem_list in elements.items():
-                    logger.info(f"Compliance check: Found {len(elem_list) if isinstance(elem_list, list) else 0} {elem_type}")
+                elem_counts = {k: len(v) if isinstance(v, list) else 0 for k, v in elements.items()}
+                logger.info(f"Compliance check: Elements by type: {elem_counts}")
+                total_elems = sum(elem_counts.values())
+                logger.info(f"Compliance check: TOTAL ELEMENTS IN GRAPH: {total_elems}")
+            elif isinstance(elements, list):
+                logger.info(f"Compliance check: Elements is list with {len(elements)} items")
         else:
             logger.info(f"Compliance check: Graph has NO elements section. Available keys: {list(graph.keys())}")
         
@@ -1450,11 +1454,14 @@ def check_compliance():
             rule_ids = set(r.get('rule_id') for r in results['results'] if r.get('rule_id'))
             logger.info(f"Compliance check: Rule IDs in results: {rule_ids}")
         
-        return jsonify({
+        response_data = {
             "success": True,
             **results,
             "error": None
-        })
+        }
+        logger.info(f"[check_compliance response] Total elements in response: {response_data.get('total_elements')}, Total checks: {response_data.get('total_checks')}, Response keys: {list(response_data.keys())}")
+        
+        return jsonify(response_data)
     
     except Exception as e:
         logger.exception("Compliance check failed")
@@ -1884,12 +1891,21 @@ def generate_compliance_report_endpoint():
         
         # CRITICAL: Reload rules from file each time to reflect user updates
         # This ensures rule deletions/modifications are immediately reflected
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
+        # Try custom_rules.json first (user-imported), fallback to enhanced-regulation-rules.json
+        custom_rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
+        default_rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
         
-        if not rules_file.exists():
+        # Determine which file to use
+        if custom_rules_file.exists():
+            rules_file = custom_rules_file
+            logger.info(f"[COMPLIANCE REPORT] Using custom rules from {rules_file}")
+        elif default_rules_file.exists():
+            rules_file = default_rules_file
+            logger.info(f"[COMPLIANCE REPORT] Using regulatory rules from {rules_file}")
+        else:
             return jsonify({
                 "success": False,
-                "error": "No rules loaded. Please import regulatory rules first."
+                "error": "No rules found. Neither custom_rules.json nor enhanced-regulation-rules.json available."
             }), 400
         
         # Load rules from file (fresh, not cached)
@@ -1901,7 +1917,7 @@ def generate_compliance_report_endpoint():
         if not rules_list:
             return jsonify({
                 "success": False,
-                "error": "No rules available. Please import regulatory rules first."
+                "error": "No rules available in the selected rules file."
             }), 400
         
         # Convert list to dict format if needed
@@ -2003,12 +2019,21 @@ def check_rules_compliance():
         
         # CRITICAL: Reload rules from file each time to reflect user updates
         # This ensures rule deletions/modifications are immediately reflected
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
+        # Try custom_rules.json first (user-imported), fallback to enhanced-regulation-rules.json
+        custom_rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
+        default_rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
         
-        if not rules_file.exists():
+        # Determine which file to use
+        if custom_rules_file.exists():
+            rules_file = custom_rules_file
+            logger.info(f"[COMPLIANCE CHECK] Using custom rules from {rules_file}")
+        elif default_rules_file.exists():
+            rules_file = default_rules_file
+            logger.info(f"[COMPLIANCE CHECK] Using regulatory rules from {rules_file}")
+        else:
             return jsonify({
                 "success": False, 
-                "error": "No rules loaded. Please import regulatory rules first.",
+                "error": "No rules found. Neither custom_rules.json nor enhanced-regulation-rules.json available.",
                 "compliance": None
             }), 400
         
@@ -2021,7 +2046,7 @@ def check_rules_compliance():
         if not rules_list:
             return jsonify({
                 "success": False, 
-                "error": "No rules available. Please import regulatory rules first.",
+                "error": "No rules available in the selected rules file.",
                 "compliance": None
             }), 400
         
@@ -2032,18 +2057,60 @@ def check_rules_compliance():
         logger.info(f"[COMPLIANCE CHECK] Reloaded {len(engine.rules)} rules from {rules_file}")
         logger.info(f"[COMPLIANCE CHECK] Rule IDs: {[r.get('id', 'N/A') for r in engine.rules[:5]]}")
         
-        # Check compliance using the fresh rules
-        result = engine.check_compliance(graph, rules_manifest_path=None)
+        # Check compliance using check_graph to get detailed failure results with regulatory fields
+        check_result = engine.check_graph(graph, rules=rules_list)
+        
+        # Transform to format expected by RuleCheckView while keeping detailed results for Reasoning Layer
+        # Get rules summary per rule
+        rules_by_id = {}
+        for result in check_result.get('results', []):
+            rule_id = result.get('rule_id')
+            if rule_id not in rules_by_id:
+                rules_by_id[rule_id] = {
+                    'rule_id': rule_id,
+                    'rule_name': result.get('rule_name'),
+                    'code_reference': result.get('code_reference'),
+                    'severity': result.get('severity'),
+                    'passed': 0,
+                    'failed': 0,
+                    'unable': 0,
+                    'components_evaluated': 0
+                }
+            
+            # Count results per rule
+            if result.get('passed') is True:
+                rules_by_id[rule_id]['passed'] += 1
+            elif result.get('passed') is False:
+                rules_by_id[rule_id]['failed'] += 1
+            else:
+                rules_by_id[rule_id]['unable'] += 1
+            rules_by_id[rule_id]['components_evaluated'] += 1
+        
+        # Build summary
+        summary = {
+            'total_rules': len(rules_by_id),
+            'components_checked': check_result.get('total_elements', 0),
+            'total_evaluations': len(check_result.get('results', []))
+        }
+        
+        # Return result with both summary (for RuleCheckView) and detailed results (for ReasoningView)
+        result = {
+            'summary': summary,
+            'rules': list(rules_by_id.values()),
+            'results': check_result.get('results', []),  # Detailed failures for Reasoning Layer
+            'total_checks': check_result.get('total_checks', 0),
+            'total_elements': check_result.get('total_elements', 0),
+            'passed': check_result.get('passed', 0),
+            'failed': check_result.get('failed', 0),
+            'unable': check_result.get('unable', 0)
+        }
         
         # Log summary
-        if result.get("summary"):
-            summary = result["summary"]
-            logger.info(f"[COMPLIANCE CHECK] Summary: {summary['total_rules']} rules, {summary['components_checked']} components checked, {summary['total_evaluations']} evaluations")
-            
-            # Log results per rule
-            for rule_result in result.get("rules", [])[:5]:
-                logger.info(f"[COMPLIANCE CHECK] Rule {rule_result['rule_id']}: {rule_result['passed']} passed, {rule_result['failed']} failed")
+        logger.info(f"[COMPLIANCE CHECK] Results: {len(result.get('results', []))} total checks")
+        logger.info(f"[COMPLIANCE CHECK] Passed: {result.get('passed', 0)}, Failed: {result.get('failed', 0)}, Unable: {result.get('unable', 0)}")
+        logger.info(f"[COMPLIANCE CHECK] Total elements: {result.get('total_elements', 0)}")
         
+        logger.info(f"[check_rules_compliance] Returning result with {len(result.get('results', []))} individual results and {len(result.get('rules', []))} rules")
         return jsonify({"success": True, "compliance": result}), 200
     
     except Exception as e:

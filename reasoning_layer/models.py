@@ -1,209 +1,140 @@
 """
-Reasoning Layer Models
+Data models for the Reasoning Layer.
 
-Defines data structures for explaining:
-1. WHY rules exist (regulatory intent, safety, accessibility)
-2. WHY elements failed (design analysis, alternatives)
+Provides structured representations for reasoning results, failure analysis,
+impact metrics, and recommendations.
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, asdict, field
+from typing import Dict, List, Any, Optional
 from enum import Enum
-from datetime import datetime
+import json
 
 
-class SeverityLevel(Enum):
-    """Severity levels for issues and solutions."""
-    CRITICAL = "critical"      # Safety/compliance risk
-    HIGH = "high"              # Significant violation
-    MEDIUM = "medium"          # Moderate concern
-    LOW = "low"                # Minor issue
-    INFO = "info"              # Informational
+class SeverityLevel(str, Enum):
+    """Severity levels for compliance failures."""
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
 
 
-class ReasoningType(Enum):
-    """Types of reasoning provided."""
-    RULE_JUSTIFICATION = "rule_justification"      # Why rule exists
-    FAILURE_ANALYSIS = "failure_analysis"          # Why element failed
-    SOLUTION = "solution"                          # How to fix
+class RecommendationEffort(str, Enum):
+    """Effort levels for implementing recommendations."""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
 
 
 @dataclass
 class RegulatoryReference:
-    """Reference to regulation, standard, or code."""
-    standard: str              # e.g., "ADA", "IBC", "DIN"
-    section: str               # e.g., "203.9", "1007.1"
-    jurisdiction: str          # e.g., "USA", "Germany", "International"
-    title: Optional[str] = None  # e.g., "Accessible Routes"
-    url: Optional[str] = None  # Link to regulation
-    year: Optional[int] = None # e.g., 2010 for ADA
+    """Reference to regulatory source."""
+    regulation: str
+    section: str
+    jurisdiction: str
+    source_link: Optional[str] = None
 
 
 @dataclass
-class RuleJustification:
-    """Explains WHY a rule exists and its regulatory intent."""
-    # Required fields
-    rule_id: str                           # Reference to rule
-    rule_name: str                         # Human-readable rule name
-    regulatory_intent: str                 # Core reason for rule (safety, accessibility, etc.)
-    target_beneficiary: str                # Who benefits (elderly, disabled, general public)
-    primary_regulation: RegulatoryReference  # Primary regulation backing
-    explanation: str                       # Detailed "why" in plain language
-    
-    # Optional fields
-    safety_concern: Optional[str] = None          # Safety risk addressed
-    accessibility_concern: Optional[str] = None   # Accessibility issue addressed
-    historical_context: Optional[str] = None      # Why this rule was created/updated
-    
-    # Optional with defaults
-    related_regulations: List[RegulatoryReference] = field(default_factory=list)
-    severity: SeverityLevel = SeverityLevel.MEDIUM
-    applicability: str = "All buildings"   # When/where rule applies
-    
-    # Metadata
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-
-
-@dataclass
-class FailureMetrics:
-    """Quantifies how an element failed."""
-    actual_value: Any              # What the element actually has
-    required_value: Any            # What it should have
-    unit: str                      # Measurement unit (mm, degrees, etc.)
-    
-    # For numeric values
-    deviation: Optional[float] = None  # actual - required
-    deviation_percent: Optional[float] = None  # (actual - required) / required * 100
-    
-    # For categorical values
-    mismatch_detail: Optional[str] = None  # Description of mismatch
-
-
-@dataclass
-class FailureAnalysis:
-    """Explains WHY a specific element failed a rule."""
-    # Required fields
-    element_id: str                       # IFC element identifier
-    element_type: str                     # e.g., "IfcDoor", "IfcStair"
-    rule_id: str                          # Which rule it failed
-    rule_name: str                        # Human-readable rule name
-    failure_reason: str                   # Why element doesn't meet rule
-    root_cause: str                       # Root cause (design error, constraint, etc.)
-    metrics: FailureMetrics               # Quantify the failure
-    severity: SeverityLevel               # How serious is this failure
-    impact_on_users: str                  # How it affects building occupants
-    
-    # Optional fields
-    element_name: Optional[str] = None           # Name in IFC model
-    design_intent: Optional[str] = None          # What designer may have intended
-    location: Optional[str] = None               # Where in building (e.g., "Room 101", "Level 2")
-    related_elements: List[str] = field(default_factory=list)  # Other affected elements
-    
-    # Metadata
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-
-
-@dataclass
-class Solution:
-    """Suggests how to fix a failure."""
-    # Required fields
-    failure_id: str                       # Which failure this solves
-    element_id: str                       # Which element
-    recommendation: str                   # Primary fix recommendation
-    description: str                      # Detailed explanation of fix
-    feasibility: str                      # "easy", "moderate", "complex"
-    
-    # Optional fields
-    estimated_cost: Optional[str] = None         # Cost range (e.g., "low", "$1000-$5000")
-    estimated_effort: Optional[str] = None       # Time estimate (e.g., "1 day", "1 week")
-    design_implications: Optional[str] = None    # Side effects or cascading changes
-    reasoning_detail: Optional[str] = None  # Why this solution is recommended
-    
-    # Optional with defaults
-    implementation_steps: List[str] = field(default_factory=list)  # How to implement
-    alternatives: List[Dict[str, str]] = field(default_factory=list)  # List of {name, description, pros, cons}
-    potential_issues: List[str] = field(default_factory=list)  # Risks or trade-offs
-    confidence: float = 0.85              # 0.0-1.0, how confident is this solution
-    
-    # Metadata
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-
-
-@dataclass
-class ElementFailureExplanation:
-    """Complete explanation for why an element failed (combines analysis + solutions)."""
-    # Required fields
+class FailureContext:
+    """Context information about a failure."""
     element_id: str
     element_type: str
-    failed_rules: List[str]               # Which rules failed
-    analyses: List[FailureAnalysis]       # Detailed "why" for each failure
-    solutions: List[Solution]             # How to fix each failure
-    total_failures: int
-    critical_failures: int
-    high_severity_failures: int
-    compliance_impact: str                # How failures affect overall compliance
-    
-    # Optional fields
-    element_name: Optional[str] = None
-    
-    # Metadata
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    element_name: str
+    actual_value: Any
+    required_value: Any
+    unit: str = ""
+    properties: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
-class RuleExplanationResult:
-    """Complete explanation for why a rule exists."""
-    # Required fields
+class FailureExplanation:
+    """Explanation of why a rule failed."""
     rule_id: str
     rule_name: str
-    justification: RuleJustification
-    applicable_element_types: List[str]   # Which IFC types this rule applies to
-    total_elements_checked: int
-    elements_passing: int
-    elements_failing: int
-    
-    # Optional with defaults
-    similar_rules: List[str] = field(default_factory=list)  # Related rules
-    
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    failure_type: str  # e.g., "dimension_violation", "missing_property", "invalid_configuration"
+    short_explanation: str
+    detailed_explanation: str
+    context: FailureContext
+    regulatory_reference: RegulatoryReference
+    affected_property: str
+    severity: SeverityLevel
+
+
+@dataclass
+class ImpactMetrics:
+    """Metrics about the impact of failures."""
+    total_affected_elements: int
+    affected_by_type: Dict[str, int]  # e.g., {"IfcDoor": 5, "IfcWindow": 3}
+    percentage_of_building: float
+    failure_distribution: Dict[str, int]  # By severity
+    cost_estimate_range: Optional[str] = None  # e.g., "$10,000 - $50,000"
+    implementation_timeline: Optional[str] = None  # e.g., "1-2 weeks"
+
+
+@dataclass
+class Recommendation:
+    """A single recommendation for fixing failures."""
+    title: str
+    description: str
+    implementation_steps: List[str]
+    estimated_effort: RecommendationEffort
+    estimated_cost: Optional[str] = None
+    affected_elements: int = 0
+    regulatory_pathway: Optional[str] = None
+
+
+@dataclass
+class RecommendationSet:
+    """Set of tiered recommendations."""
+    quick_fixes: List[Recommendation] = field(default_factory=list)
+    medium_fixes: List[Recommendation] = field(default_factory=list)
+    comprehensive_fixes: List[Recommendation] = field(default_factory=list)
+    systemic_fixes: List[Recommendation] = field(default_factory=list)
+
+
+@dataclass
+class RootCause:
+    """Root cause analysis result."""
+    cause_id: str
+    description: str
+    affected_elements: int
+    affected_rules: List[str]
+    systemic: bool  # Whether this is a systemic issue affecting multiple elements
+
+
+@dataclass
+class ReasoningTab:
+    """Tab result for a reasoning layer view."""
+    tab_name: str  # "Why It Failed", "Impact Assessment", "How to Fix", etc.
+    content: Dict[str, Any]
+    data: Any
 
 
 @dataclass
 class ReasoningResult:
-    """Top-level result containing all reasoning information."""
-    reasoning_type: ReasoningType
+    """Complete reasoning analysis result."""
+    element_id: str
+    element_type: str
+    element_name: str
     
-    # For RULE_JUSTIFICATION
-    rule_explanations: List[RuleExplanationResult] = field(default_factory=list)
+    # Why it failed
+    failure_explanations: List[FailureExplanation] = field(default_factory=list)
     
-    # For FAILURE_ANALYSIS
-    element_explanations: List[ElementFailureExplanation] = field(default_factory=list)
+    # Impact
+    impact_metrics: Optional[ImpactMetrics] = None
     
-    # Summary statistics
-    total_rules_analyzed: int = 0
-    total_failures_analyzed: int = 0
-    total_solutions_provided: int = 0
+    # How to fix
+    recommendations: Optional[RecommendationSet] = None
+    
+    # Root causes
+    root_causes: List[RootCause] = field(default_factory=list)
     
     # Metadata
-    ifc_file: Optional[str] = None
-    analysis_timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    analysis_timestamp: str = ""
+    total_failed_rules: int = 0
+    
 
-
-# Helper functions for JSON serialization
-def reasoning_result_to_dict(result: ReasoningResult) -> Dict:
+def reasoning_result_to_dict(result: ReasoningResult) -> Dict[str, Any]:
     """Convert ReasoningResult to dictionary for JSON serialization."""
-    return _asdict_with_enums(result)
-
-
-def _asdict_with_enums(obj) -> Any:
-    """Recursively convert dataclass to dict, handling Enums."""
-    if isinstance(obj, dict):
-        return {k: _asdict_with_enums(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
-        return [_asdict_with_enums(item) for item in obj]
-    elif isinstance(obj, Enum):
-        return obj.value
-    elif hasattr(obj, '__dataclass_fields__'):
-        return {k: _asdict_with_enums(v) for k, v in asdict(obj).items()}
-    else:
-        return obj
+    return asdict(result)

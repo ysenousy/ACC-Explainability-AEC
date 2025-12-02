@@ -30,8 +30,9 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'compliance-report', label: 'Compliance Report', icon: FileText, description: 'Generate comprehensive compliance report' },
     ],
     reasoningLayer: [
-      { id: 'reasoning', label: 'Reasoning Layer', icon: Network, description: 'Rule justifications & failure analysis' },
-      { id: 'results', label: 'Analysis Results', icon: AlertCircle, description: 'Rule evaluation outcomes' },
+      { id: 'reasoning-why', label: 'Why It Failed', icon: AlertCircle, description: 'Explains compliance failures with context' },
+      { id: 'reasoning-impact', label: 'Impact Assessment', icon: BarChart3, description: 'Quantifies scope and severity of failures' },
+      { id: 'reasoning-fix', label: 'How To Fix', icon: Settings, description: 'Provides tiered recommendations' },
     ],
   };
 

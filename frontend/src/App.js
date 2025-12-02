@@ -282,7 +282,9 @@ function App() {
               {activeLayer === 'rule-check' && <RuleCheckView graph={currentGraph} />}
               {activeLayer === 'rule-layer' && <RuleLayerView graph={currentGraph} />}
               {activeLayer === 'rule-config' && <UnifiedConfigurationView graph={currentGraph} />}
-              {activeLayer === 'reasoning' && <ReasoningView graph={currentGraph} />}
+              {(activeLayer === 'reasoning-why' || activeLayer === 'reasoning-impact' || activeLayer === 'reasoning-fix') && (
+                <ReasoningView graph={currentGraph} activeTab={activeLayer.replace('reasoning-', '')} />
+              )}
               {activeLayer === 'results' && <ResultsView graph={currentGraph} />}
               {activeLayer === 'compliance-report' && <ComplianceReportView graph={currentGraph} />}
             </div>

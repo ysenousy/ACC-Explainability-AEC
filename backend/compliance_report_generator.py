@@ -380,39 +380,51 @@ class ComplianceReportGenerator:
             # If there are filters, check if element matches them
             if filters and not self._check_selector_filters(item, filters):
                 # Element doesn't match selector, skip evaluation (not applicable)
+                provenance = rule.get("provenance", {})
                 return {
                     "rule_id": rule_id,
                     "rule_name": rule_name,
                     "status": "skip",
                     "message": "Element does not match rule selector criteria (not applicable)",
                     "severity": rule.get("severity", "warning"),
-                    "code_reference": rule.get("provenance", {}).get("section", ""),
+                    "code_reference": provenance.get("section", ""),
+                    "regulatory_reference": provenance.get("regulation", ""),
+                    "jurisdiction": provenance.get("jurisdiction", ""),
+                    "source_link": provenance.get("source_link", ""),
                     "description": rule.get("description", "")
                 }
             
             # Get condition from rule
             condition = rule.get("condition", {})
             if not condition:
+                provenance = rule.get("provenance", {})
                 return {
                     "rule_id": rule_id,
                     "rule_name": rule_name,
                     "status": "unknown",
                     "message": "No condition defined in rule",
                     "severity": rule.get("severity", "warning"),
-                    "code_reference": rule.get("code_reference", ""),
+                    "code_reference": provenance.get("section", ""),
+                    "regulatory_reference": provenance.get("regulation", ""),
+                    "jurisdiction": provenance.get("jurisdiction", ""),
+                    "source_link": provenance.get("source_link", ""),
                     "description": rule.get("description", "")
                 }
             
             # Extract LHS value from IFC properties
             lhs_val = self._extract_rule_value(item, condition.get("lhs"))
             if lhs_val is None:
+                provenance = rule.get("provenance", {})
                 return {
                     "rule_id": rule_id,
                     "rule_name": rule_name,
                     "status": "fail",
                     "message": f"Required property not found in IFC element",
                     "severity": rule.get("severity", "warning"),
-                    "code_reference": rule.get("code_reference", ""),
+                    "code_reference": provenance.get("section", ""),
+                    "regulatory_reference": provenance.get("regulation", ""),
+                    "jurisdiction": provenance.get("jurisdiction", ""),
+                    "source_link": provenance.get("source_link", ""),
                     "description": rule.get("description", "")
                 }
             
@@ -455,6 +467,9 @@ class ComplianceReportGenerator:
             "message": message,
             "severity": rule.get("severity", "warning"),
             "code_reference": provenance.get("section", ""),
+            "regulatory_reference": provenance.get("regulation", ""),
+            "jurisdiction": provenance.get("jurisdiction", ""),
+            "source_link": provenance.get("source_link", ""),
             "description": rule.get("description", "")
         }
         

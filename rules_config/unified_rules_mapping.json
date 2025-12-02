@@ -24,90 +24,6 @@
     "strict_mode": false
   },
   "ifc_element_mappings": {
-    "wall": {
-      "attributes": [
-        {
-          "name": "fire_rating",
-          "pset_name": "Pset_WallCommon",
-          "property_name": "FireRating",
-          "required": true,
-          "source": "pset",
-          "unit": "rating"
-        },
-        {
-          "name": "acoustic_rating",
-          "pset_name": "Pset_WallCommon",
-          "property_name": "AcousticRating",
-          "required": false,
-          "source": "pset",
-          "unit": "rating"
-        },
-        {
-          "name": "is_load_bearing",
-          "pset_name": "Pset_WallCommon",
-          "property_name": "LoadBearing",
-          "required": false,
-          "source": "pset",
-          "unit": "boolean"
-        },
-        {
-          "name": "thickness_mm",
-          "qto_name": "Qto_WallBaseQuantities",
-          "quantity_name": "Width",
-          "required": false,
-          "source": "qto",
-          "unit": "mm"
-        }
-      ],
-      "filters": [],
-      "ifc_class": "IfcWall",
-      "required_psets": [
-        "Pset_WallCommon",
-        "Qto_WallBaseQuantities"
-      ]
-    },
-    "slab": {
-      "attributes": [
-        {
-          "name": "fire_rating",
-          "pset_name": "Pset_SlabCommon",
-          "property_name": "FireRating",
-          "required": true,
-          "source": "pset",
-          "unit": "rating"
-        },
-        {
-          "name": "thickness_mm",
-          "qto_name": "Qto_SlabBaseQuantities",
-          "quantity_name": "Thickness",
-          "required": true,
-          "source": "qto",
-          "unit": "mm"
-        },
-        {
-          "name": "area_m2",
-          "qto_name": "Qto_SlabBaseQuantities",
-          "quantity_name": "GrossArea",
-          "required": false,
-          "source": "qto",
-          "unit": "m2"
-        },
-        {
-          "name": "is_fire_separation",
-          "pset_name": "Pset_SlabCommon",
-          "property_name": "IsFireSeparation",
-          "required": false,
-          "source": "pset",
-          "unit": "boolean"
-        }
-      ],
-      "filters": [],
-      "ifc_class": "IfcSlab",
-      "required_psets": [
-        "Pset_SlabCommon",
-        "Qto_SlabBaseQuantities"
-      ]
-    },
     "door": {
       "attributes": [
         {
@@ -164,6 +80,48 @@
       "required_psets": [
         "Pset_DoorCommon",
         "Qto_DoorBaseQuantities"
+      ]
+    },
+    "slab": {
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "property_name": "FireRating",
+          "pset_name": "Pset_SlabCommon",
+          "required": true,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "thickness_mm",
+          "qto_name": "Qto_SlabBaseQuantities",
+          "quantity_name": "Thickness",
+          "required": true,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "area_m2",
+          "qto_name": "Qto_SlabBaseQuantities",
+          "quantity_name": "GrossArea",
+          "required": false,
+          "source": "qto",
+          "unit": "m2"
+        },
+        {
+          "name": "is_fire_separation",
+          "property_name": "IsFireSeparation",
+          "pset_name": "Pset_SlabCommon",
+          "required": false,
+          "source": "pset",
+          "unit": "boolean"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcSlab",
+      "required_psets": [
+        "Pset_SlabCommon",
+        "Qto_SlabBaseQuantities"
       ]
     },
     "space": {
@@ -248,6 +206,48 @@
         "Qto_StairFlightBaseQuantities"
       ]
     },
+    "wall": {
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "property_name": "FireRating",
+          "pset_name": "Pset_WallCommon",
+          "required": true,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "acoustic_rating",
+          "property_name": "AcousticRating",
+          "pset_name": "Pset_WallCommon",
+          "required": false,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "is_load_bearing",
+          "property_name": "LoadBearing",
+          "pset_name": "Pset_WallCommon",
+          "required": false,
+          "source": "pset",
+          "unit": "boolean"
+        },
+        {
+          "name": "thickness_mm",
+          "qto_name": "Qto_WallBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcWall",
+      "required_psets": [
+        "Pset_WallCommon",
+        "Qto_WallBaseQuantities"
+      ]
+    },
     "window": {
       "attributes": [
         {
@@ -284,7 +284,7 @@
   },
   "metadata": {
     "description": "Declarative configuration that maps IFC attributes to compliance rules (both generated and regulation). Provides single source of truth for rule resolution, parameter binding, and multi-format rule orchestration.",
-    "last_updated": "2025-11-28T15:16:35.530739",
+    "last_updated": "2025-12-02T15:41:32.827270",
     "maintainer": "ACC Explainability Team",
     "supported_standards": [
       "ADA 2010 Standards",
@@ -972,11 +972,11 @@
     },
     {
       "attribute_extraction": {
-        "operator": "exists",
         "lhs": {
           "attribute": "condition",
           "source": "ifc"
         },
+        "operator": "exists",
         "rhs": {
           "parameter": "min_condition_score"
         }
@@ -1048,7 +1048,7 @@
       "mapping_id": "MAP_IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
       "parameter_bindings": {
         "min_column_rating_h": {
-          "default_value": 1.0,
+          "default_value": 1,
           "description": "IBC minimum fire-resistance rating for columns",
           "source": "regulation_rule",
           "type": "fixed",

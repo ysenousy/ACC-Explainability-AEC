@@ -1,0 +1,77 @@
+{
+  "root_causes": {
+    "undersized_doors": {
+      "description": "Multiple doors fall short of width requirements",
+      "patterns": [
+        "ADA_DOOR_WIDTH",
+        "IBC_EGRESS_WIDTH"
+      ],
+      "systemic_fix": "Review and standardize door specifications in architectural standards",
+      "affected_property": ["width"],
+      "tags": ["accessibility", "egress"],
+      "min_severity": "WARNING"
+    },
+    "inadequate_egress": {
+      "description": "Multiple egress-related failures in bedrooms",
+      "patterns": [
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "IRC_EGRESS_WINDOW_SILL_HEIGHT",
+        "IBC_EGRESS_WIDTH"
+      ],
+      "systemic_fix": "Redesign bedroom egress strategy; ensure all sleeping rooms have compliant egress",
+      "affected_property": ["width", "height"],
+      "tags": ["egress", "fire_safety", "bedroom"],
+      "min_severity": "ERROR"
+    },
+    "slope_violations": {
+      "description": "Multiple accessible routes with non-compliant slopes",
+      "patterns": [
+        "ADA_RAMP_SLOPE",
+        "ADA_ACCESSIBLE_ROUTE_WIDTH"
+      ],
+      "systemic_fix": "Redesign site circulation and entry approaches",
+      "affected_property": ["slope", "width"],
+      "tags": ["accessibility", "site_design"],
+      "min_severity": "WARNING"
+    },
+    "missing_accessibility_features": {
+      "description": "Building lacks required accessibility components",
+      "patterns": [
+        "ADA_DOOR_WIDTH",
+        "ADA_RAMP_SLOPE",
+        "ADA_HANDRAIL_HEIGHT"
+      ],
+      "systemic_fix": "Conduct comprehensive accessibility retrofit program",
+      "affected_property": ["width", "slope", "height"],
+      "tags": ["accessibility", "universal_design"],
+      "min_severity": "ERROR"
+    },
+    "fire_safety_gaps": {
+      "description": "Multiple fire safety violations",
+      "patterns": [
+        "IBC_EGRESS_WIDTH",
+        "IBC_EXIT_SIGN_REQUIREMENT",
+        "IBC_FIRE_RATING_REQUIREMENT"
+      ],
+      "systemic_fix": "Complete fire safety system upgrade",
+      "affected_property": ["width", "fire_rating"],
+      "tags": ["fire_safety", "egress"],
+      "min_severity": "CRITICAL"
+    }
+  },
+  "grouping_rules": {
+    "minimum_elements_for_systemic": 3,
+    "minimum_rules_for_systemic": 2,
+    "element_type_correlation": {
+      "IfcDoor": "undersized_doors",
+      "IfcWindow": "inadequate_egress",
+      "IfcRamp": "slope_violations"
+    }
+  },
+  "metadata": {
+    "version": "1.1",
+    "description": "Root cause analysis rules for failure pattern detection. Uses pattern matching on rule IDs and element thresholds to identify systemic vs local issues. Supports severity filtering and multi-dimensional tag-based reasoning.",
+    "created": "2025-12-02",
+    "notes": "affected_property is now consistently an array. Each root cause has optional min_severity to prevent minor warnings from triggering systemic alerts. Tags enable multi-dimensional filtering and paper presentation."
+  }
+}

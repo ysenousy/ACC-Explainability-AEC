@@ -1,0 +1,56 @@
+{
+  "metrics": {
+    "cost_multipliers": {
+      "_comment": "All costs in USD. per_element is base cost per affected item.",
+      "per_element": 500,
+      "high_severity_adjustment": 1000,
+      "complex_fix_multiplier": 1.5,
+      "systemic_fix_multiplier": 2.0
+    },
+    "timeline_multipliers": {
+      "_comment": "Time units: days for adjustment, weeks for systemic. avg_resolution_weeks_per_failure used to extrapolate schedule slippage.",
+      "avg_resolution_weeks_per_failure": 2.5,
+      "high_severity_adjustment_days": 3,
+      "systemic_fix_weeks": 4
+    },
+    "severity_weights": {
+      "_comment": "Numeric weights for impact scoring: higher = more severe",
+      "CRITICAL": 4,
+      "ERROR": 3,
+      "WARNING": 2,
+      "INFO": 1
+    },
+    "impact_thresholds": {
+      "_comment": "Bands for UI legend rendering. Threshold is max value for that band.",
+      "bands": [
+        {"name": "low", "label": "Low Impact", "max": 5, "color": "#4CAF50"},
+        {"name": "medium", "label": "Medium Impact", "max": 15, "color": "#FFC107"},
+        {"name": "high", "label": "High Impact", "max": 30, "color": "#FF9800"},
+        {"name": "critical", "label": "Critical Impact", "max": 50, "color": "#F44336"}
+      ],
+      "low_impact": 5,
+      "medium_impact": 15,
+      "high_impact": 30,
+      "critical_impact": 50
+    }
+  },
+  "reporting": {
+    "show_percentages": true,
+    "precision_decimal_places": 2,
+    "group_by_element_type": true,
+    "group_by_severity": true,
+    "show_most_affected": 10,
+    "show_most_common_rules": 10
+  },
+  "metadata": {
+    "version": "1.1",
+    "description": "Impact analysis configuration for reasoning layer. Defines cost/timeline computation, impact classification, and reporting preferences.",
+    "last_updated": "2025-12-02",
+    "assumptions": {
+      "currency": "USD",
+      "cost_unit": "dollars per item or per systemic fix",
+      "time_unit": "weeks for systemic, days for adjustments",
+      "impact_unit": "count of affected elements"
+    }
+  }
+}

@@ -68,6 +68,40 @@ function ComplianceReportView({ graph }) {
           const data = await response.json();
           if (data.success) {
             setReport(data.report);
+            // Store in sessionStorage for ReasoningView to access
+            if (data.report && data.report.items) {
+              // Transform report structure to compliance results format for ReasoningView
+              const complianceResults = {
+                results: data.report.items.flatMap(item =>
+                  item.rules_evaluated.map(rule => ({
+                    rule_id: rule.rule_id,
+                    rule_name: rule.rule_name,
+                    element_id: item.id,
+                    element_guid: item.id,
+                    element_type: item.type,
+                    element_name: item.name,
+                    passed: rule.status === 'pass',
+                    severity: rule.severity,
+                    explanation: rule.message,
+                    properties: item.properties || {},
+                    // Flat fields for reasoningService transformation
+                    regulation: rule.regulatory_reference,
+                    section: rule.code_reference,
+                    jurisdiction: rule.jurisdiction,
+                    source_link: rule.source_link
+                  }))
+                ),
+                total_checks: data.report.summary.total_items,
+                total_elements: data.report.summary.total_items,
+                summary: data.report.summary
+              };
+              sessionStorage.setItem('lastComplianceResults', JSON.stringify(complianceResults));
+              sessionStorage.setItem('lastComplianceCheckTime', Date.now().toString());
+              console.log('[ComplianceReportView] Stored compliance results:', {
+                num_results: complianceResults.results.length,
+                total_elements: complianceResults.total_elements
+              });
+            }
           } else {
             setError(data.error || 'Failed to generate report');
           }
@@ -714,7 +748,7 @@ function ComplianceReportView({ graph }) {
                                   {rule.message}
                                 </div>
 
-                                {/* Code Reference */}
+                                {/* Code Reference and Regulatory Info */}
                                 <div style={{
                                   fontSize: '0.75rem',
                                   color: '#6b7280',
@@ -724,6 +758,24 @@ function ComplianceReportView({ graph }) {
                                   marginBottom: '0.5rem'
                                 }}>
                                   <strong>Code:</strong> {rule.code_reference}
+                                  {rule.regulatory_reference && (
+                                    <>
+                                      <br />
+                                      <strong>Regulation:</strong> {rule.regulatory_reference}
+                                    </>
+                                  )}
+                                  {rule.jurisdiction && (
+                                    <>
+                                      <br />
+                                      <strong>Jurisdiction:</strong> {rule.jurisdiction}
+                                    </>
+                                  )}
+                                  {rule.source_link && (
+                                    <>
+                                      <br />
+                                      <strong>Source:</strong> <a href={rule.source_link} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>{rule.source_link}</a>
+                                    </>
+                                  )}
                                 </div>
 
                                 {/* Reasoning Layer */}

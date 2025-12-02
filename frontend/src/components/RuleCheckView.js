@@ -105,7 +105,16 @@ function RuleCheckView({ graph }) {
 
       const data = await response.json();
       if (data.success) {
+        console.log('[RuleCheckView] Received compliance data:', {
+          compliance_keys: data.compliance ? Object.keys(data.compliance) : 'null',
+          has_summary: data.compliance && 'summary' in data.compliance,
+          summary_total_elements: data.compliance?.summary?.total_elements,
+          has_total_elements_top_level: data.compliance && 'total_elements' in data.compliance
+        });
         setComplianceResults(data.compliance);
+        // Store in sessionStorage for ReasoningView to access
+        sessionStorage.setItem('lastComplianceResults', JSON.stringify(data.compliance));
+        sessionStorage.setItem('lastComplianceCheckTime', Date.now().toString());
       } else {
         setError(data.error || 'Failed to check compliance');
       }

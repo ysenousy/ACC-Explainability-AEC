@@ -1,0 +1,395 @@
+{
+  "rules": {
+    "ADA_DOOR_WIDTH": {
+      "applies_to": ["IfcDoor"],
+      "quick_fix": {
+        "title": "Modify {affected_elements} door(s) width in IFC model",
+        "description": "Update IFC door properties to minimum ADA-compliant width of {required_value_with_unit}",
+        "ifc_modifications": [
+          "Update IfcDoorType.OverallWidth property",
+          "Current value: {actual_value_with_unit}",
+          "Required minimum: {required_value_with_unit}",
+          "Apply change to {affected_elements} door element(s)"
+        ],
+        "steps": [
+          "Open IFC model in design authoring tool",
+          "Select affected door elements",
+          "Modify door width property to {required_value_with_unit}",
+          "Update associated door type if needed",
+          "Verify clearance in model",
+          "Save and export updated IFC"
+        ],
+        "design_effort": "LOW",
+        "regulatory_pathway": "ADA Title II - Accessible Routes, 2010 ADA Standards §206.2.2"
+      },
+      "medium_fix": {
+        "title": "Redesign entry layout in IFC model for ADA compliance",
+        "description": "Modify IFC entry vestibule to accommodate ADA-compliant door width while maintaining functional design",
+        "ifc_modifications": [
+          "Redefine IfcDoor width to {required_value_with_unit}",
+          "Adjust adjacent IfcWall elements for clearance",
+          "Modify spatial relationships and alignments",
+          "Update vestibule IfcSpace dimensions if needed",
+          "Review and update all child door elements"
+        ],
+        "steps": [
+          "Review entry vestibule layout in IFC model",
+          "Identify spatial constraints affecting door width",
+          "Modify door width properties to {required_value_with_unit}",
+          "Adjust adjacent wall positions as needed",
+          "Update spatial relationships between elements",
+          "Verify door swing clearance in updated layout",
+          "Save updated IFC file"
+        ],
+        "design_effort": "MEDIUM",
+        "regulatory_pathway": "ADA Title II - Building Alterations, 2010 ADA Standards §202.3"
+      },
+      "comprehensive_fix": {
+        "title": "Complete entry redesign in IFC for full accessibility",
+        "description": "Full architectural redesign of entry vestibule and circulation in IFC model to provide universal accessibility",
+        "ifc_modifications": [
+          "Redefine entry vestibule spatial hierarchy",
+          "Modify all IfcDoor elements to {required_value_with_unit} minimum width",
+          "Adjust IfcWall positions and dimensions",
+          "Update IfcSpace definitions for accessible circulation",
+          "Redefine spatial relationships and alignments",
+          "Add accessible route definitions in model",
+          "Update all derived properties and constraints"
+        ],
+        "steps": [
+          "Conduct comprehensive accessibility review of IFC entry",
+          "Redesign entry vestibule spatial structure",
+          "Modify all door elements to meet width requirements",
+          "Adjust wall positions to create accessible circulation",
+          "Update space definitions for wayfinding clarity",
+          "Add accessible route pathways to model",
+          "Update all dimensional constraints",
+          "Perform full model validation and compliance check"
+        ],
+        "design_effort": "HIGH",
+        "regulatory_pathway": "ADA Title II - Alterations, 2010 ADA Standards §202.3-202.4"
+      }
+    },
+    "ADA_RAMP_SLOPE": {
+      "applies_to": ["IfcRamp"],
+      "quick_fix": {
+        "title": "Adjust ramp slope in IFC to {required_value_with_unit} or less",
+        "description": "Modify IFC ramp gradient from current {actual_value_with_unit} to meet ADA maximum slope requirement",
+        "ifc_modifications": [
+          "Update IfcRamp gradient/slope property",
+          "Current slope: {actual_value_with_unit}",
+          "Required maximum: {required_value_with_unit}",
+          "Extend ramp length in model to achieve compliant slope"
+        ],
+        "steps": [
+          "Open IFC model in design tool",
+          "Select ramp element(s)",
+          "Calculate required ramp length for {required_value_with_unit} slope",
+          "Modify ramp geometry and slope property",
+          "Update associated landing elevations",
+          "Verify handrail placement in model",
+          "Save updated IFC file"
+        ],
+        "design_effort": "LOW",
+        "regulatory_pathway": "ADA Title II - Accessible Routes, 2010 ADA Standards §303.3"
+      },
+      "medium_fix": {
+        "title": "Redesign entry approach in IFC with compliant ramp",
+        "description": "Redesign IFC entry approach with extended ramp to achieve ADA-compliant slope",
+        "ifc_modifications": [
+          "Recalculate IfcRamp geometry for {required_value_with_unit} slope",
+          "Extend ramp path length as needed",
+          "Add IfcRampFlight elements for intermediate sections",
+          "Define intermediate landing IfcSpace elements",
+          "Update approach site grading references",
+          "Integrate handrail and guardrail elements"
+        ],
+        "steps": [
+          "Review current approach design in IFC",
+          "Assess elevation change and available space",
+          "Design extended ramp system for {required_value_with_unit} slope or less",
+          "Add intermediate landings (every 9m) as IfcSpace elements",
+          "Define handrail and guardrail positions",
+          "Update approach circulation paths",
+          "Modify adjacent site elements as needed",
+          "Save updated IFC design"
+        ],
+        "design_effort": "MEDIUM",
+        "regulatory_pathway": "ADA Title II - Accessible Routes, 2010 ADA Standards §303-304"
+      },
+      "comprehensive_fix": {
+        "title": "Complete accessible approach redesign in IFC",
+        "description": "Full redesign of entry approach in IFC with multiple accessible routes and complete circulation",
+        "ifc_modifications": [
+          "Redesign site approach spatial structure",
+          "Create primary accessible ramp system with proper slope",
+          "Define alternative accessible route pathways",
+          "Add intermediate landing IfcSpace elements",
+          "Integrate handrail, guardrail, and tactile warning elements",
+          "Update site grading and edge conditions",
+          "Add wayfinding spatial definitions"
+        ],
+        "steps": [
+          "Conduct comprehensive site approach analysis in IFC",
+          "Design primary accessible ramp system with {required_value_with_unit} slope",
+          "Design alternative accessible route pathways",
+          "Define all required landing spaces and transitions",
+          "Integrate handrails, guardrails, and edge protection",
+          "Add tactile warning systems to model",
+          "Define wayfinding and signage zones",
+          "Update all site circulation paths",
+          "Perform complete accessibility validation"
+        ],
+        "design_effort": "HIGH",
+        "regulatory_pathway": "ADA Title II - Alterations and Site Accessibility, 2010 ADA Standards §202.3-206"
+      }
+    },
+    "IBC_EGRESS_WIDTH": {
+      "applies_to": ["IfcDoor"],
+      "quick_fix": {
+        "title": "Increase IFC exit door width by {difference_with_unit}",
+        "description": "Modify IFC doorway from {actual_value_with_unit} to meet {required_value_with_unit} minimum egress width requirement",
+        "ifc_modifications": [
+          "Update IfcDoor.OverallWidth property",
+          "Current width: {actual_value_with_unit}",
+          "Required minimum: {required_value_with_unit}",
+          "Apply to all exit doorways"
+        ],
+        "steps": [
+          "Open IFC model in design tool",
+          "Select all non-compliant exit doors",
+          "Increase door width to {required_value_with_unit}",
+          "Update associated door types",
+          "Verify swing direction doesn't obstruct egress path",
+          "Check clearance on approach side",
+          "Save updated IFC file"
+        ],
+        "design_effort": "LOW",
+        "regulatory_pathway": "IBC Section 1010 - Means of Egress"
+      },
+      "medium_fix": {
+        "title": "Redesign egress paths in IFC",
+        "description": "Reconfigure IFC egress paths and exit doors to meet width and clearance requirements",
+        "ifc_modifications": [
+          "Update all IfcDoor elements in egress path to {required_value_with_unit}",
+          "Modify corridor/passage IfcSpace widths for clearance",
+          "Adjust wall positions if needed",
+          "Update spatial relationships in egress routes",
+          "Define emergency signage and lighting zones"
+        ],
+        "steps": [
+          "Identify all non-compliant exits in IFC",
+          "Widen exit doors to {required_value_with_unit} minimum",
+          "Ensure egress corridors meet clearance requirements",
+          "Adjust adjacent walls if needed",
+          "Update spatial definitions for emergency routes",
+          "Add emergency signage and lighting zones to model",
+          "Verify no obstructions in egress paths",
+          "Save updated IFC design"
+        ],
+        "design_effort": "MEDIUM",
+        "regulatory_pathway": "IBC Section 1010 - Means of Egress"
+      },
+      "comprehensive_fix": {
+        "title": "Complete egress system redesign in IFC",
+        "description": "Full redesign of building egress system in IFC to meet IBC requirements",
+        "ifc_modifications": [
+          "Reconfigure entire egress path spatial structure",
+          "Update all IfcDoor elements to meet egress widths",
+          "Modify IfcSpace elements for egress corridors",
+          "Reposition walls affecting egress routes",
+          "Define all exit pathways and alternative routes",
+          "Add emergency signage and lighting spatial definitions",
+          "Update occupancy and load calculation spaces"
+        ],
+        "steps": [
+          "Conduct comprehensive building egress analysis in IFC",
+          "Redesign complete exit layout and routing structure",
+          "Widen all exit doors and pathways to meet requirements",
+          "Add alternative egress routes where needed",
+          "Define emergency signage and lighting zones",
+          "Add emergency communication system spatial definitions",
+          "Redefine occupancy load calculation spaces",
+          "Update all circulation paths in model",
+          "Perform complete egress compliance validation"
+        ],
+        "design_effort": "HIGH",
+        "regulatory_pathway": "IBC Section 1010 - Means of Egress"
+      }
+    },
+    "IRC_EGRESS_WINDOW_MIN_WIDTH": {
+      "applies_to": ["IfcWindow"],
+      "quick_fix": {
+        "title": "Increase IFC egress window width to {required_value_with_unit}",
+        "description": "Enlarge IFC bedroom window from {actual_value_with_unit} to meet minimum egress width requirement",
+        "ifc_modifications": [
+          "Update IfcWindow.OverallWidth property",
+          "Current width: {actual_value_with_unit}",
+          "Required minimum: {required_value_with_unit}",
+          "Adjust window sill height if needed (below {max_sill_height_with_unit})",
+          "Update window operation properties"
+        ],
+        "steps": [
+          "Open IFC model in design tool",
+          "Select bedroom window(s) needing enlargement",
+          "Increase window width to {required_value_with_unit}",
+          "Verify sill height is below {max_sill_height_with_unit}",
+          "Ensure window can open fully for egress",
+          "Update adjacent wall and mullion positions",
+          "Save updated IFC file"
+        ],
+        "design_effort": "LOW",
+        "regulatory_pathway": "IRC Section R310 - Emergency Escape and Rescue Openings"
+      },
+      "medium_fix": {
+        "title": "Add dedicated egress window to {element_type} in IFC",
+        "description": "Add new egress-compliant window to sleeping room in IFC model meeting full IRC requirements",
+        "ifc_modifications": [
+          "Define new IfcWindow element in exterior wall",
+          "Set window dimensions to egress-compliant size",
+          "Position window in available wall opening",
+          "Ensure sill height below {max_sill_height_with_unit}",
+          "Update wall IfcWallStandardCase with window opening",
+          "Add emergency landing IfcSpace if needed"
+        ],
+        "steps": [
+          "Identify wall location for new egress window in IFC",
+          "Define new IfcWindow element meeting egress requirements",
+          "Modify exterior wall to accommodate window opening",
+          "Set sill height for safe egress",
+          "Add emergency landing space if needed",
+          "Verify clearance to grade or landing",
+          "Update window operation and hardware properties",
+          "Save updated IFC design"
+        ],
+        "design_effort": "MEDIUM",
+        "regulatory_pathway": "IRC Section R310 - Emergency Escape and Rescue Openings"
+      },
+      "comprehensive_fix": {
+        "title": "Complete bedroom egress redesign in IFC",
+        "description": "Full redesign of sleeping rooms in IFC to ensure all meet egress window and safety requirements",
+        "ifc_modifications": [
+          "Audit all sleeping room IfcSpace elements for egress compliance",
+          "Add/modify IfcWindow elements in non-compliant rooms",
+          "Reposition exterior walls to accommodate egress windows",
+          "Create emergency landing IfcSpace elements as needed",
+          "Add emergency signage and lighting spatial definitions",
+          "Update all affected room geometry and relationships"
+        ],
+        "steps": [
+          "Audit all sleeping rooms in IFC for egress compliance",
+          "Identify rooms requiring new or enlarged windows",
+          "Modify exterior walls to accommodate egress windows",
+          "Add compliant windows to all affected rooms",
+          "Add emergency landing spaces where needed",
+          "Add emergency lighting and signage zones",
+          "Verify all sill heights and clearances in model",
+          "Update room data and fire rating properties",
+          "Perform complete egress compliance check"
+        ],
+        "design_effort": "HIGH",
+        "regulatory_pathway": "IRC Section R310 - Emergency Escape and Rescue Openings"
+      }
+    },
+    "default": {
+      "applies_to": [],
+      "quick_fix": {
+        "title": "Modify {element_type} in IFC for compliance",
+        "description": "Update {element_type} element(s) in IFC model to meet regulatory requirements",
+        "ifc_modifications": [
+          "Identify all non-compliant {element_type} elements",
+          "Update relevant IFC properties to meet requirements",
+          "Apply changes across affected elements"
+        ],
+        "steps": [
+          "Open IFC model in design tool",
+          "Identify all non-compliant {element_type} elements",
+          "Review specific regulatory compliance requirements",
+          "Modify IFC properties to achieve compliance",
+          "Verify compliance in updated model",
+          "Save updated IFC file"
+        ],
+        "design_effort": "LOW"
+      },
+      "medium_fix": {
+        "title": "Redesign {element_type} configuration in IFC",
+        "description": "Systematic redesign of {element_type} in IFC model to ensure compliance",
+        "ifc_modifications": [
+          "Review current {element_type} configuration in model",
+          "Design compliant alternative layout",
+          "Update spatial relationships and properties",
+          "Implement changes across affected areas"
+        ],
+        "steps": [
+          "Conduct detailed analysis of current {element_type} configuration in IFC",
+          "Design compliant alternative in model",
+          "Systematically implement changes",
+          "Update all related spatial relationships",
+          "Perform verification and validation",
+          "Save updated IFC design"
+        ],
+        "design_effort": "MEDIUM"
+      },
+      "comprehensive_fix": {
+        "title": "Complete redesign in IFC for compliance",
+        "description": "Full architectural solution in IFC model for regulatory compliance",
+        "ifc_modifications": [
+          "Perform comprehensive review of affected areas in model",
+          "Design complete solution in IFC",
+          "Update spatial structure and relationships",
+          "Implement changes across all affected areas",
+          "Validate against compliance requirements"
+        ],
+        "steps": [
+          "Perform comprehensive code review in IFC model",
+          "Design complete solution addressing all requirements",
+          "Implement across all affected areas in model",
+          "Update spatial hierarchy and relationships",
+          "Update all affected properties and constraints",
+          "Conduct full model validation",
+          "Perform complete compliance audit",
+          "Save final updated IFC design"
+        ],
+        "design_effort": "HIGH"
+      }
+    }
+  },
+  "metadata": {
+    "version": "2.0",
+    "description": "Recommendation templates for regulatory compliance rules - Design Phase Focus. Each rule defines quick/medium/comprehensive fix strategies with IFC modification guidance and design effort complexity levels (LOW/MEDIUM/HIGH) rather than construction costs.",
+    "created": "2025-12-02",
+    "last_updated": "2025-12-02",
+    "phase": "DESIGN",
+    "design_effort_levels": {
+      "LOW": "Simple property modifications, minimal spatial impact, isolated changes",
+      "MEDIUM": "Coordinated modifications affecting multiple elements, spatial relationship updates",
+      "HIGH": "Complete redesign of areas, major spatial restructuring, comprehensive impact"
+    },
+    "available_placeholders": {
+      "_comment": "All placeholders auto-filled from compliance failure data. Use _with_unit variants for model-agnostic output (e.g., cm vs inches).",
+      "required_value": "Numeric required value (e.g., 0.9)",
+      "required_value_with_unit": "Required value with unit (e.g., 0.9m or 90cm—unit derived from model context)",
+      "actual_value": "Numeric actual value (e.g., 0.75)",
+      "actual_value_with_unit": "Actual value with unit",
+      "difference": "Required minus actual (e.g., 0.15)",
+      "difference_with_unit": "Difference with unit",
+      "affected_elements": "Count of non-compliant items (e.g., 3)",
+      "element_type": "IFC type (e.g., IfcDoor, IfcWindow, IfcRamp)",
+      "regulation": "Standard name (e.g., ADA, IBC, IRC)",
+      "jurisdiction": "Geographic location (e.g., USA, CA, UK)",
+      "max_sill_height_with_unit": "Maximum sill height with unit"
+    },
+    "standards_covered": {
+      "_comment": "Current prototype has templates mainly for ADA/IBC/IRC. UK Building Regulations and Canadian National Building Code are planned for future work.",
+      "implemented": ["ADA (Americans with Disabilities Act)", "IBC (International Building Code)", "IRC (International Residential Code)"],
+      "planned": ["UK Building Regulations", "Canadian National Building Code"]
+    },
+    "key_changes_from_v1": {
+      "removed": "All cost_estimate objects - no construction costs in design phase",
+      "added": "design_effort (LOW/MEDIUM/HIGH) complexity indicators",
+      "added": "ifc_modifications array for each recommendation level",
+      "updated": "All steps and descriptions focused on IFC model modifications",
+      "rationale": "Design phase focuses on how to modify IFC model, not construction implementation costs"
+    }
+  }
+}
