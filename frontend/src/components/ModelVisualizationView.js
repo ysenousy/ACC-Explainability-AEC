@@ -24,10 +24,13 @@ function ModelVisualizationView({ graph }) {
   const elementsRef = useRef([]);
   const geometryCacheRef = useRef({}); // Cache geometries for reuse
   const materialsCacheRef = useRef({}); // Cache materials per color
+  const animationFrameIdRef = useRef(null); // Track animation frame for cleanup
   const [viewerReady, setViewerReady] = useState(false);
   const [selectedElements, setSelectedElements] = useState([]);
   const [hoveredElement, setHoveredElement] = useState(null);
   const [wireframeMode, setWireframeMode] = useState(false);
+  const [renderingProgress, setRenderingProgress] = useState(0);
+  const maxElementsToRender = 100; // Start with max 100 elements to avoid overload
   const MAX_VISIBLE_LABELS = 15;
 
   // Get color configuration from centralized config
@@ -44,13 +47,30 @@ function ModelVisualizationView({ graph }) {
     }, 100);
 
     return () => {
-      // Cleanup - remove renderer and clear container
+      // CLEANUP: Stop animation loop
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+      }
+      
+      // CLEANUP: Remove event listeners
+      window.removeEventListener('resize', () => {});
+      
+      // CLEANUP: Dispose renderer and clear container
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+        rendererRef.current = null;
+      }
+      
       if (containerRef.current) {
         containerRef.current.innerHTML = '';
       }
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
+      
+      // CLEANUP: Clear scene references
+      sceneRef.current = null;
+      cameraRef.current = null;
+      
+      clearTimeout(timeout);
     };
   }, [graph]);
 
@@ -119,9 +139,9 @@ function ModelVisualizationView({ graph }) {
     };
     window.addEventListener('resize', handleResize);
 
-    // Animation loop
+    // Animation loop - store frame ID for cleanup
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameIdRef.current = requestAnimationFrame(animate);
       renderer.render(scene, camera);
     };
     animate();
@@ -134,6 +154,7 @@ function ModelVisualizationView({ graph }) {
 
     const elements = [];
     const colors = getAllColors('three'); // Get all colors in Three.js format
+    let totalElementsProcessed = 0;
 
     // Process each element type
     Object.entries(graph.elements).forEach(([type, elementList]) => {
@@ -147,6 +168,11 @@ function ModelVisualizationView({ graph }) {
       const material = getOrCreateMaterial(color);
 
       elementList.forEach((el) => {
+        // Limit rendering to avoid performance issues - only render first N elements
+        if (totalElementsProcessed >= maxElementsToRender) {
+          return; // Skip rendering additional elements
+        }
+
         const mesh = new THREE.Mesh(geometry, material);
 
         // Distribute elements in space for visibility
@@ -165,12 +191,23 @@ function ModelVisualizationView({ graph }) {
         };
 
         elements.push(elementObj);
+        totalElementsProcessed++;
         index++;
+        
+        // Update progress
+        setRenderingProgress(Math.round((totalElementsProcessed / maxElementsToRender) * 100));
       });
     });
 
     elementsRef.current = elements;
     setSelectedElements(elements);
+    
+    // Log info about limited rendering
+    const totalAvailable = Object.values(graph.elements).flat().length;
+    if (totalAvailable > maxElementsToRender) {
+      console.warn(`⚠️ Rendering limited to ${maxElementsToRender} elements out of ${totalAvailable} total. 
+        To render all elements, increase maxElementsToRender or switch to a lightweight viewer.`);
+    }
   };
 
   const getOrCreateGeometry = (type) => {
@@ -397,6 +434,58 @@ function ModelVisualizationView({ graph }) {
         {/* 3D Viewer Container */}
         <div className="viewer-section">
           <div ref={containerRef} className="viewer-canvas" />
+          
+          {/* Loading Progress Indicator */}
+          {renderingProgress > 0 && renderingProgress < 100 && (
+            <div className="rendering-progress" style={{
+              position: 'absolute',
+              bottom: '20px',
+              left: '20px',
+              background: 'rgba(0, 0, 0, 0.7)',
+              color: '#fff',
+              padding: '12px 20px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              zIndex: 100
+            }}>
+              <div style={{ marginBottom: '8px' }}>🔄 Rendering elements...</div>
+              <div style={{
+                width: '200px',
+                height: '4px',
+                background: 'rgba(255, 255, 255, 0.3)',
+                borderRadius: '2px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${renderingProgress}%`,
+                  height: '100%',
+                  background: '#3b82f6',
+                  transition: 'width 0.2s'
+                }} />
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '12px' }}>{renderingProgress}%</div>
+            </div>
+          )}
+          
+          {/* Limited Rendering Notice */}
+          {viewerReady && elementsRef.current.length >= maxElementsToRender && graph?.elements && 
+           Object.values(graph.elements).flat().length > maxElementsToRender && (
+            <div className="rendering-notice" style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(245, 158, 11, 0.9)',
+              color: '#000',
+              padding: '12px 16px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              zIndex: 100,
+              maxWidth: '300px'
+            }}>
+              ⚠️ Showing {elementsRef.current.length} of {Object.values(graph.elements).flat().length} elements 
+              for better performance. Switch to a model summary view for all elements.
+            </div>
+          )}
         </div>
       </div>
 

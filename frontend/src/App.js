@@ -17,6 +17,7 @@ import ReasoningView from './components/ReasoningView';
 import ResultsView from './components/ResultsView';
 import ComplianceReportView from './components/ComplianceReportView';
 import UnifiedConfigurationView from './components/UnifiedConfigurationView';
+import TRMDashboard from './components/TRMDashboard';
 import './App.css';
 
 function App() {
@@ -285,6 +286,7 @@ function App() {
               {(activeLayer === 'reasoning-why' || activeLayer === 'reasoning-impact' || activeLayer === 'reasoning-fix') && (
                 <ReasoningView graph={currentGraph} activeTab={activeLayer.replace('reasoning-', '')} />
               )}
+              {activeLayer === 'trm-model' && <TRMDashboard />}
               {activeLayer === 'results' && <ResultsView graph={currentGraph} />}
               {activeLayer === 'compliance-report' && <ComplianceReportView graph={currentGraph} />}
             </div>

@@ -26,6 +26,9 @@ from backend.rule_config_manager import (
     export_rules,
 )
 from reasoning_layer.reasoning_engine import ReasoningEngine
+from backend.trm_api import register_trm_endpoints
+from backend.trm_model_manager import ModelVersionManager
+from backend.trm_model_management_api import register_model_management_endpoints
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -3308,6 +3311,15 @@ def get_available_rules():
 @app.errorhandler(500)
 def server_error(error):
     return jsonify({"error": "Internal server error"}), 500
+
+
+# Register TRM API endpoints
+from backend.trm_model_manager import ModelVersionManager
+model_version_manager = ModelVersionManager(Path("backend/model_versions"))
+register_trm_endpoints(app, model_version_manager)
+
+# Register Model Management endpoints
+register_model_management_endpoints(app, model_version_manager)
 
 
 if __name__ == "__main__":

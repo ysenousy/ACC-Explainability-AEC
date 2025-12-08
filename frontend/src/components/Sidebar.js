@@ -33,6 +33,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'reasoning-why', label: 'Why It Failed', icon: AlertCircle, description: 'Explains compliance failures with context' },
       { id: 'reasoning-impact', label: 'Impact Assessment', icon: BarChart3, description: 'Quantifies scope and severity of failures' },
       { id: 'reasoning-fix', label: 'How To Fix', icon: Settings, description: 'Provides tiered recommendations' },
+      { id: 'trm-model', label: 'TRM Model Management', icon: Settings, description: 'Manage model versions and training history' },
     ],
   };
 
