@@ -691,61 +691,8 @@
         ],
         "source_link": "https://codes.iccsafe.org/content/IBC2018/chapter-10-means-of-egress"
       }
-    },
-    {
-      "id": "ADA_DOOR_ACCESSIBILITY_HEIGHT",
-      "name": "ADA Door Accessibility Height Requirement",
-      "rule_type": "attribute_comparison",
-      "description": "Accessible doors must have a minimum clear height of 2032 mm (80 inches) measured from the floor to the lowest obstruction, in accordance with ADA 2010 Standards Section 404.1.",
-      "target": {
-        "ifc_class": "IfcDoor",
-        "selector": {
-          "filters": [
-            {
-              "pset": "Pset_DoorCommon",
-              "property": "IsAccessible",
-              "op": "=",
-              "value": true
-            }
-          ]
-        }
-      },
-      "condition": {
-        "op": ">=",
-        "lhs": {
-          "source": "qto",
-          "qto_name": "Qto_DoorBaseQuantities",
-          "quantity": "Height",
-          "unit": "mm"
-        },
-        "rhs": {
-          "source": "parameter",
-          "param": "min_accessible_door_height_mm"
-        }
-      },
-      "parameters": {
-        "min_accessible_door_height_mm": 2032
-      },
-      "severity": "ERROR",
-      "explanation": {
-        "short": "Accessible doors must provide a minimum clear height of 2032 mm (80 in).",
-        "on_fail": "Accessible door {guid} has height {lhs} mm, below the required {rhs} mm (ADA 404.1).",
-        "on_pass": "Accessible door {guid} meets the minimum height requirement ({lhs} mm ≥ {rhs} mm, ADA 404.1)."
-      },
-      "provenance": {
-        "source": "regulation",
-        "regulation": "2010 ADA Standards for Accessible Design",
-        "section": "404.1",
-        "title": "Accessible Doors",
-        "jurisdiction": "US",
-        "jurisdiction_scope": [
-          "US",
-          "ADA"
-        ],
-        "source_link": "https://www.ada.gov/regs2010/2010ADAStandards/2010ADAstandards.htm#sec404"
-      }
     }
   ],
-  "saved_at": "2025-12-08T17:56:07.141931",
+  "saved_at": "2025-12-09T11:08:51.486173",
   "version": 1
 }

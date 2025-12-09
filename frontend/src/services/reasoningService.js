@@ -35,25 +35,15 @@ class ReasoningService {
   }
 
   /**
-   * Load impact metrics configuration from backend or use defaults
+   * Load impact metrics configuration from defaults
+   * (Backend API endpoint not implemented, so use client-side defaults)
    */
   async loadImpactConfig() {
     if (this.impactConfig) {
       return this.impactConfig;
     }
 
-    try {
-      // Try to fetch from backend
-      const response = await fetch(`${API_BASE}/api/config/impact-metrics`);
-      if (response.ok) {
-        this.impactConfig = await response.json();
-        return this.impactConfig;
-      }
-    } catch (err) {
-      console.warn('Could not load impact config from backend, using defaults:', err);
-    }
-
-    // Use defaults
+    // Use defaults directly without attempting API call
     this.impactConfig = DEFAULT_IMPACT_CONFIG;
     return this.impactConfig;
   }

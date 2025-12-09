@@ -30,7 +30,7 @@ function ModelVisualizationView({ graph }) {
   const [hoveredElement, setHoveredElement] = useState(null);
   const [wireframeMode, setWireframeMode] = useState(false);
   const [renderingProgress, setRenderingProgress] = useState(0);
-  const maxElementsToRender = 100; // Start with max 100 elements to avoid overload
+  const maxElementsToRender = Infinity; // Show all elements (no limit)
   const MAX_VISIBLE_LABELS = 15;
 
   // Get color configuration from centralized config
@@ -201,13 +201,6 @@ function ModelVisualizationView({ graph }) {
 
     elementsRef.current = elements;
     setSelectedElements(elements);
-    
-    // Log info about limited rendering
-    const totalAvailable = Object.values(graph.elements).flat().length;
-    if (totalAvailable > maxElementsToRender) {
-      console.warn(`⚠️ Rendering limited to ${maxElementsToRender} elements out of ${totalAvailable} total. 
-        To render all elements, increase maxElementsToRender or switch to a lightweight viewer.`);
-    }
   };
 
   const getOrCreateGeometry = (type) => {
@@ -464,26 +457,6 @@ function ModelVisualizationView({ graph }) {
                 }} />
               </div>
               <div style={{ marginTop: '8px', fontSize: '12px' }}>{renderingProgress}%</div>
-            </div>
-          )}
-          
-          {/* Limited Rendering Notice */}
-          {viewerReady && elementsRef.current.length >= maxElementsToRender && graph?.elements && 
-           Object.values(graph.elements).flat().length > maxElementsToRender && (
-            <div className="rendering-notice" style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              background: 'rgba(245, 158, 11, 0.9)',
-              color: '#000',
-              padding: '12px 16px',
-              borderRadius: '6px',
-              fontSize: '13px',
-              zIndex: 100,
-              maxWidth: '300px'
-            }}>
-              ⚠️ Showing {elementsRef.current.length} of {Object.values(graph.elements).flat().length} elements 
-              for better performance. Switch to a model summary view for all elements.
             </div>
           )}
         </div>

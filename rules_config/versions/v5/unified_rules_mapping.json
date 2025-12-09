@@ -1,0 +1,867 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "execution_config": {
+    "cache_attributes": true,
+    "continue_on_error": true,
+    "log_level": "INFO",
+    "parallel_execution": true,
+    "strict_mode": false
+  },
+  "global_settings": {
+    "conflict_resolution_strategy": "use_strictest_severity",
+    "default_unit": "mm",
+    "enable_cross_format_validation": true,
+    "rule_resolution_priority": [
+      "regulation",
+      "generated",
+      "custom"
+    ],
+    "severity_hierarchy": [
+      "ERROR",
+      "WARNING",
+      "INFO"
+    ],
+    "strict_mode": false
+  },
+  "ifc_element_mappings": {
+    "door": {
+      "attributes": [
+        {
+          "name": "width_mm",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "height_mm",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity_name": "Height",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "clear_width_mm",
+          "qto_name": "Qto_DoorBaseQuantities",
+          "quantity_name": "ClearWidth",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "is_accessible",
+          "property_name": "IsAccessible",
+          "pset_name": "Pset_DoorCommon",
+          "required": false,
+          "source": "pset",
+          "type": "boolean"
+        },
+        {
+          "name": "is_fire_exit",
+          "property_name": "FireExit",
+          "pset_name": "Pset_DoorCommon",
+          "required": false,
+          "source": "pset",
+          "type": "boolean"
+        },
+        {
+          "name": "fire_rating",
+          "property_name": "FireRating",
+          "pset_name": "Pset_DoorCommon",
+          "required": false,
+          "source": "pset",
+          "type": "string"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcDoor",
+      "required_psets": [
+        "Pset_DoorCommon",
+        "Qto_DoorBaseQuantities"
+      ]
+    },
+    "slab": {
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "property_name": "FireRating",
+          "pset_name": "Pset_SlabCommon",
+          "required": true,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "thickness_mm",
+          "qto_name": "Qto_SlabBaseQuantities",
+          "quantity_name": "Thickness",
+          "required": true,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "area_m2",
+          "qto_name": "Qto_SlabBaseQuantities",
+          "quantity_name": "GrossArea",
+          "required": false,
+          "source": "qto",
+          "unit": "m2"
+        },
+        {
+          "name": "is_fire_separation",
+          "property_name": "IsFireSeparation",
+          "pset_name": "Pset_SlabCommon",
+          "required": false,
+          "source": "pset",
+          "unit": "boolean"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcSlab",
+      "required_psets": [
+        "Pset_SlabCommon",
+        "Qto_SlabBaseQuantities"
+      ]
+    },
+    "space": {
+      "attributes": [
+        {
+          "name": "area_m2",
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity_name": "GrossFloorArea",
+          "required": true,
+          "source": "qto",
+          "unit": "m2"
+        },
+        {
+          "name": "volume_m3",
+          "qto_name": "Qto_SpaceBaseQuantities",
+          "quantity_name": "Volume",
+          "required": false,
+          "source": "qto",
+          "unit": "m3"
+        },
+        {
+          "name": "occupancy",
+          "property_name": "Occupancy",
+          "pset_name": "Pset_SpaceCommon",
+          "required": false,
+          "source": "pset",
+          "type": "integer"
+        },
+        {
+          "name": "storey_name",
+          "property_name": "storey_name",
+          "required": false,
+          "source": "element",
+          "type": "string"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcSpace",
+      "required_psets": [
+        "Pset_SpaceCommon",
+        "Qto_SpaceBaseQuantities"
+      ]
+    },
+    "stair": {
+      "attributes": [
+        {
+          "name": "width_mm",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "Width",
+          "required": true,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "height_mm",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "Height",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "number_of_risers",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "NumberOfRisers",
+          "required": false,
+          "source": "qto",
+          "unit": "count"
+        },
+        {
+          "name": "tread_length_mm",
+          "qto_name": "Qto_StairFlightBaseQuantities",
+          "quantity_name": "TreadLength",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcStairFlight",
+      "required_psets": [
+        "Qto_StairFlightBaseQuantities"
+      ]
+    },
+    "wall": {
+      "attributes": [
+        {
+          "name": "fire_rating",
+          "property_name": "FireRating",
+          "pset_name": "Pset_WallCommon",
+          "required": true,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "acoustic_rating",
+          "property_name": "AcousticRating",
+          "pset_name": "Pset_WallCommon",
+          "required": false,
+          "source": "pset",
+          "unit": "rating"
+        },
+        {
+          "name": "is_load_bearing",
+          "property_name": "LoadBearing",
+          "pset_name": "Pset_WallCommon",
+          "required": false,
+          "source": "pset",
+          "unit": "boolean"
+        },
+        {
+          "name": "thickness_mm",
+          "qto_name": "Qto_WallBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcWall",
+      "required_psets": [
+        "Pset_WallCommon",
+        "Qto_WallBaseQuantities"
+      ]
+    },
+    "window": {
+      "attributes": [
+        {
+          "name": "width_mm",
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity_name": "Width",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "height_mm",
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity_name": "Height",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        },
+        {
+          "name": "frame_depth_mm",
+          "qto_name": "Qto_WindowBaseQuantities",
+          "quantity_name": "FrameDepth",
+          "required": false,
+          "source": "qto",
+          "unit": "mm"
+        }
+      ],
+      "filters": [],
+      "ifc_class": "IfcWindow",
+      "required_psets": [
+        "Qto_WindowBaseQuantities"
+      ]
+    }
+  },
+  "metadata": {
+    "description": "Declarative configuration that maps IFC attributes to compliance rules (both generated and regulation). Provides single source of truth for rule resolution, parameter binding, and multi-format rule orchestration.",
+    "last_updated": "2025-12-02T15:41:32.827270",
+    "maintainer": "ACC Explainability Team",
+    "supported_standards": [
+      "ADA 2010 Standards",
+      "IBC 2018",
+      "Custom/Organization Rules",
+      "IFC-extracted Rules"
+    ],
+    "title": "Unified Rules Configuration & Mapping"
+  },
+  "notes": {
+    "design_notes": "This configuration provides a single source of truth that bridges generated rules (from IFC extraction) and regulation rules (user-provided). It eliminates the need for adapters by defining declaratively how to map IFC data to compliance requirements.",
+    "future_extensions": [
+      "Support for custom rule types (DSL-based)",
+      "Machine learning confidence scores",
+      "Dynamic parameter binding from external APIs",
+      "Multi-jurisdiction conflict resolution",
+      "Rule versioning and change tracking"
+    ],
+    "usage_example": "UnifiedRuleEngine.from_config('unified_rules_mapping.json') reads both rule formats and orchestrates execution transparently."
+  },
+  "rule_groups": {
+    "accessibility": {
+      "applicable_standards": [
+        "ADA 2010 Standards"
+      ],
+      "description": "ADA and accessibility-related rules",
+      "jurisdiction": "US",
+      "name": "Accessibility Compliance",
+      "rules": [
+        "MAP_ADA_DOOR_CLEAR_WIDTH"
+      ]
+    },
+    "egress": {
+      "applicable_standards": [
+        "IBC 2018"
+      ],
+      "description": "IBC egress and emergency exit requirements",
+      "jurisdiction": "US",
+      "name": "Egress & Life Safety",
+      "rules": [
+        "MAP_IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "MAP_IBC_STAIR_MIN_WIDTH",
+        "MAP_IBC_WALL_FIRE_RATING",
+        "MAP_IBC_SLAB_FIRE_SEPARATION"
+      ]
+    },
+    "space_planning": {
+      "applicable_standards": [
+        "Custom Organization Policy"
+      ],
+      "description": "Space area and occupancy rules",
+      "jurisdiction": "Global",
+      "name": "Space Planning",
+      "rules": [
+        "MAP_IFC_SPACE_MIN_AREA",
+        "MAP_OCCUPANCY_PER_STOREY"
+      ]
+    }
+  },
+  "rule_mappings": [
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "height_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_exit_height_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_fire_exit",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Fire exit door {target_id} has height {lhs} mm, below the required {rhs} mm (IBC 1010.1.1).",
+        "on_pass": "Fire exit door {target_id} meets the IBC minimum height requirement ({lhs} mm ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mm, IBC 1010.1.1).",
+        "short": "Fire exit doors must provide a clear height of at least 2032 mm (80 in)."
+      },
+      "mapping_id": "MAP_IBC_FIRE_EXIT_DOOR_HEIGHT",
+      "parameter_bindings": {
+        "min_exit_height_mm": {
+          "default_value": 2032,
+          "description": "IBC minimum height for fire exit doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IBC"
+        ],
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "1010.1.1",
+        "source": "regulation",
+        "title": "Door Size"
+      },
+      "required_attributes": [
+        "height_mm",
+        "is_fire_exit"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "fire_rating",
+          "source": "ifc",
+          "unit": "rating"
+        },
+        "operator": "exists",
+        "rhs": {
+          "parameter": "required_rating"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "wall",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Wall {target_id} does not have a fire rating assigned.",
+        "on_pass": "Wall {target_id} has fire rating {lhs}.",
+        "short": "All walls must have a fire rating designation."
+      },
+      "mapping_id": "MAP_IBC_WALL_FIRE_RATING",
+      "parameter_bindings": {
+        "required_rating": {
+          "default_value": "1-2H",
+          "description": "IBC required fire rating for walls",
+          "source": "regulation_rule",
+          "type": "variable",
+          "unit": "rating"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "regulation": "International Building Code (IBC) 2018",
+        "section": "717",
+        "source": "regulation",
+        "title": "Fire Walls"
+      },
+      "required_attributes": [
+        "fire_rating"
+      ],
+      "rule_reference": {
+        "format": "regulation",
+        "rule_id": "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "clear_width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_clear_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_accessible",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Accessible door {target_id} has clear width {lhs} mm, below the required {rhs} mm (ADA 404.2.3).",
+        "on_pass": "Accessible door {target_id} meets the ADA minimum clear width requirement ({lhs} mm ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mm, ADA 404.2.3).",
+        "short": "Accessible doors on accessible routes must have a clear opening width of at least 815 mm (32 in)."
+      },
+      "mapping_id": "MAP_ADA_DOOR_MIN_CLEAR_WIDTH",
+      "parameter_bindings": {
+        "min_clear_width_mm": {
+          "default_value": 815,
+          "description": "ADA minimum clear width for accessible doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "ADA"
+        ],
+        "regulation": "2010 ADA Standards for Accessible Design",
+        "section": "404.2.3",
+        "source": "regulation",
+        "title": "Clear Width"
+      },
+      "required_attributes": [
+        "clear_width_mm",
+        "is_accessible"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "area_m2",
+          "source": "ifc",
+          "unit": "m2"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_area_m2"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "window",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Egress window {target_id} has clear opening area {lhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â², below the required {rhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² (IRC R310.2.1).",
+        "on_pass": "Egress window {target_id} meets the minimum clear opening area ({lhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â², IRC R310.2.1).",
+        "short": "Egress windows must provide a minimum net clear opening area of 0.53 mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² (5.7 ftÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²)."
+      },
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_AREA",
+      "parameter_bindings": {
+        "min_egress_area_m2": {
+          "default_value": 0.53,
+          "description": "IRC minimum egress window area",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "m2"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.1",
+        "source": "regulation",
+        "title": "Minimum Opening Area"
+      },
+      "required_attributes": [
+        "area_m2"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_AREA",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "height_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_height_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "window",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Egress window {target_id} has clear opening height {lhs} mm, below the required {rhs} mm (IRC R310.2.2).",
+        "on_pass": "Egress window {target_id} meets the minimum clear opening height ({lhs} mm ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mm, IRC R310.2.2).",
+        "short": "Egress windows must provide a minimum net clear opening height of 610 mm (24 in)."
+      },
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_HEIGHT",
+      "parameter_bindings": {
+        "min_egress_height_mm": {
+          "default_value": 610,
+          "description": "IRC minimum egress window height",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.2",
+        "source": "regulation",
+        "title": "Minimum Opening Height"
+      },
+      "required_attributes": [
+        "height_mm"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_egress_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "window",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Egress window {target_id} has clear opening width {lhs} mm, below the required {rhs} mm (IRC R310.2.3).",
+        "on_pass": "Egress window {target_id} meets the minimum clear opening width ({lhs} mm ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mm, IRC R310.2.3).",
+        "short": "Egress windows must provide a minimum net clear opening width of 508 mm (20 in)."
+      },
+      "mapping_id": "MAP_IRC_EGRESS_WINDOW_MIN_WIDTH",
+      "parameter_bindings": {
+        "min_egress_width_mm": {
+          "default_value": 508,
+          "description": "IRC minimum egress window width",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R310.2.3",
+        "source": "regulation",
+        "title": "Minimum Opening Width"
+      },
+      "required_attributes": [
+        "width_mm"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "area_m2",
+          "source": "ifc",
+          "unit": "m2"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_bedroom_area_m2"
+        }
+      },
+      "element_filter": {
+        "filters": [],
+        "logic": "AND"
+      },
+      "element_type": "space",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Bedroom space {target_id} has area {lhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â², below the required {rhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² (IRC R304.1/R304.2).",
+        "on_pass": "Bedroom space {target_id} meets the minimum floor area requirement ({lhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â², IRC R304.1/R304.2).",
+        "short": "Bedrooms must have a minimum floor area of 6.5 mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² (70 ftÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²)."
+      },
+      "mapping_id": "MAP_IRC_BEDROOM_MIN_AREA",
+      "parameter_bindings": {
+        "min_bedroom_area_m2": {
+          "default_value": 6.5,
+          "description": "IRC minimum bedroom floor area",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "m2"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "US",
+        "jurisdiction_scope": [
+          "US",
+          "IRC"
+        ],
+        "regulation": "International Residential Code (IRC) 2021",
+        "section": "R304.1 / R304.2",
+        "source": "regulation",
+        "title": "Minimum Room Areas"
+      },
+      "required_attributes": [
+        "area_m2"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "IRC_BEDROOM_MIN_AREA",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "clear_width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_accessible",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Accessible door {target_id} has clear width {lhs} mm, below the UK requirement of {rhs} mm (Approved Document M).",
+        "on_pass": "Accessible door {target_id} meets the UK minimum clear width requirement ({lhs} mm ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mm, Approved Document M).",
+        "short": "UK regulations require an effective clear opening width of at least 775 mm for accessible doors in new dwellings."
+      },
+      "mapping_id": "MAP_UK_DOOR_WIDTH_ACCESSIBLE",
+      "parameter_bindings": {
+        "min_width_mm": {
+          "default_value": 775,
+          "description": "UK minimum door width for accessible doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "UK",
+        "jurisdiction_scope": [
+          "UK",
+          "ADM"
+        ],
+        "regulation": "UK Building Regulations ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Approved Document M",
+        "section": "Access to and Use of Buildings",
+        "source": "regulation",
+        "title": "Minimum Effective Clear Widths of Doors"
+      },
+      "required_attributes": [
+        "clear_width_mm",
+        "is_accessible"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "UK_DOOR_WIDTH_ACCESSIBLE",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    },
+    {
+      "attribute_extraction": {
+        "lhs": {
+          "attribute": "clear_width_mm",
+          "source": "ifc",
+          "unit": "mm"
+        },
+        "operator": ">=",
+        "rhs": {
+          "parameter": "min_width_mm"
+        }
+      },
+      "element_filter": {
+        "filters": [
+          {
+            "attribute": "is_accessible",
+            "operator": "==",
+            "value": true
+          }
+        ],
+        "logic": "AND"
+      },
+      "element_type": "door",
+      "enabled": true,
+      "explanation": {
+        "on_fail": "Accessible door {target_id} has clear width {lhs} mm, below the Canadian requirement of {rhs} mm (NBC/CSA B651).",
+        "on_pass": "Accessible door {target_id} meets the minimum Canadian clear width requirement ({lhs} mm ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ {rhs} mm, NBC/CSA B651).",
+        "short": "Canadian accessibility guidance typically requires a minimum door clear opening width of 850 mm on accessible routes."
+      },
+      "mapping_id": "MAP_CA_DOOR_WIDTH_ACCESSIBLE",
+      "parameter_bindings": {
+        "min_width_mm": {
+          "default_value": 850,
+          "description": "Canadian minimum door width for accessible doors",
+          "source": "regulation_rule",
+          "type": "fixed",
+          "unit": "mm"
+        }
+      },
+      "provenance": {
+        "jurisdiction": "CA",
+        "jurisdiction_scope": [
+          "CA",
+          "NBC",
+          "CSA B651"
+        ],
+        "regulation": "National Building Code of Canada + CSA B651",
+        "section": "NBC 3.8 / CSA B651-18 5.2.1",
+        "source": "regulation",
+        "title": "Door Clear Opening Width"
+      },
+      "required_attributes": [
+        "clear_width_mm",
+        "is_accessible"
+      ],
+      "rule_reference": {
+        "alternative_ids": [],
+        "format": "regulation",
+        "rule_id": "CA_DOOR_WIDTH_ACCESSIBLE",
+        "source_file": "enhanced-regulation-rules.json"
+      }
+    }
+  ],
+  "validation_rules": {
+    "missing_attribute_behavior": "skip_rule",
+    "null_attribute_behavior": "not_applicable",
+    "require_all_attributes": false,
+    "type_coercion_enabled": true,
+    "unit_conversion_enabled": true
+  },
+  "version": "1.0.0"
+}

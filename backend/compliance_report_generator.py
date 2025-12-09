@@ -10,15 +10,20 @@ logger = logging.getLogger(__name__)
 class ComplianceReportGenerator:
     """Generates comprehensive compliance reports."""
 
-    def __init__(self, rules: Optional[Dict] = None):
+    def __init__(self, rules: Optional[Dict] = None, version_manager = None):
         """Initialize report generator.
         
         Args:
             rules: Optional user-imported rules dict. If not provided, loads defaults.
+            version_manager: Optional RulesVersionManager instance. If provided, uses latest version.
         """
         if rules is not None:
             # Use user-imported rules (list of rule dicts)
             self.regulatory_rules = list(rules.values()) if isinstance(rules, dict) else rules
+        elif version_manager is not None:
+            # Load from version manager (latest version)
+            rules_data, _ = version_manager.load_rules()
+            self.regulatory_rules = rules_data.get("rules", [])
         else:
             # Fall back to default rules file
             self.regulatory_rules = self._load_regulatory_rules()
@@ -715,38 +720,35 @@ class ComplianceReportGenerator:
         }
 
     def _load_regulatory_rules(self) -> List[Dict]:
-        """Load regulatory rules from custom_rules.json if available, otherwise from enhanced-regulation-rules.json."""
+        """Load regulatory rules from RulesVersionManager (latest version)."""
         from pathlib import Path
-        
-        # Try to load custom rules first (these are converted from Rule Config and have proper IFC extraction)
-        custom_rules_file = Path(__file__).parent.parent / "rules_config" / "custom_rules.json"
-        if custom_rules_file.exists():
-            try:
-                with open(custom_rules_file, 'r') as f:
-                    data = json.load(f)
-                    rules = data.get("rules", [])
-                    logger.info(f"Loaded {len(rules)} custom rules from Rule Config conversion")
-                    return rules
-            except Exception as e:
-                logger.warning(f"Error loading custom rules: {e}, falling back to catalogue rules")
-        
-        # Fall back to catalogue rules
-        rules_file = Path(__file__).parent.parent / "rules_config" / "enhanced-regulation-rules.json"
-        
-        if not rules_file.exists():
-            logger.warning(f"Regulatory rules file not found at {rules_file}")
-            return []
+        from backend.rules_version_manager import RulesVersionManager
         
         try:
-            with open(rules_file, 'r') as f:
-                data = json.load(f)
-                rules = data.get("rules", [])
-                logger.info(f"Loaded {len(rules)} regulatory rules from enhanced file (catalogue)")
-                return rules
-                
+            rules_config_dir = Path(__file__).parent.parent / "rules_config"
+            version_manager = RulesVersionManager(str(rules_config_dir))
+            rules_data, _ = version_manager.load_rules()
+            rules = rules_data.get("rules", [])
+            logger.info(f"Loaded {len(rules)} rules from RulesVersionManager (latest version)")
+            return rules
         except Exception as e:
-            logger.error(f"Error loading regulatory rules: {e}")
-            return []
+            logger.warning(f"Error loading from RulesVersionManager: {e}")
+            # Fallback to direct file load
+            rules_file = Path(__file__).parent.parent / "rules_config" / "enhanced-regulation-rules.json"
+            
+            if not rules_file.exists():
+                logger.warning(f"Regulatory rules file not found at {rules_file}")
+                return []
+            
+            try:
+                with open(rules_file, 'r') as f:
+                    data = json.load(f)
+                    rules = data.get("rules", [])
+                    logger.info(f"Loaded {len(rules)} regulatory rules from enhanced file (fallback)")
+                    return rules
+            except Exception as e2:
+                logger.error(f"Error loading regulatory rules: {e2}")
+                return []
 
 
 def generate_compliance_report(graph: Dict[str, Any]) -> Dict[str, Any]:

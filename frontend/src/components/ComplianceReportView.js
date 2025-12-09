@@ -474,6 +474,32 @@ function ComplianceReportView({ graph }) {
               </div>
             </div>
 
+            {/* Explanation Card */}
+            <div style={{
+              marginTop: '1.5rem',
+              marginBottom: '2.5rem',
+              padding: '1rem',
+              backgroundColor: '#f0f9ff',
+              border: '1px solid #0284c7',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
+              lineHeight: '1.5',
+              color: '#0c4a6e',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}>
+              <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>📊 Understanding These Metrics:</div>
+              <ul style={{ margin: '0.5rem 0', paddingLeft: '1.25rem' }}>
+                <li><strong>Overall Compliance %</strong>: Percentage of individual rule checks that <strong>passed</strong> (test-level)</li>
+                <li><strong>Compliant Items</strong>: Elements that passed all applicable rules</li>
+                <li><strong>Non-Compliant Items</strong>: Elements that failed one or more rules</li>
+                <li><strong>Partial</strong>: Elements that passed some rules but failed others</li>
+              </ul>
+              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontStyle: 'italic', opacity: 0.9 }}>
+                The Overall Compliance % measures how many individual rule evaluations passed, not how many elements are compliant
+              </div>
+            </div>
+
             {/* Filters */}
             <div style={{
               display: 'flex',

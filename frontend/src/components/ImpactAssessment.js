@@ -41,13 +41,39 @@ function ImpactAssessment({ failures, impactMetrics, totalElements }) {
   }
 
   const totalAffected = impactMetrics?.total_affected_elements || (failures ? new Set(failures.map(f => f.element_id)).size : 0);
+  const totalFailures = failures?.length || 0;
   
   // Use totalElements from backend (now includes total_elements from compliance results)
   // Use nullish coalescing (??) instead of || to handle 0 correctly
   const effectiveTotalElements = totalElements ?? 1; // Fallback to 1 to avoid division by zero
   
+  console.log('[ImpactAssessment] Calculation values:', {
+    effectiveTotalElements,
+    totalAffected,
+    totalFailures,
+    received_totalElements: totalElements
+  });
+  
+  // Impact rate: affected elements as percentage of total elements
   const percentage = impactMetrics?.percentage_of_building || (effectiveTotalElements > 0 ? (totalAffected / effectiveTotalElements * 100) : 0);
-  const complianceRate = effectiveTotalElements > 0 ? ((effectiveTotalElements - totalAffected) / effectiveTotalElements * 100).toFixed(1) : 0;
+  
+  // Compliance rate: non-affected elements as percentage of total elements
+  // Only calculate if we have a meaningful total elements value (> totalAffected)
+  let complianceRate = 0;
+  if (effectiveTotalElements > 0 && effectiveTotalElements > totalAffected) {
+    complianceRate = ((effectiveTotalElements - totalAffected) / effectiveTotalElements * 100).toFixed(1);
+  } else if (effectiveTotalElements > 0 && effectiveTotalElements === totalAffected) {
+    // All elements have failures
+    complianceRate = 0;
+  } else {
+    // effectiveTotalElements is 1 (fallback), can't calculate meaningful rate
+    complianceRate = 0;
+  }
+  
+  console.log('[ImpactAssessment] Final rates:', {
+    complianceRate: complianceRate,
+    percentage: percentage
+  });
 
   return (
     <div className="impact-assessment-container">
@@ -82,15 +108,49 @@ function ImpactAssessment({ failures, impactMetrics, totalElements }) {
             </div>
 
             <div className="metric-card">
-              <div className="metric-label">Total Failures</div>
-              <div className="metric-value" style={{color: '#dc2626'}}>{totalAffected}</div>
-              <div className="metric-subtitle">out of {effectiveTotalElements} elements</div>
+              <div className="metric-label">Total Rule Violations</div>
+              <div className="metric-value" style={{color: '#dc2626'}}>{totalFailures}</div>
+              <div className="metric-subtitle">across {totalAffected} unique element(s)</div>
             </div>
 
             <div className="metric-card">
-              <div className="metric-label">Failure Rate</div>
+              <div className="metric-label">Affected Elements</div>
+              <div className="metric-value" style={{color: '#f97316'}}>{totalAffected}</div>
+              <div className="metric-subtitle">out of {effectiveTotalElements} total</div>
+            </div>
+
+            <div className="metric-card">
+              <div className="metric-label">Impact Rate</div>
               <div className="metric-value" style={{color: '#dc2626'}}>{percentage.toFixed(1)}%</div>
               <div className="metric-subtitle">of building affected</div>
+            </div>
+          </div>
+        )}
+
+        {/* Explanation Card - Outside section-content for full width */}
+        {expandedSections.overview && (
+          <div style={{
+            marginTop: '1.5rem',
+            marginBottom: '2.5rem',
+            padding: '1rem',
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #0284c7',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            lineHeight: '1.5',
+            color: '#0c4a6e',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>🎯 Understanding Impact Assessment:</div>
+            <ul style={{ margin: '0.5rem 0', paddingLeft: '1.25rem' }}>
+              <li><strong>Compliance Rate %</strong>: Percentage of building elements that are <strong>compliant</strong> (not affected)</li>
+              <li><strong>Impact Rate %</strong>: Percentage of building elements that are <strong>affected</strong> by non-compliance</li>
+              <li><strong>Affected Elements</strong>: Individual building components failing one or more rules</li>
+              <li><strong>Total Elements</strong>: All building components in the model</li>
+            </ul>
+            <div style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontStyle: 'italic', opacity: 0.9 }}>
+              Impact Assessment counts unique elements, so one element failing multiple rules counts as 1 affected element
             </div>
           </div>
         )}
@@ -120,7 +180,7 @@ function ImpactAssessment({ failures, impactMetrics, totalElements }) {
                     <div className="distribution-bar">
                       <div 
                         className="distribution-fill"
-                        style={{width: `${(count / totalAffected) * 100}%`}}
+                        style={{width: `${(count / totalFailures) * 100}%`}}
                       ></div>
                     </div>
                     <span className="distribution-count">{count}</span>

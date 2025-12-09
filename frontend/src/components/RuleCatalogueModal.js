@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronDown, ChevronRight, AlertCircle, AlertTriangle, Info, Upload, Edit2, Save, XCircle, Trash2, Download } from 'lucide-react';
 
-function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
+function RuleCatalogueModal({ isOpen, onClose, onConfirmRules, refreshTrigger }) {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,7 +18,7 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
   const fileInputRef = useRef(null);
   const appendFileInputRef = useRef(null);
 
-  // Fetch rules catalogue on mount or when modal opens
+  // Fetch rules catalogue on mount or when modal opens or when rules are refreshed
   useEffect(() => {
     if (!isOpen) return;
 
@@ -44,7 +44,7 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
     };
 
     fetchRules();
-  }, [isOpen]);
+  }, [isOpen, refreshTrigger]);
 
   const toggleExpanded = (ruleId) => {
     setExpandedRules(prev => ({
@@ -78,6 +78,24 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
         const catalogueData = await catalogueResponse.json();
         if (catalogueData.success) {
           setRules(catalogueData.rules || []);
+          
+          // Trigger mapping sync after catalogue change
+          try {
+            const syncResponse = await fetch('/api/rules/sync/on-catalogue-update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'batch',
+                description: 'Imported catalogue'
+              })
+            });
+            
+            if (syncResponse.ok) {
+              console.log('Mappings synced after import');
+            }
+          } catch (syncErr) {
+            console.warn('Sync error (non-critical):', syncErr.message);
+          }
         }
         setTimeout(() => setImportMessage(null), 3000);
       } else {
@@ -119,6 +137,24 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
         const catalogueData = await catalogueResponse.json();
         if (catalogueData.success) {
           setRules(catalogueData.rules || []);
+          
+          // Trigger mapping sync after catalogue change
+          try {
+            const syncResponse = await fetch('/api/rules/sync/on-catalogue-update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'batch',
+                description: 'Appended rules to catalogue'
+              })
+            });
+            
+            if (syncResponse.ok) {
+              console.log('Mappings synced after append');
+            }
+          } catch (syncErr) {
+            console.warn('Sync error (non-critical):', syncErr.message);
+          }
         }
         setTimeout(() => setImportMessage(null), 3000);
       } else {
@@ -203,6 +239,24 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
         setRules(data.rules || []);
         setEditingRuleId(null);
         setEditFormData({});
+        
+        // Trigger mapping sync after catalogue change
+        try {
+          const syncResponse = await fetch('/api/rules/sync/on-catalogue-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'modify',
+              rule_id: editFormData.id
+            })
+          });
+          
+          if (syncResponse.ok) {
+            console.log('Mappings synced after rule update');
+          }
+        } catch (syncErr) {
+          console.warn('Sync error (non-critical):', syncErr.message);
+        }
       } else {
         alert(`Error: ${data.error}`);
       }
@@ -218,20 +272,35 @@ function RuleCatalogueModal({ isOpen, onClose, onConfirmRules }) {
     
     setDeletingRuleId(ruleId);
     try {
-      const response = await fetch(`/api/rules/delete/${ruleId}`, {
-        method: 'DELETE',
+      // Delete directly from catalogue by filtering out the rule
+      const updatedRules = rules.filter(r => r.id !== ruleId);
+      
+      // Immediately update the UI
+      setRules(updatedRules);
+      
+      // Save the updated catalogue as a new version
+      const response = await fetch('/api/rules/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rules: updatedRules,
+          description: `Deleted rule: ${ruleId}`
+        })
       });
       
       const data = await response.json();
       if (data.success) {
-        setRules(data.rules || []);
-        setImportMessage('✓ Rule deleted successfully');
+        setImportMessage(`✓ Rule deleted and saved (version ${data.version_id})`);
         setImportMessageType('success');
         setTimeout(() => setImportMessage(null), 3000);
       } else {
-        alert(`Error: ${data.error}`);
+        // If save failed, revert the UI
+        setRules(rules);
+        alert(`Error saving deletion: ${data.error}`);
       }
     } catch (err) {
+      // If error, revert the UI
+      setRules(rules);
       alert(`Error deleting rule: ${err.message}`);
     } finally {
       setDeletingRuleId(null);

@@ -31,13 +31,15 @@ class ReasoningEngine:
     """
     
     def __init__(self, rules_file: Optional[str] = None,
-                 custom_rules_file: Optional[str] = None):
+                 custom_rules_file: Optional[str] = None,
+                 load_from_version_manager: bool = False):
         """
         Initialize reasoning engine.
         
         Args:
             rules_file: Path to regulatory rules JSON file
             custom_rules_file: Path to custom rules JSON file
+            load_from_version_manager: If True, load latest regulatory rules from RulesVersionManager
         """
         self.config = ReasoningConfig()
         self.failure_explainer = FailureExplainer()
@@ -49,10 +51,54 @@ class ReasoningEngine:
         self.custom_rules = {}
         self.rules = {}
         
+        # Load from version manager if requested
+        if load_from_version_manager:
+            self.load_rules_from_version_manager()
+        
         if rules_file:
             self.load_rules_from_file(rules_file, rule_type='regulatory')
         if custom_rules_file:
             self.load_rules_from_file(custom_rules_file, rule_type='custom')
+    
+    def load_rules_from_version_manager(self) -> Dict[str, Any]:
+        """Load latest regulatory rules from RulesVersionManager."""
+        try:
+            from pathlib import Path
+            from backend.rules_version_manager import RulesVersionManager
+            
+            rules_config_dir = Path(__file__).parent.parent / "rules_config"
+            version_manager = RulesVersionManager(str(rules_config_dir))
+            
+            rules_data, _ = version_manager.load_rules()
+            rules_list = rules_data.get('rules', [])
+            
+            # Store rules by ID
+            rules_dict = {}
+            for rule in rules_list:
+                rule_id = rule.get('id')
+                if rule_id:
+                    rules_dict[rule_id] = rule
+            
+            # Store as regulatory rules
+            self.regulatory_rules.update(rules_dict)
+            self.rules.update(rules_dict)
+            
+            logger.info(f"Loaded {len(rules_dict)} regulatory rules from RulesVersionManager (v{version_manager.get_current_version_id()})")
+            
+            return {
+                'success': True,
+                'rules_loaded': len(rules_dict),
+                'source': 'RulesVersionManager',
+                'version': version_manager.get_current_version_id()
+            }
+        
+        except Exception as e:
+            logger.error(f"Error loading rules from RulesVersionManager: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'rules_loaded': 0
+            }
     
     def load_rules_from_file(self, file_path: str, rule_type: str = 'regulatory') -> Dict[str, Any]:
         """Load rules from JSON file."""

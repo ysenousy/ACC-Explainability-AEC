@@ -44,7 +44,7 @@
       "test_samples": 129
     },
     "training_duration_seconds": 0.0,
-    "is_best": false,
+    "is_best": true,
     "description": "Training with 1032 samples, 10 epochs",
     "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
     "parent_version": null

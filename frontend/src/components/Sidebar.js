@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Database, CheckCircle, Network, FileText, AlertCircle, Download, BarChart3, Settings } from 'lucide-react';
+import { ChevronDown, ChevronRight, Database, CheckCircle, Network, FileText, AlertCircle, Download, BarChart3, Settings, Brain } from 'lucide-react';
 
 function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
   const [expandedGroups, setExpandedGroups] = useState({
@@ -33,7 +33,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'reasoning-why', label: 'Why It Failed', icon: AlertCircle, description: 'Explains compliance failures with context' },
       { id: 'reasoning-impact', label: 'Impact Assessment', icon: BarChart3, description: 'Quantifies scope and severity of failures' },
       { id: 'reasoning-fix', label: 'How To Fix', icon: Settings, description: 'Provides tiered recommendations' },
-      { id: 'trm-model', label: 'TRM Model Management', icon: Settings, description: 'Manage model versions and training history' },
+      { id: 'trm-model', label: 'Train Model', icon: Brain, description: 'Manage model versions and training history' },
     ],
   };
 

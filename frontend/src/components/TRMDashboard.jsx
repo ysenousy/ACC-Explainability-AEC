@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Brain, BarChart3, ArrowUpRight, Clock, TrendingUp, Info, Zap, Database, Network, BookOpen } from 'lucide-react';
+import { Brain, BarChart3, ArrowUpRight, Clock, TrendingUp, Info, Zap, Database, Network, BookOpen, Trash2 } from 'lucide-react';
 import '../styles/TRMDashboard.css';
 
 const TRMDashboard = () => {
@@ -125,6 +125,33 @@ const TRMDashboard = () => {
       }
     } catch (error) {
       console.error('Error marking best version:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteVersion = async (versionId) => {
+    if (!window.confirm(`Are you sure you want to delete version ${versionId}? This action cannot be undone.`)) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/trm/versions/${versionId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchVersions();
+        // If deleted version was selected, clear selection
+        if (selectedVersion?.version_id === versionId) {
+          setSelectedVersion(null);
+        }
+      } else {
+        alert('Failed to delete version: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting version:', error);
+      alert('Error deleting version: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -397,72 +424,50 @@ const TRMDashboard = () => {
       {activeTab === 'versions' && (
         <div className="versions-tab">
           <h2>Model Versions</h2>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+            View and manage different versions of your TRM model. Each version represents a trained model with specific performance metrics and configurations.
+          </p>
+
           {loading ? (
             <p>Loading...</p>
           ) : (
-            <div className="versions-list">
-              {versions.map(version => (
-                <div key={version.version_id} className="version-card">
-                  <div className="version-header">
-                    <h3>{version.version_id}</h3>
-                    {version.version_id === bestVersion && (
-                      <span className="badge-best">BEST</span>
-                    )}
-                  </div>
-                  
-                  <p className="version-date">
-                    Created: {new Date(version.created_at).toLocaleDateString()}
-                  </p>
-                  
-                  {version.description && (
-                    <p className="version-description">{version.description}</p>
-                  )}
-                  
-                  <div className="metrics">
-                    <div className="metric">
-                      <span className="label">Accuracy:</span>
-                      <span className="value">
-                        {(version.performance_metrics?.best_val_accuracy * 100).toFixed(2)}%
-                      </span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Loss:</span>
-                      <span className="value">
-                        {version.performance_metrics?.best_val_loss?.toFixed(4)}
-                      </span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Training Time:</span>
-                      <span className="value">
-                        {(version.training_duration_seconds / 60).toFixed(1)}m
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="actions">
-                    <button 
-                      onClick={() => {
-                        fetchVersionDetail(version.version_id);
-                        setActiveTab('detail');
-                      }}
-                    >
-                      View Detail
-                    </button>
-                    {version.version_id !== bestVersion && (
+            <div className="workflow-section">
+              <h3>Available Versions</h3>
+              <div className="workflow-steps">
+                {versions.map((version, index) => (
+                  <div key={version.version_id} className="step">
+                    <div className="step-number">{index + 1}</div>
+                    <div className="step-content">
+                      <h4>{version.version_id}</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0.25rem 0' }}>
+                        {new Date(version.created_at).toLocaleDateString()}
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: '#4b5563', margin: '0.5rem 0 0 0' }}>
+                        Accuracy: {(version.performance_metrics?.best_val_accuracy * 100).toFixed(1)}%
+                      </p>
                       <button 
-                        onClick={() => markBestVersion(version.version_id)}
+                        onClick={() => {
+                          fetchVersionDetail(version.version_id);
+                          setActiveTab('detail');
+                        }}
+                        style={{
+                          marginTop: '0.5rem',
+                          padding: '0.5rem 1rem',
+                          background: '#8b5cf6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}
                       >
-                        Mark as Best
+                        View Detail
                       </button>
-                    )}
-                    <input 
-                      type="checkbox"
-                      checked={selectedForComparison.includes(version.version_id)}
-                      onChange={() => handleSelectForComparison(version.version_id)}
-                    />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
           
@@ -478,20 +483,45 @@ const TRMDashboard = () => {
 
       {/* Detail Tab */}
       {activeTab === 'detail' && selectedVersion && (
-        <div className="detail-tab">
-          <h2>Version: {selectedVersion.version_id}</h2>
+        <div className="versions-tab">
+          <h2>Version Details: {selectedVersion.version_id}</h2>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+            In-depth information about this model version including configuration, performance metrics, and training history.
+          </p>
           
-          <div className="section">
-            <h3>Configuration</h3>
-            <pre>{JSON.stringify(selectedVersion.training_config, null, 2)}</pre>
-          </div>
-          
-          <div className="section">
+          {/* Performance Metrics Cards */}
+          <div className="workflow-section">
             <h3>Performance Metrics</h3>
-            <pre>{JSON.stringify(selectedVersion.performance_metrics, null, 2)}</pre>
+            <div className="workflow-steps">
+              <div className="step">
+                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Accuracy</div>
+                <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
+                  {(selectedVersion.performance_metrics?.best_val_accuracy * 100).toFixed(2)}%
+                </div>
+              </div>
+              <div className="step">
+                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Loss</div>
+                <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
+                  {selectedVersion.performance_metrics?.best_val_loss?.toFixed(4)}
+                </div>
+              </div>
+              <div className="step">
+                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Training Time</div>
+                <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
+                  {(selectedVersion.training_duration_seconds / 60).toFixed(1)}m
+                </div>
+              </div>
+            </div>
           </div>
           
-          <div className="section">
+          <div className="workflow-section">
+            <h3>Training Configuration</h3>
+            <pre style={{ background: 'white', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid #e5e7eb' }}>
+              {JSON.stringify(selectedVersion.training_config, null, 2)}
+            </pre>
+          </div>
+          
+          <div className="workflow-section">
             <h3>Training History</h3>
             {trainingHistory.length > 0 ? (
               <table className="history-table">
@@ -528,44 +558,53 @@ const TRMDashboard = () => {
 
       {/* Comparison Tab */}
       {activeTab === 'comparison' && comparison && (
-        <div className="comparison-tab">
+        <div className="versions-tab">
           <h2>Version Comparison</h2>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+            Side-by-side comparison of selected model versions and their performance metrics.
+          </p>
           
-          <div className="section">
+          <div className="workflow-section">
             <h3>Versions</h3>
-            <table className="comparison-table">
-              <thead>
-                <tr>
-                  <th>Version</th>
-                  <th>Created</th>
-                  <th>Accuracy</th>
-                  <th>Loss</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparison.versions.map(v => (
-                  <tr key={v.id}>
-                    <td>{v.id}</td>
-                    <td>{new Date(v.created_at).toLocaleDateString()}</td>
-                    <td>{(v.best_val_accuracy * 100).toFixed(2)}%</td>
-                    <td>{v.best_val_loss?.toFixed(4)}</td>
+            <div style={{ overflowX: 'auto', background: 'white', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <table className="comparison-table">
+                <thead>
+                  <tr>
+                    <th>Version</th>
+                    <th>Created</th>
+                    <th>Accuracy</th>
+                    <th>Loss</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {comparison.versions.map(v => (
+                    <tr key={v.id}>
+                      <td>{v.id}</td>
+                      <td>{new Date(v.created_at).toLocaleDateString()}</td>
+                      <td>{(v.best_val_accuracy * 100).toFixed(2)}%</td>
+                      <td>{v.best_val_loss?.toFixed(4)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
           
           {Object.keys(comparison.metric_differences).length > 0 && (
-            <div className="section">
+            <div className="workflow-section">
               <h3>Metric Differences</h3>
-              <pre>{JSON.stringify(comparison.metric_differences, null, 2)}</pre>
+              <pre style={{ background: 'white', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid #e5e7eb' }}>
+                {JSON.stringify(comparison.metric_differences, null, 2)}
+              </pre>
             </div>
           )}
           
           {Object.keys(comparison.config_differences).length > 0 && (
-            <div className="section">
+            <div className="workflow-section">
               <h3>Config Differences</h3>
-              <pre>{JSON.stringify(comparison.config_differences, null, 2)}</pre>
+              <pre style={{ background: 'white', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid #e5e7eb' }}>
+                {JSON.stringify(comparison.config_differences, null, 2)}
+              </pre>
             </div>
           )}
         </div>

@@ -12,12 +12,12 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
   const [hasChanges, setHasChanges] = useState(false);
   const [savedRules, setSavedRules] = useState([]);
 
-  // Fetch custom rules on mount
+  // Fetch custom rules on mount (only if no unsaved changes)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasChanges) {
       fetchCustomRules();
     }
-  }, [isOpen]);
+  }, [isOpen, hasChanges]);
 
   const fetchCustomRules = async () => {
     try {
@@ -189,23 +189,28 @@ function RuleManagementPanel({ isOpen, onClose, onRulesUpdated, extractedRules }
   const handleSaveChanges = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/rules/save-all', {
+      // Save the in-memory changes as a new version
+      // The backend creates a deep copy and saves as new version
+      const response = await fetch('/api/rules/save-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rules: customRules })
+        body: JSON.stringify({
+          rules: customRules,
+          description: `Edited ${customRules.length} rules in session`
+        })
       });
       const data = await response.json();
       if (data.success) {
-        setSavedRules(customRules);
+        setSavedRules([...customRules]); // Update saved state
         setHasChanges(false);
-        setMessage('All rules saved successfully');
+        setMessage(`Changes saved successfully (${data.version_id}). Original file unchanged.`);
         setMessageType('success');
         if (onRulesUpdated) {
           onRulesUpdated(customRules);
         }
-        setTimeout(() => setMessage(null), 2000);
+        setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage(data.error || 'Failed to save rules');
+        setMessage(data.error || 'Failed to save changes');
         setMessageType('error');
       }
     } catch (err) {

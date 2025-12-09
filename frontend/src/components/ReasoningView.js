@@ -25,6 +25,7 @@ function ReasoningView({ graph, complianceResults, activeTab: tabProp }) {
   const [recommendations, setRecommendations] = useState(null);
   const [summary, setSummary] = useState(null);
   const [hasComplianceData, setHasComplianceData] = useState(false);
+  const [complianceData, setComplianceData] = useState(null); // Store actual compliance data
 
   // Update active tab when prop changes
   useEffect(() => {
@@ -71,38 +72,18 @@ function ReasoningView({ graph, complianceResults, activeTab: tabProp }) {
     }
   }, [graph]);
 
-  // Also check for compliance results updates from sessionStorage (e.g., after compliance check)
+  // Listen for storage changes when new compliance results are saved
   useEffect(() => {
-    let previousDataCount = 0;
-    
-    const checkForUpdates = () => {
-      analyzeFailures();
-      
-      // Log when new data is detected
-      const stored = sessionStorage.getItem('lastComplianceResults');
-      if (stored) {
-        try {
-          const data = JSON.parse(stored);
-          const currentCount = data.results?.length || 0;
-          if (currentCount > previousDataCount) {
-            console.log('[ReasoningView Polling] New compliance data detected!', {
-              results: currentCount,
-              total_elements: data.total_elements,
-              failures: data.results.filter(r => r.passed === false).length
-            });
-            previousDataCount = currentCount;
-          }
-        } catch (e) {
-          // Ignore parse errors in logging
-        }
+    const handleStorageChange = (e) => {
+      if (e.key === 'lastComplianceResults' && e.newValue) {
+        console.log('[ReasoningView] Compliance data updated in sessionStorage, re-analyzing...');
+        analyzeFailures();
       }
     };
     
-    // Check every 500ms for updated compliance results
-    const interval = setInterval(checkForUpdates, 500);
-    
-    return () => clearInterval(interval);
-  }, [graph]);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const analyzeFailures = async () => {
     setLoading(true);
@@ -139,6 +120,7 @@ function ReasoningView({ graph, complianceResults, activeTab: tabProp }) {
 
       setFailures(failuresList);
       setHasComplianceData(true);
+      setComplianceData(results); // Store the actual compliance data
 
       // Get impact analysis
       let totalElem = results.total_elements || results.summary?.total_elements || 0;
@@ -224,29 +206,6 @@ function ReasoningView({ graph, complianceResults, activeTab: tabProp }) {
 
   return (
     <div className="reasoning-view">
-      {/* Header */}
-      <div className="reasoning-header">
-        <h2>Compliance Analysis</h2>
-        {summary && (
-          <div className="summary-stats">
-            <div className="stat">
-              <span className="label">Total Rule Violations</span>
-              <span className="value">{summary.total_failures}</span>
-            </div>
-            <div className="stat">
-              <span className="label">Affected Elements</span>
-              <span className="value">{failures.length > 0 ? new Set(failures.map(f => f.element_id)).size : 0}</span>
-            </div>
-            {summary.by_severity && (
-              <div className="stat">
-                <span className="label">Critical Issues</span>
-                <span className="value error">{summary.by_severity.ERROR || 0}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Tab Navigation */}
       <div className="reasoning-tabs-nav">
         <button
@@ -286,10 +245,13 @@ function ReasoningView({ graph, complianceResults, activeTab: tabProp }) {
             failures={failures}
             impactMetrics={impactMetrics}
             totalElements={(() => {
-              const te = (complianceResults && (complianceResults.total_elements || complianceResults.summary?.total_elements)) || 0;
+              // Use the stored compliance data from state, not the prop
+              const te = (complianceData && (complianceData.total_elements || complianceData.summary?.total_elements)) || 0;
               console.log('[ReasoningView.ImpactAssessment] totalElements prop:', {
                 passed_to_component: te,
-                complianceResults_keys: complianceResults ? Object.keys(complianceResults).slice(0, 10) : 'null'
+                from_top_level: complianceData?.total_elements,
+                from_summary: complianceData?.summary?.total_elements,
+                complianceData_keys: complianceData ? Object.keys(complianceData).slice(0, 10) : 'null'
               });
               return te;
             })()}

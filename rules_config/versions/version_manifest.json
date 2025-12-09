@@ -1,0 +1,618 @@
+{
+  "current_version": 5,
+  "total_versions": 21,
+  "versions": [
+    {
+      "version_id": 0,
+      "label": "Original",
+      "created_at": "2025-12-09T00:00:00Z",
+      "created_by": "system",
+      "description": "Original rules configuration with 14 rules and complete mappings",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 1,
+      "label": "User Modifications #1",
+      "created_at": "2025-12-09T11:31:55.874214+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "num_rules": 13,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 2,
+      "label": "User Modifications #2",
+      "created_at": "2025-12-09T11:37:57.381317+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: IBC_CORRIDOR_MIN_WIDTH",
+      "num_rules": 12,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 3,
+      "label": "User Modifications #3",
+      "created_at": "2025-12-09T11:54:48.957343+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+      "num_rules": 11,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 4,
+      "label": "User Modifications #4",
+      "created_at": "2025-12-09T11:59:57.342720+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+      "num_rules": 10,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 5,
+      "label": "User Modifications #5",
+      "created_at": "2025-12-09T12:00:26.711552+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: IBC_STAIR_MIN_WIDTH",
+      "num_rules": 9,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 6,
+      "label": "User Modifications #6",
+      "created_at": "2025-12-09T12:08:49.972856+00:00",
+      "created_by": "user",
+      "description": "Imported 9 rules in 'replace' mode",
+      "num_rules": 9,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 7,
+      "label": "User Modifications #7",
+      "created_at": "2025-12-09T12:09:12.814682+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: IBC_WALL_FIRE_PARTITION_MIN_RATING",
+      "num_rules": 8,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 8,
+      "label": "User Modifications #8",
+      "created_at": "2025-12-09T12:57:12.115703+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: CA_DOOR_WIDTH_ACCESSIBLE",
+      "num_rules": 7,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 9,
+      "label": "User Modifications #9",
+      "created_at": "2025-12-09T13:11:13.302286+00:00",
+      "created_by": "user",
+      "description": "Imported 14 rules in 'replace' mode",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 10,
+      "label": "User Modifications #10",
+      "created_at": "2025-12-09T13:14:01.524664+00:00",
+      "created_by": "user",
+      "description": "Test import: 2 rules",
+      "num_rules": 2,
+      "rule_ids": [
+        "TEST_RULE_1",
+        "TEST_RULE_2"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 11,
+      "label": "User Modifications #11",
+      "created_at": "2025-12-09T13:15:48.451728+00:00",
+      "created_by": "user",
+      "description": "Imported 7 rules in 'replace' mode",
+      "num_rules": 7,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 12,
+      "label": "User Modifications #12",
+      "created_at": "2025-12-09T13:16:13.293658+00:00",
+      "created_by": "user",
+      "description": "Imported 14 rules in 'replace' mode",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 13,
+      "label": "User Modifications #13",
+      "created_at": "2025-12-09T13:27:11.506410+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "num_rules": 13,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 14,
+      "label": "User Modifications #14",
+      "created_at": "2025-12-09T13:27:39.555109+00:00",
+      "created_by": "user",
+      "description": "Imported 13 rules in 'replace' mode",
+      "num_rules": 13,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 15,
+      "label": "User Modifications #15",
+      "created_at": "2025-12-09T13:36:05.277547+00:00",
+      "created_by": "user",
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 16,
+      "label": "User Modifications #16",
+      "created_at": "2025-12-09T13:36:39.170744+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "num_rules": 13,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 17,
+      "label": "User Modifications #17",
+      "created_at": "2025-12-09T13:38:40.059832+00:00",
+      "created_by": "user",
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 18,
+      "label": "User Modifications #18",
+      "created_at": "2025-12-09T13:46:40.489412+00:00",
+      "created_by": "user",
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 19,
+      "label": "User Modifications #19",
+      "created_at": "2025-12-09T14:56:54.816993+00:00",
+      "created_by": "user",
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    },
+    {
+      "version_id": 20,
+      "label": "User Modifications #20",
+      "created_at": "2025-12-09T15:07:52.050455+00:00",
+      "created_by": "user",
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "num_rules": 14,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+        "IBC_CORRIDOR_MIN_WIDTH",
+        "ADA_DOOR_ACCESSIBILITY_HEIGHT"
+      ],
+      "modifications": []
+    }
+  ],
+  "version_history": [
+    {
+      "timestamp": "2025-12-09T11:31:55.874214+00:00",
+      "action": "create_version",
+      "version_id": 1,
+      "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T11:37:57.381317+00:00",
+      "action": "create_version",
+      "version_id": 2,
+      "description": "Deleted rule: IBC_CORRIDOR_MIN_WIDTH",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T11:54:48.957343+00:00",
+      "action": "create_version",
+      "version_id": 3,
+      "description": "Deleted rule: IBC_COLUMN_FIRE_PROTECTED_MIN_RATING",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T11:59:57.342720+00:00",
+      "action": "create_version",
+      "version_id": 4,
+      "description": "Deleted rule: IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T12:00:26.711552+00:00",
+      "action": "create_version",
+      "version_id": 5,
+      "description": "Deleted rule: IBC_STAIR_MIN_WIDTH",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T12:08:49.972856+00:00",
+      "action": "create_version",
+      "version_id": 6,
+      "description": "Imported 9 rules in 'replace' mode",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T12:09:12.814682+00:00",
+      "action": "create_version",
+      "version_id": 7,
+      "description": "Deleted rule: IBC_WALL_FIRE_PARTITION_MIN_RATING",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T12:57:12.115703+00:00",
+      "action": "create_version",
+      "version_id": 8,
+      "description": "Deleted rule: CA_DOOR_WIDTH_ACCESSIBLE",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:11:13.302286+00:00",
+      "action": "create_version",
+      "version_id": 9,
+      "description": "Imported 14 rules in 'replace' mode",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:14:01.524664+00:00",
+      "action": "create_version",
+      "version_id": 10,
+      "description": "Test import: 2 rules",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:15:48.451728+00:00",
+      "action": "create_version",
+      "version_id": 11,
+      "description": "Imported 7 rules in 'replace' mode",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:16:13.293658+00:00",
+      "action": "create_version",
+      "version_id": 12,
+      "description": "Imported 14 rules in 'replace' mode",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:27:11.506410+00:00",
+      "action": "create_version",
+      "version_id": 13,
+      "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:27:39.555109+00:00",
+      "action": "create_version",
+      "version_id": 14,
+      "description": "Imported 13 rules in 'replace' mode",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:36:05.277547+00:00",
+      "action": "create_version",
+      "version_id": 15,
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:36:39.170744+00:00",
+      "action": "create_version",
+      "version_id": 16,
+      "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:38:40.059832+00:00",
+      "action": "create_version",
+      "version_id": 17,
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T13:46:40.489412+00:00",
+      "action": "create_version",
+      "version_id": 18,
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T14:56:54.816993+00:00",
+      "action": "create_version",
+      "version_id": 19,
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2025-12-09T15:07:52.050455+00:00",
+      "action": "create_version",
+      "version_id": 20,
+      "description": "Imported from 'enhanced-regulation-rules.json' (14 rules)",
+      "created_by": "user"
+    }
+  ]
+}

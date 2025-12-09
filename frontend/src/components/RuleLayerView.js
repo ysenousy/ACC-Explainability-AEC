@@ -286,6 +286,7 @@ function RuleLayerView({ graph }) {
         isOpen={showCatalogue} 
         onClose={() => setShowCatalogue(false)}
         onConfirmRules={handleConfirmRules}
+        refreshTrigger={refreshTrigger}
       />
       <RuleManagementPanel
         isOpen={showManagement}

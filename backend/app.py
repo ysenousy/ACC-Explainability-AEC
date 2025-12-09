@@ -29,6 +29,10 @@ from reasoning_layer.reasoning_engine import ReasoningEngine
 from backend.trm_api import register_trm_endpoints
 from backend.trm_model_manager import ModelVersionManager
 from backend.trm_model_management_api import register_model_management_endpoints
+from backend.rules_version_manager import RulesVersionManager
+from backend.rules_versioning_api import rules_versioning_bp
+from backend.rules_mapping_sync import RulesMappingSynchronizer
+from backend.rules_sync_api import rules_sync_bp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -62,6 +66,16 @@ def set_utf8_encoding(response):
 # Services
 data_svc = DataLayerService()
 
+# Initialize Rules Version Manager
+rules_config_path = Path(__file__).parent.parent / "rules_config"
+rules_version_manager = RulesVersionManager(str(rules_config_path))
+app.config["rules_version_manager"] = rules_version_manager
+app.config["rules_config_dir"] = str(rules_config_path)
+
+# Initialize Rules Mapping Synchronizer
+rules_sync = RulesMappingSynchronizer(str(rules_config_path))
+app.config["rules_mapping_synchronizer"] = rules_sync
+
 # Initialize reasoning engine WITHOUT loading rules at startup
 # Rules will be loaded on-demand when user imports/selects them
 reasoning_engine = ReasoningEngine(
@@ -69,8 +83,58 @@ reasoning_engine = ReasoningEngine(
     custom_rules_file=None  # Not loaded at startup
 )
 
+# Store reasoning engine in app config so other blueprints can access it
+app.config["reasoning_engine"] = reasoning_engine
+
 # Track if rules have been imported in this session
 rules_imported_in_session = False
+
+# In-memory session state for rule edits (delete/add/modify)
+# This maintains state across multiple operations until user saves
+session_state = {
+    'in_memory_rules': None,  # Current in-memory rules (None = use latest version)
+    'is_editing': False,      # Whether user is currently editing
+}
+
+def get_session_rules():
+    """Get current rules from session (in-memory) or latest version."""
+    if session_state['in_memory_rules'] is not None:
+        logger.debug(f"[SESSION] Returning in-memory rules: {len(session_state['in_memory_rules'])} rules")
+        return session_state['in_memory_rules']
+    # Load from latest version
+    logger.debug(f"[SESSION] Loading from RulesVersionManager (in_memory_rules is None)")
+    rules_dict, _ = rules_version_manager.load_rules()
+    rules = rules_dict.get('rules', [])
+    logger.debug(f"[SESSION] Loaded {len(rules)} rules from version manager")
+    return rules
+
+def set_session_rules(rules):
+    """Update in-memory session rules."""
+    session_state['in_memory_rules'] = rules
+    session_state['is_editing'] = True
+
+def clear_session_rules():
+    """Clear in-memory session rules (after save)."""
+    session_state['in_memory_rules'] = None
+    session_state['is_editing'] = False
+
+
+def sync_reasoning_engine_with_latest_rules():
+    """Sync reasoning engine with latest rules from RulesVersionManager.
+    
+    This ensures the reasoning layer always has the latest version of rules.
+    """
+    try:
+        result = reasoning_engine.load_rules_from_version_manager()
+        if result.get('success'):
+            logger.info(f"✓ Reasoning engine synced: {result.get('rules_loaded')} rules from v{result.get('version')}")
+            return True
+        else:
+            logger.warning(f"Failed to sync reasoning engine: {result.get('error')}")
+            return False
+    except Exception as e:
+        logger.error(f"Error syncing reasoning engine: {e}")
+        return False
 
 
 # ===== Health & Info Endpoints =====
@@ -425,7 +489,7 @@ def get_doors_endpoint():
 def evaluate_rules_endpoint():
     """Evaluate regulatory compliance rules against a graph.
     
-    Uses the unified compliance engine with regulatory rules from enhanced-regulation-rules.json
+    Uses the unified compliance engine with the latest version of regulatory rules from RulesVersionManager.
     
     Request:
         {
@@ -451,11 +515,17 @@ def evaluate_rules_endpoint():
         
         logger.info("Evaluating regulatory compliance rules")
         
-        # Initialize unified compliance engine with regulatory rules
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
-        engine = UnifiedComplianceEngine(str(rules_file))
+        # Load latest rules from RulesVersionManager
+        rules_config_dir = Path(__file__).parent.parent / 'rules_config'
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_data, _ = version_manager.load_rules()
+        rules_list = rules_data.get('rules', [])
         
-        logger.info(f"Using {len(engine.rules)} regulatory compliance rules")
+        logger.info(f"Using {len(rules_list)} regulatory compliance rules from RulesVersionManager (latest version)")
+        
+        # Initialize unified compliance engine and set rules
+        engine = UnifiedComplianceEngine()
+        engine.rules = rules_list
         
         # Run compliance check
         results = engine.check_graph(graph)
@@ -548,6 +618,8 @@ def get_manifest_endpoint():
 def get_rules_catalogue():
     """Get all available rules with full metadata.
     
+    Loads from enhanced-regulation-rules.json (current version).
+    
     Response:
         {
             "success": bool,
@@ -566,13 +638,20 @@ def get_rules_catalogue():
         }
     """
     try:
-        # Load custom rules (user-imported rules)
-        # Return empty array if no custom rules exist (empty catalogue by default)
-        custom_rules = load_custom_rules()
+        # Load rules from current version (enhanced-regulation-rules.json)
+        # This ensures we always show the user's current catalogue
+        from backend.rules_version_manager import RulesVersionManager
+        
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        
+        # Load current version's rules
+        rules_dict, _ = version_manager.load_rules()
+        rules = rules_dict.get('rules', [])
         
         return jsonify({
             "success": True,
-            "rules": custom_rules,
+            "rules": rules,
             "error": None,
         })
     except Exception as e:
@@ -677,7 +756,7 @@ def get_all_rules_endpoint():
 
 @app.route("/api/rules/add", methods=["POST"])
 def add_rule_endpoint():
-    """Add a custom rule to the ruleset.
+    """Add a rule to the current ruleset.
     
     Request:
         {
@@ -706,22 +785,40 @@ def add_rule_endpoint():
         if not rule or not rule.get("id"):
             return jsonify({"success": False, "error": "rule with id required"}), 400
         
-        logger.info("Adding custom rule: %s", rule.get("id"))
-        success = add_rule(rule)
+        logger.info("Adding rule: %s", rule.get("id"))
         
-        if success:
-            custom = load_custom_rules()
-            return jsonify({
-                "success": True,
-                "custom_rules": custom,
-                "error": None,
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "custom_rules": None,
-                "error": "Failed to add rule (may already exist)",
-            }), 400
+        # Load current version rules and mappings
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_dict, mappings_dict = version_manager.load_rules()
+        rules_list = rules_dict.get('rules', [])
+        
+        # Check if rule already exists
+        for existing_rule in rules_list:
+            if existing_rule.get('id') == rule.get('id'):
+                return jsonify({
+                    "success": False,
+                    "custom_rules": None,
+                    "error": "Rule with this ID already exists",
+                }), 400
+        
+        # Add new rule
+        rules_list.append(rule)
+        rules_dict['rules'] = rules_list
+        
+        # Create new version
+        new_version = version_manager.create_new_version(
+            rules_dict,
+            mappings_dict,
+            f"Added rule: {rule.get('id')}"
+        )
+        logger.info(f"Rule {rule.get('id')} added. New version: {new_version}")
+        
+        return jsonify({
+            "success": True,
+            "custom_rules": rules_list,
+            "error": None,
+        })
     except Exception as e:
         logger.exception("Failed to add rule")
         return jsonify({
@@ -733,40 +830,67 @@ def add_rule_endpoint():
 
 @app.route("/api/rules/delete/<rule_id>", methods=["DELETE"])
 def delete_rule_endpoint(rule_id):
-    """Delete a custom rule from the ruleset.
+    """Delete a rule from the in-memory session (does NOT persist to file yet).
+    
+    This removes the rule from the working set in memory.
+    Changes are NOT saved to disk until user confirms via /api/rules/save-session.
+    Original file remains unchanged until explicit save.
     
     Response:
         {
             "success": bool,
-            "rules": list,
+            "rules": list (remaining rules in session),
+            "changes_count": int (total unsaved changes),
             "error": str or null
         }
     """
     try:
-        logger.info("Deleting custom rule: %s", rule_id)
-        success = delete_rule(rule_id)
+        logger.info(f"[DELETE] Attempting to delete rule: '{rule_id}'")
         
-        if success:
-            custom = load_custom_rules()
+        # Get current session rules (either in-memory or latest version)
+        current_rules = get_session_rules()
+        rules_list = list(current_rules) if current_rules else []
+        
+        # If this is the first edit operation, initialize the session with current rules
+        if session_state['in_memory_rules'] is None and rules_list:
+            logger.info(f"[DELETE] First edit operation - initializing session state with {len(rules_list)} rules")
+            set_session_rules(rules_list)
+        
+        logger.info(f"[DELETE] Current rules count: {len(rules_list)}")
+        logger.info(f"[DELETE] Available rule IDs: {[r.get('id') for r in rules_list[:3]]}...")
+        
+        # Filter out the rule to delete (in memory only, not persisted yet)
+        original_count = len(rules_list)
+        updated_rules = [r for r in rules_list if r.get('id') != rule_id]
+        
+        logger.info(f"[DELETE] After filter - count: {len(updated_rules)}, original: {original_count}")
+        
+        if len(updated_rules) < original_count:
+            # Rule was found and deleted from in-memory session
+            logger.info(f"[DELETE] Rule '{rule_id}' deleted from session (NOT YET SAVED). Remaining: {len(updated_rules)} rules")
             
-            # Reset rules imported flag if no rules left
-            global rules_imported_in_session
-            if len(custom) == 0:
-                rules_imported_in_session = False
+            # Update session state to maintain in-memory changes
+            set_session_rules(updated_rules)
             
+            # Don't sync mappings yet - only sync on final save
+            # This prevents partial updates if user cancels editing
+            # Return the updated rules, but note this is not persisted yet
             return jsonify({
                 "success": True,
-                "rules": custom,
+                "rules": updated_rules,
+                "changes_count": original_count - len(updated_rules),
+                "message": "Rule deleted from session. Click 'Save Changes' to persist.",
                 "error": None,
             })
         else:
+            logger.warning(f"[DELETE] Rule not found: '{rule_id}'. Available IDs: {[r.get('id') for r in rules_list]}")
             return jsonify({
                 "success": False,
                 "rules": None,
-                "error": "Rule not found",
+                "error": f"Rule not found: {rule_id}",
             }), 404
     except Exception as e:
-        logger.exception("Failed to delete rule")
+        logger.exception("Failed to delete rule from session")
         return jsonify({
             "success": False,
             "rules": None,
@@ -774,9 +898,102 @@ def delete_rule_endpoint(rule_id):
         }), 500
 
 
+@app.route("/api/rules/save-session", methods=["POST"])
+def save_session_endpoint():
+    """Save in-memory changes as a new version.
+    
+    This endpoint takes the current in-memory rules (after deletions/additions)
+    and saves them as a new permanent version. Original source files are never modified.
+    
+    Request:
+        {
+            "rules": list (current in-memory rules),
+            "description": str (optional, auto-generated if not provided)
+        }
+    
+    Response:
+        {
+            "success": bool,
+            "version_id": str (new version created),
+            "rules_count": int,
+            "message": str,
+            "error": str or null
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        rules_list = data.get('rules', [])
+        user_description = data.get('description', '')
+        
+        if not rules_list:
+            return jsonify({
+                "success": False,
+                "error": "No rules provided to save"
+            }), 400
+        
+        # Prepare rules for saving
+        import copy
+        saved_rules = copy.deepcopy(rules_list)
+        
+        # Load current version for mappings reference
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        _, mappings_dict = version_manager.load_rules()
+        
+        # Create description
+        if user_description:
+            description = user_description
+        else:
+            description = f"Session changes: Saved {len(saved_rules)} rules"
+        
+        # Create new version with in-memory changes
+        rules_dict = {'rules': saved_rules}
+        new_version = version_manager.create_new_version(
+            rules_dict,
+            mappings_dict,
+            description
+        )
+        
+        logger.info(f"[SAVE-SESSION] Saved in-memory changes as {new_version} with {len(saved_rules)} rules")
+        
+        # Automatically sync mappings
+        try:
+            synchronizer = RulesMappingSynchronizer(str(rules_config_dir))
+            sync_result = synchronizer.sync_mappings(verbose=True)
+            logger.info(f"[SAVE-SESSION] Mappings synced: {sync_result}")
+        except Exception as sync_err:
+            logger.error(f"[SAVE-SESSION] Error syncing mappings: {sync_err}")
+        
+        # Sync reasoning engine
+        try:
+            reasoning_result = reasoning_engine.load_rules_from_version_manager()
+            logger.info(f"[SAVE-SESSION] Reasoning engine synced")
+        except Exception as engine_err:
+            logger.error(f"[SAVE-SESSION] Error syncing reasoning engine: {engine_err}")
+        
+        # Clear in-memory session state after successful save
+        clear_session_rules()
+        logger.info(f"[SAVE-SESSION] Session state cleared, ready for new edits")
+        
+        return jsonify({
+            "success": True,
+            "version_id": new_version,
+            "rules_count": len(saved_rules),
+            "message": f"Changes saved as {new_version}. Original files unchanged.",
+            "error": None
+        }), 201
+    
+    except Exception as e:
+        logger.exception("Failed to save session")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 @app.route("/api/rules/save-all", methods=["POST"])
 def save_all_rules_endpoint():
-    """Save all custom rules at once.
+    """Save all rules at once to current version.
     
     Request:
         {
@@ -792,10 +1009,20 @@ def save_all_rules_endpoint():
         data = request.get_json()
         rules = data.get("rules", [])
         
-        logger.info("Saving %d custom rules", len(rules))
+        logger.info("Saving %d rules", len(rules))
         
-        # Save all rules
-        save_custom_rules(rules)
+        # Load current version, update rules, create new version
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_dict, mappings_dict = version_manager.load_rules()
+        
+        rules_dict['rules'] = rules
+        new_version = version_manager.create_new_version(
+            rules_dict,
+            mappings_dict,
+            f"Saved {len(rules)} rules"
+        )
+        logger.info(f"Rules saved. New version: {new_version}")
         
         return jsonify({
             "success": True,
@@ -811,20 +1038,24 @@ def save_all_rules_endpoint():
 
 @app.route("/api/rules/custom", methods=["GET"])
 def get_custom_rules_endpoint():
-    """Get all custom rules.
+    """Get all current rules (from session or current version).
     
     Response:
         {
             "success": bool,
             "custom_rules": list,
+            "is_editing": bool (whether in-memory edits exist),
             "error": str or null
         }
     """
     try:
-        custom = load_custom_rules()
+        # Get rules from session (in-memory) or latest version
+        rules = get_session_rules()
+        
         return jsonify({
             "success": True,
-            "custom_rules": custom,
+            "custom_rules": rules,
+            "is_editing": session_state['is_editing'],
             "error": None,
         })
     except Exception as e:
@@ -832,13 +1063,14 @@ def get_custom_rules_endpoint():
         return jsonify({
             "success": False,
             "custom_rules": None,
+            "is_editing": False,
             "error": str(e),
         }), 500
 
 
 @app.route("/api/rules/import", methods=["POST"])
 def import_rules_endpoint():
-    """Import rules from JSON file.
+    """Import rules from JSON file to current version.
     
     Request (form-data):
         file: JSON file with rules array
@@ -898,20 +1130,55 @@ def import_rules_endpoint():
         # Get merge flag from form data
         merge = request.form.get("merge", "true").lower() == "true"
         
-        # Call import_rules (saves to custom_rules.json)
-        status = import_rules(rules_to_import, merge=merge)
-        logger.info(f"[IMPORT] Imported {status.get('added', 0)} rules, skipped {status.get('skipped', 0)}")
+        # Load current version
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_dict, mappings_dict = version_manager.load_rules()
+        existing_rules = rules_dict.get('rules', [])
+        
+        # Process import
+        status = {
+            'total_imported': len(rules_to_import),
+            'added': 0,
+            'skipped': 0,
+            'errors': []
+        }
+        
+        if merge:
+            # Merge mode: add new rules, skip duplicates
+            existing_ids = {r.get('id') for r in existing_rules}
+            final_rules = existing_rules.copy()
+            
+            for rule in rules_to_import:
+                if rule.get('id') not in existing_ids:
+                    final_rules.append(rule)
+                    status['added'] += 1
+                else:
+                    status['skipped'] += 1
+        else:
+            # Replace mode: clear and import
+            final_rules = rules_to_import
+            status['added'] = len(rules_to_import)
+        
+        # Create new version with imported rules
+        rules_dict['rules'] = final_rules
+        new_version = version_manager.create_new_version(
+            rules_dict,
+            mappings_dict,
+            f"Imported {status['added']} rules (merge={merge})"
+        )
+        logger.info(f"[IMPORT] Imported {status['added']} rules, skipped {status['skipped']}. New version: {new_version}")
         
         # Immediately load the imported rules into reasoning_engine
         if status.get('added', 0) > 0:
             try:
-                from pathlib import Path
                 backend_dir = Path(__file__).parent
                 project_root = backend_dir.parent
-                custom_rules_path = str(project_root / "rules_config" / "custom_rules.json")
-                logger.info(f"[IMPORT] Loading rules into reasoning engine from: {custom_rules_path}")
+                # Load from current version's enhanced-regulation-rules.json
+                enhanced_rules_path = str(project_root / "rules_config" / "versions" / new_version / "enhanced-regulation-rules.json")
+                logger.info(f"[IMPORT] Loading rules into reasoning engine from: {enhanced_rules_path}")
                 
-                result = reasoning_engine.load_rules_from_file(custom_rules_path, rule_type='custom')
+                result = reasoning_engine.load_rules_from_file(enhanced_rules_path, rule_type='custom')
                 if result.get('success'):
                     logger.info(f"[IMPORT] ✓ Successfully loaded {result['rules_loaded']} rules into reasoning engine")
                 else:
@@ -1233,7 +1500,10 @@ def check_rules_against_ifc():
 
 @app.route("/api/rules/import-catalogue", methods=["POST"])
 def import_catalogue():
-    """Import rules from JSON file.
+    """Import rules from JSON file as a new version.
+    
+    Creates a deep copy of imported rules into a new version.
+    This ensures the original imported file is never modified.
     
     Supports two modes:
     - replace: Clear existing rules and import new ones (fresh import)
@@ -1250,59 +1520,76 @@ def import_catalogue():
         if not file.filename.endswith('.json'):
             return jsonify({"success": False, "error": "File must be JSON"}), 400
         
-        mode = request.form.get('mode', 'append')  # Default to append for backward compatibility
+        mode = request.form.get('mode', 'replace')  # Default to replace for clean imports
         
         data = json.load(file)
         
         if 'rules' not in data or not isinstance(data.get('rules'), list):
             return jsonify({"success": False, "error": "Invalid JSON format: must contain 'rules' array"}), 400
         
-        new_rules = data.get('rules', [])
+        # Make a DEEP COPY of the imported rules (independent of original file)
+        import copy
+        new_rules = copy.deepcopy(data.get('rules', []))
+        
+        # Load current version rules and mappings
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_dict, mappings_dict = version_manager.load_rules()
+        existing_rules = rules_dict.get('rules', [])
         
         if mode == 'replace':
-            # Fresh import: replace all existing rules
-            existing_rules = []
+            # Fresh import: replace all existing rules with a clean copy
+            final_rules = copy.deepcopy(new_rules)
             added_count = len(new_rules)
             skipped_count = 0
+            description = f"Imported from '{file.filename}' ({added_count} rules)"
         else:
             # Append mode: merge with existing
-            existing_rules = load_custom_rules()
-            
             # Get existing rule IDs to avoid duplicates
             existing_ids = {rule.get('id') for rule in existing_rules}
             
-            # Add new rules, skip duplicates
+            # Add new rules, skip duplicates (use deep copies)
             added_count = 0
             skipped_count = 0
+            final_rules = copy.deepcopy(existing_rules)
             
             for rule in new_rules:
                 if rule.get('id') not in existing_ids:
-                    existing_rules.append(rule)
+                    final_rules.append(copy.deepcopy(rule))
                     added_count += 1
                 else:
                     skipped_count += 1
+            
+            description = f"Appended {added_count} rules from '{file.filename}', skipped {skipped_count} duplicates"
         
-        # Combine rules based on mode
-        if mode == 'replace':
-            final_rules = new_rules
-        else:
-            final_rules = existing_rules
+        # Create new version with imported rules (as independent copy)
+        rules_dict['rules'] = final_rules
+        new_version = version_manager.create_new_version(
+            rules_dict,
+            mappings_dict,
+            description
+        )
+        logger.info(f"[IMPORT-CATALOGUE] Imported {added_count} rules in '{mode}' mode, skipped {skipped_count}. New version: {new_version}")
         
-        # Save updated rules
-        save_custom_rules(final_rules)
-        
-        logger.info(f"[IMPORT-CATALOGUE] Imported {added_count} rules in '{mode}' mode, skipped {skipped_count}")
+        # Automatically sync mappings with the imported rules
+        if added_count > 0:
+            try:
+                synchronizer = RulesMappingSynchronizer(str(rules_config_dir))
+                sync_result = synchronizer.sync_mappings(verbose=True)
+                logger.info(f"[IMPORT-CATALOGUE] ✓ Mappings synced after import: {sync_result}")
+            except Exception as sync_err:
+                logger.error(f"[IMPORT-CATALOGUE] Error syncing mappings after import: {sync_err}")
         
         # Immediately load the imported rules into reasoning_engine
         if added_count > 0:
             try:
-                from pathlib import Path
                 backend_dir = Path(__file__).parent
                 project_root = backend_dir.parent
-                custom_rules_path = str(project_root / "rules_config" / "custom_rules.json")
-                logger.info(f"[IMPORT-CATALOGUE] Loading rules into reasoning engine from: {custom_rules_path}")
+                # Load from current version's enhanced-regulation-rules.json
+                enhanced_rules_path = str(project_root / "rules_config" / "versions" / new_version / "enhanced-regulation-rules.json")
+                logger.info(f"[IMPORT-CATALOGUE] Loading rules into reasoning engine from: {enhanced_rules_path}")
                 
-                result = reasoning_engine.load_rules_from_file(custom_rules_path, rule_type='custom')
+                result = reasoning_engine.load_rules_from_file(enhanced_rules_path, rule_type='custom')
                 if result.get('success'):
                     logger.info(f"[IMPORT-CATALOGUE] ✓ Successfully loaded {result['rules_loaded']} rules into reasoning engine")
                 else:
@@ -1325,12 +1612,16 @@ def import_catalogue():
     except json.JSONDecodeError:
         return jsonify({"success": False, "error": "Invalid JSON file"}), 400
     except Exception as e:
+        logger.exception("Failed to import catalogue")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/api/rules/update", methods=["PUT"])
 def update_rule():
-    """Update a specific rule."""
+    """Update a specific rule from current version.
+    
+    Updates rule in enhanced-regulation-rules.json (current version).
+    """
     try:
         data = request.get_json()
         rule_id = data.get('id')
@@ -1338,12 +1629,15 @@ def update_rule():
         if not rule_id:
             return jsonify({"success": False, "error": "Rule ID required"}), 400
         
-        # Load current custom rules
-        custom_rules = load_custom_rules()
+        # Load current version rules and mappings
+        rules_config_dir = Path(__file__).parent.parent / "rules_config"
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_dict, mappings_dict = version_manager.load_rules()
+        rules_list = rules_dict.get('rules', [])
         
         # Find and update rule
         rule_found = False
-        for rule in custom_rules:
+        for rule in rules_list:
             if rule.get('id') == rule_id:
                 rule_found = True
                 rule['name'] = data.get('name', rule.get('name'))
@@ -1364,16 +1658,23 @@ def update_rule():
         if not rule_found:
             return jsonify({"success": False, "error": "Rule not found"}), 404
         
-        # Save updated rules
-        save_custom_rules(custom_rules)
+        # Create new version with updated rules
+        rules_dict['rules'] = rules_list
+        new_version = version_manager.create_new_version(
+            rules_dict,
+            mappings_dict,
+            f"Updated rule: {rule_id}"
+        )
+        logger.info(f"Rule {rule_id} updated. New version: {new_version}")
         
         return jsonify({
             "success": True,
-            "rules": custom_rules,
+            "rules": rules_list,
             "error": None
         })
     
     except Exception as e:
+        logger.exception("Failed to update rule")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -1438,24 +1739,30 @@ def check_compliance():
         else:
             logger.info(f"Compliance check: Graph has NO elements section. Available keys: {list(graph.keys())}")
         
-        # Initialize unified compliance engine
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
-        engine = UnifiedComplianceEngine(str(rules_file))
+        # Load latest rules from RulesVersionManager
+        rules_config_dir = Path(__file__).parent.parent / 'rules_config'
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_data, _ = version_manager.load_rules()
+        all_rules = rules_data.get('rules', [])
         
-        logger.info(f"Compliance check: Loaded {len(engine.rules)} rules")
+        logger.info(f"Compliance check: Loaded {len(all_rules)} rules from RulesVersionManager (latest version)")
         
         # Filter rules if specified
-        rules_to_check = engine.rules
+        rules_to_check = all_rules
         if rule_ids:
-            rules_to_check = [r for r in engine.rules if r.get('id') in rule_ids]
+            rules_to_check = [r for r in all_rules if r.get('id') in rule_ids]
+        
+        # Initialize unified compliance engine and set rules
+        engine = UnifiedComplianceEngine()
+        engine.rules = rules_to_check
         
         # Run compliance check
         results = engine.check_graph(graph, rules_to_check, target_classes if target_classes else None)
         
         logger.info(f"Compliance check: Found {len(results.get('results', []))} check results")
         if results.get('results'):
-            rule_ids = set(r.get('rule_id') for r in results['results'] if r.get('rule_id'))
-            logger.info(f"Compliance check: Rule IDs in results: {rule_ids}")
+            rule_ids_in_results = set(r.get('rule_id') for r in results['results'] if r.get('rule_id'))
+            logger.info(f"Compliance check: Rule IDs in results: {rule_ids_in_results}")
         
         response_data = {
             "success": True,
@@ -1791,14 +2098,10 @@ def get_all_rules_with_applicability():
         if not graph:
             return jsonify({"success": False, "error": "graph required"}), 400
         
-        # Load all regulatory rules
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
-        if not rules_file.exists():
-            return jsonify({"success": False, "error": "Rules file not found"}), 404
-        
-        with open(rules_file, 'r') as f:
-            rules_data = json.load(f)
-        
+        # Load all regulatory rules from RulesVersionManager
+        rules_config_dir = Path(__file__).parent.parent / 'rules_config'
+        version_manager = RulesVersionManager(str(rules_config_dir))
+        rules_data, _ = version_manager.load_rules()
         all_rules = rules_data.get('rules', [])
         
         # Get element counts from graph
@@ -1883,7 +2186,7 @@ def not_found(error):
 def generate_compliance_report_endpoint():
     """Generate comprehensive compliance report.
     
-    Reloads rules from file each time to reflect any updates (deletions, modifications).
+    Loads latest rules from RulesVersionManager to reflect any updates (deletions, modifications).
     """
     try:
         body = request.get_json()
@@ -1892,51 +2195,34 @@ def generate_compliance_report_endpoint():
         if not graph:
             return jsonify({"success": False, "error": "No graph provided"}), 400
         
-        # CRITICAL: Reload rules from file each time to reflect user updates
-        # This ensures rule deletions/modifications are immediately reflected
-        # Try custom_rules.json first (user-imported), fallback to enhanced-regulation-rules.json
-        custom_rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
-        default_rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        # Load latest rules from RulesVersionManager
+        rules_config_dir = Path(__file__).parent.parent / 'rules_config'
+        version_manager = RulesVersionManager(str(rules_config_dir))
         
-        # Determine which file to use
-        if custom_rules_file.exists():
-            rules_file = custom_rules_file
-            logger.info(f"[COMPLIANCE REPORT] Using custom rules from {rules_file}")
-        elif default_rules_file.exists():
-            rules_file = default_rules_file
-            logger.info(f"[COMPLIANCE REPORT] Using regulatory rules from {rules_file}")
-        else:
+        try:
+            rules_data, mappings_data = version_manager.load_rules()
+            rules_list = rules_data.get('rules', [])
+            
+            if not rules_list:
+                return jsonify({
+                    "success": False,
+                    "error": "No rules available in the current version."
+                }), 400
+            
+            logger.info(f"[COMPLIANCE REPORT] Loaded {len(rules_list)} rules from RulesVersionManager (latest version)")
+            
+            # Pass rules to generator
+            generator = ComplianceReportGenerator(rules=rules_list)
+            report = generator.generate_report(graph)
+            
+            return jsonify({"success": True, "report": report}), 200
+            
+        except Exception as e:
+            logger.error(f"Error loading rules from RulesVersionManager: {e}")
             return jsonify({
                 "success": False,
-                "error": "No rules found. Neither custom_rules.json nor enhanced-regulation-rules.json available."
-            }), 400
-        
-        # Load rules from file (fresh, not cached)
-        with open(rules_file, 'r', encoding='utf-8') as f:
-            loaded_rules_data = json.load(f)
-        
-        rules_list = loaded_rules_data.get('rules', []) if isinstance(loaded_rules_data, dict) else (loaded_rules_data if isinstance(loaded_rules_data, list) else [])
-        
-        if not rules_list:
-            return jsonify({
-                "success": False,
-                "error": "No rules available in the selected rules file."
-            }), 400
-        
-        # Convert list to dict format if needed
-        rules_dict = {}
-        for rule in rules_list:
-            rule_id = rule.get('id')
-            if rule_id:
-                rules_dict[rule_id] = rule
-        
-        logger.info(f"[COMPLIANCE REPORT] Reloaded {len(rules_dict)} rules from {rules_file}")
-        
-        # Pass fresh rules to generator
-        generator = ComplianceReportGenerator(rules=rules_dict)
-        report = generator.generate_report(graph)
-        
-        return jsonify({"success": True, "report": report}), 200
+                "error": f"Failed to load rules: {str(e)}"
+            }), 500
     
     except Exception as e:
         logger.error(f"Error generating compliance report: {e}")
@@ -2010,8 +2296,7 @@ def export_compliance_report_endpoint():
 def check_rules_compliance():
     """Check IFC rules compliance against regulatory rules.
     
-    Uses ONLY rules that have been explicitly imported by the user in this session.
-    Reloads rules from file each time to reflect any updates (deletions, modifications).
+    Uses latest rules from RulesVersionManager to reflect any updates (deletions, modifications).
     """
     try:
         body = request.get_json()
@@ -2020,36 +2305,28 @@ def check_rules_compliance():
         if not graph:
             return jsonify({"success": False, "error": "No graph provided"}), 400
         
-        # CRITICAL: Reload rules from file each time to reflect user updates
-        # This ensures rule deletions/modifications are immediately reflected
-        # Try custom_rules.json first (user-imported), fallback to enhanced-regulation-rules.json
-        custom_rules_file = Path(__file__).parent.parent / 'rules_config' / 'custom_rules.json'
-        default_rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
+        # Load latest rules from RulesVersionManager
+        rules_config_dir = Path(__file__).parent.parent / 'rules_config'
+        version_manager = RulesVersionManager(str(rules_config_dir))
         
-        # Determine which file to use
-        if custom_rules_file.exists():
-            rules_file = custom_rules_file
-            logger.info(f"[COMPLIANCE CHECK] Using custom rules from {rules_file}")
-        elif default_rules_file.exists():
-            rules_file = default_rules_file
-            logger.info(f"[COMPLIANCE CHECK] Using regulatory rules from {rules_file}")
-        else:
+        try:
+            rules_data, _ = version_manager.load_rules()
+            rules_list = rules_data.get('rules', [])
+            
+            if not rules_list:
+                return jsonify({
+                    "success": False, 
+                    "error": "No rules available in the current version.",
+                    "compliance": None
+                }), 400
+            
+            logger.info(f"[COMPLIANCE CHECK] Loaded {len(rules_list)} rules from RulesVersionManager (latest version)")
+            logger.info(f"[COMPLIANCE CHECK] Rule IDs: {[r.get('id', 'N/A') for r in rules_list[:5]]}")
+        except Exception as e:
+            logger.error(f"[COMPLIANCE CHECK] Error loading from RulesVersionManager: {e}")
             return jsonify({
-                "success": False, 
-                "error": "No rules found. Neither custom_rules.json nor enhanced-regulation-rules.json available.",
-                "compliance": None
-            }), 400
-        
-        # Load rules from file (fresh, not cached)
-        with open(rules_file, 'r', encoding='utf-8') as f:
-            loaded_rules_data = json.load(f)
-        
-        rules_list = loaded_rules_data.get('rules', []) if isinstance(loaded_rules_data, dict) else (loaded_rules_data if isinstance(loaded_rules_data, list) else [])
-        
-        if not rules_list:
-            return jsonify({
-                "success": False, 
-                "error": "No rules available in the selected rules file.",
+                "success": False,
+                "error": f"Failed to load rules: {str(e)}",
                 "compliance": None
             }), 400
         
@@ -2057,8 +2334,7 @@ def check_rules_compliance():
         engine = UnifiedComplianceEngine()
         engine.rules = rules_list
         
-        logger.info(f"[COMPLIANCE CHECK] Reloaded {len(engine.rules)} rules from {rules_file}")
-        logger.info(f"[COMPLIANCE CHECK] Rule IDs: {[r.get('id', 'N/A') for r in engine.rules[:5]]}")
+        logger.info(f"[COMPLIANCE CHECK] Using {len(engine.rules)} rules for compliance check")
         
         # Check compliance using check_graph to get detailed failure results with regulatory fields
         check_result = engine.check_graph(graph, rules=rules_list)
@@ -2146,56 +2422,22 @@ def validate_ifc_endpoint():
 def check_rules_status():
     """Check if regulatory rules are loaded and available.
     
-    This endpoint:
-    1. Checks if rules are in reasoning_engine.rules
-    2. If not, but rules exist on disk, auto-loads them
-    3. Returns current status
+    Uses RulesVersionManager to check the current version of rules.
     
     Query parameters:
     - refresh=true: Force reload rules from disk
     """
     try:
-        # Check if we should refresh/reload rules from disk
-        refresh = request.args.get('refresh', 'false').lower() == 'true'
+        # Load latest rules from RulesVersionManager
+        rules_config_dir = Path(__file__).parent.parent / 'rules_config'
+        version_manager = RulesVersionManager(str(rules_config_dir))
         
-        # Check if rules are in the reasoning_engine (user-imported rules)
-        rules_dict = reasoning_engine.rules if hasattr(reasoning_engine, 'rules') else {}
-        
-        # Convert dict to list if needed
-        if isinstance(rules_dict, dict):
-            rules_list = list(rules_dict.values())
-        else:
-            rules_list = rules_dict if rules_dict else []
+        rules_data, _ = version_manager.load_rules()
+        rules_list = rules_data.get('rules', [])
         
         rules_loaded = len(rules_list) > 0
         
-        # If refresh requested or no rules in memory but they exist on disk, reload them
-        if refresh or not rules_loaded:
-            from pathlib import Path
-            backend_dir = Path(__file__).parent
-            project_root = backend_dir.parent
-            custom_rules_path = project_root / "rules_config" / "custom_rules.json"
-            
-            if custom_rules_path.exists():
-                try:
-                    if refresh:
-                        logger.info(f"[CHECK-STATUS] Refresh requested. Reloading rules from {custom_rules_path}")
-                    else:
-                        logger.info(f"[CHECK-STATUS] Rules not in memory. Auto-loading from {custom_rules_path}")
-                    
-                    # Always clear before loading to ensure we get the current state from disk
-                    result = reasoning_engine.load_rules_from_file(str(custom_rules_path), rule_type='custom', clear_existing=True)
-                    if result.get('success'):
-                        logger.info(f"[CHECK-STATUS] ✓ Loaded {result['rules_loaded']} rules")
-                        # Update rules_list after loading
-                        rules_dict = reasoning_engine.rules if hasattr(reasoning_engine, 'rules') else {}
-                        if isinstance(rules_dict, dict):
-                            rules_list = list(rules_dict.values())
-                        else:
-                            rules_list = rules_dict if rules_dict else []
-                        rules_loaded = len(rules_list) > 0
-                except Exception as e:
-                    logger.warning(f"[CHECK-STATUS] Failed to load rules: {e}")
+        logger.info(f"[CHECK-STATUS] Rules loaded from RulesVersionManager: {rules_loaded} ({len(rules_list)} rules)")
         
         return jsonify({
             "success": True,
@@ -2800,7 +3042,9 @@ def validate_unified_config():
 
 @app.route("/api/config/check-mappings", methods=["POST"])
 def check_config_mappings():
-    """Check how many IFC elements are mapped to rules in the configuration.
+    """Check how many IFC elements are mapped to rules.
+    
+    Uses current rules from RulesVersionManager to get the latest mappings.
     
     Expects JSON POST with:
     - graph: The IFC graph object (from data layer)
@@ -2808,8 +3052,6 @@ def check_config_mappings():
     Returns statistics on element counts per element type and rule mapping coverage.
     """
     try:
-        from backend.unified_config_manager import get_config_manager
-        
         data = request.get_json()
         graph = data.get("graph") if data else None
         
@@ -2822,17 +3064,32 @@ def check_config_mappings():
         # Extract elements from the graph
         elements = graph.get("elements", {}) or {}
         
-        # Load the config to get mappings
-        manager = get_config_manager()
-        config = manager.load_config()
-        if not config:
+        # Load current rules from session (in-memory) or latest version
+        try:
+            rules_list = get_session_rules()
+        except Exception as e:
+            logger.error(f"[CHECK-MAPPINGS] Error loading rules from session: {e}")
             return jsonify({
                 "success": False,
-                "error": "Failed to load configuration"
+                "error": f"Failed to load rules: {str(e)}"
             }), 500
         
-        # config is the actual config dict, not wrapped in a response object
-        rule_mappings = config.get("rule_mappings", [])
+        # Create rule mappings from current rules based on their target IFC classes
+        rule_mappings = []
+        for rule in rules_list:
+            target = rule.get('target', {})
+            ifc_class = target.get('ifc_class', '')
+            if ifc_class:
+                # Map rule to its target IFC class
+                rule_mappings.append({
+                    'mapping_id': rule.get('id'),
+                    'rule_id': rule.get('id'),
+                    'rule_reference': {'rule_id': rule.get('id')},
+                    'element_type': ifc_class,
+                    'enabled': True
+                })
+        
+        logger.info(f"[CHECK-MAPPINGS] Loaded {len(rules_list)} rules, created {len(rule_mappings)} mappings")
         
         # Build mapping statistics
         mapping_stats = {}
@@ -2845,20 +3102,22 @@ def check_config_mappings():
         
         logger.info(f"IFC element types found: {list(total_elements_by_type.keys())}")
         
-        # Create normalized mapping (lowercase + singularize for common plurals)
+        # Create normalized mapping (lowercase + remove 'ifc' prefix + singularize for common plurals)
         def normalize_element_type(type_str):
-            """Normalize element type: lowercase and remove trailing 's' for common cases"""
+            """Normalize element type: lowercase, remove 'Ifc' prefix, and singularize"""
             normalized = type_str.lower()
+            # Remove 'ifc' prefix if present
+            if normalized.startswith('ifc'):
+                normalized = normalized[3:]
             # Remove trailing 's' for common plurals: doors->door, spaces->space, stairs->stair, etc.
             if normalized.endswith('s') and len(normalized) > 1:
-                # Keep singulars: "glass", "columns", "walls", "slabs", "windows"
-                # Remove 's': "doors"→"door", "spaces"→"space", "stairs"→"stair"
                 singular = normalized[:-1]  # Remove the 's'
                 return singular
             return normalized
         
+        # Normalize both element types from IFC and rule targets
         elements_by_type_normalized = {normalize_element_type(k): v for k, v in total_elements_by_type.items()}
-        logger.info(f"Normalized element types: {list(elements_by_type_normalized.keys())}")
+        logger.info(f"Normalized element types from IFC: {list(elements_by_type_normalized.keys())}")
         
         # For each rule mapping, count how many elements of that type exist
         for mapping in rule_mappings:
@@ -2866,17 +3125,18 @@ def check_config_mappings():
                 continue
             
             mapping_id = mapping.get("mapping_id", "unknown")
-            element_type = mapping.get("element_type", "").lower()  # Normalize to lowercase
+            element_type_raw = mapping.get("element_type", "")
+            element_type_normalized = normalize_element_type(element_type_raw)  # Normalize the rule's target
             rule_id = mapping.get("rule_reference", {}).get("rule_id", "")
             
-            # Case and plural-insensitive lookup
-            element_count = elements_by_type_normalized.get(element_type, 0)
-            logger.debug(f"Mapping {mapping_id}: looking for '{element_type}' -> found {element_count} elements")
+            # Look up normalized element count
+            element_count = elements_by_type_normalized.get(element_type_normalized, 0)
+            logger.debug(f"Mapping {mapping_id}: rule targets '{element_type_raw}' -> normalized '{element_type_normalized}' -> found {element_count} elements")
             
             mapping_stats[mapping_id] = {
                 "mapping_id": mapping_id,
                 "rule_id": rule_id,
-                "element_type": element_type,
+                "element_type": element_type_raw,
                 "elements_in_ifc": element_count,
                 "enabled": mapping.get("enabled", True)
             }
@@ -3269,22 +3529,10 @@ def validate_mappings_endpoint():
 
 @app.route("/api/rules/available", methods=["GET"])
 def get_available_rules():
-    """Get available regulatory rules from enhanced-regulation-rules.json."""
+    """Get available regulatory rules from session or current version."""
     try:
-        rules_file = Path(__file__).parent.parent / 'rules_config' / 'enhanced-regulation-rules.json'
-        
-        if not rules_file.exists():
-            logger.warning(f"Rules file not found: {rules_file}")
-            return jsonify({
-                "success": False,
-                "error": "Regulatory rules file not found",
-                "rules": []
-            }), 404
-        
-        with open(rules_file, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
-        rules = data.get('rules', [])
+        # Get rules from session (in-memory) or latest version
+        rules = get_session_rules()
         
         return jsonify({
             "success": True,
@@ -3320,6 +3568,12 @@ register_trm_endpoints(app, model_version_manager)
 
 # Register Model Management endpoints
 register_model_management_endpoints(app, model_version_manager)
+
+# Register Rules Versioning endpoints
+app.register_blueprint(rules_versioning_bp)
+
+# Register Rules Sync endpoints
+app.register_blueprint(rules_sync_bp)
 
 
 if __name__ == "__main__":
