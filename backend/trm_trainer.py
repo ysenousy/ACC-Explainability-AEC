@@ -24,6 +24,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import json
 import logging
+import time
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
@@ -51,6 +52,9 @@ class TrainingConfig:
     device: str = "cpu"
     checkpoint_dir: str = "checkpoints/trm"
     verbose: bool = True
+    test_split: float = 0.1
+    use_weighted_loss: bool = True
+    min_samples_warning: int = 300
     
     def __post_init__(self):
         """Create checkpoint directory if it doesn't exist"""
@@ -166,10 +170,20 @@ class TRMTrainer:
         self.optimizer = None
         self.scheduler = None
         self.loss_fn = nn.CrossEntropyLoss()
+        self.class_weights = None
         
         self.training_history: List[TrainingMetrics] = []
         self.best_val_loss = float('inf')
         self.epochs_without_improvement = 0
+        self.training_duration_seconds = 0.0
+        
+        # Track best metrics for performance summary
+        self.best_train_accuracy = 0.0
+        self.best_precision = 0.0
+        self.best_recall = 0.0
+        self.best_val_accuracy = 0.0
+        self.train_fail_count = 0
+        self.train_pass_count = 0
         
         logger.info(f"Initialized TRMTrainer on device: {self.device}")
     
@@ -190,6 +204,25 @@ class TRMTrainer:
             patience=5
         )
     
+    def _compute_class_weights(self, labels: List[int]):
+        """Compute class weights for imbalanced data"""
+        if not self.config.use_weighted_loss:
+            return None
+        
+        unique, counts = np.unique(labels, return_counts=True)
+        total = len(labels)
+        weights = {}
+        for cls, count in zip(unique, counts):
+            weight = total / (len(unique) * count)
+            weights[cls] = weight
+        
+        class_weights = torch.zeros(2)
+        for cls in [0, 1]:
+            class_weights[cls] = weights.get(cls, 1.0)
+        
+        logger.info(f"Class weights: {class_weights.tolist()}")
+        return class_weights.to(self.device)
+    
     def _train_epoch(self, train_loader: DataLoader) -> Tuple[float, np.ndarray, np.ndarray]:
         """
         Train for one epoch
@@ -208,7 +241,13 @@ class TRMTrainer:
             # Forward pass
             self.optimizer.zero_grad()
             logits, _ = self.model(x)
-            loss = self.loss_fn(logits, y)
+            
+            # Use weighted loss for class imbalance
+            if self.class_weights is not None:
+                weighted_loss_fn = nn.CrossEntropyLoss(weight=self.class_weights)
+                loss = weighted_loss_fn(logits, y)
+            else:
+                loss = self.loss_fn(logits, y)
             
             # Backward pass
             loss.backward()
@@ -345,6 +384,34 @@ class TRMTrainer:
         if self.optimizer is None:
             self._setup_optimizer()
         
+        # Check dataset size and class balance
+        total_samples = len(train_samples)
+        if val_samples:
+            total_samples += len(val_samples)
+        
+        if total_samples < self.config.min_samples_warning:
+            logger.warning(
+                f"⚠️  WARNING: Only {total_samples} samples (recommended minimum: {self.config.min_samples_warning}). "
+                f"Model will likely overfit. Add more IFC files and run compliance checks."
+            )
+        
+        # Check class balance
+        label_counts = np.bincount(np.array(train_labels))
+        if len(label_counts) == 1:
+            logger.error(
+                f"❌ CRITICAL: All {len(train_labels)} samples are class {np.argmax(label_counts)}! "
+                f"Model will achieve 100% by predicting this class. Need BOTH pass and fail cases."
+            )
+        else:
+            logger.info(f"✅ Class distribution: {label_counts[0]} fails, {label_counts[1]} passes")
+        
+        # Store class counts for metrics
+        self.train_fail_count = int(label_counts[0]) if len(label_counts) > 0 else 0
+        self.train_pass_count = int(label_counts[1]) if len(label_counts) > 1 else 0
+        
+        # Compute class weights for imbalanced data
+        self.class_weights = self._compute_class_weights(train_labels)
+        
         # If validation data not provided, use validation_split
         if val_samples is None:
             split_idx = int(len(train_samples) * (1 - self.config.validation_split))
@@ -377,6 +444,9 @@ class TRMTrainer:
         logger.info(f"Training for {self.config.num_epochs} epochs (resume from epoch {start_epoch})")
         logger.info(f"Train size: {len(train_dataset)}, Val size: {len(val_dataset)}")
         
+        # Record training start time
+        training_start_time = time.time()
+        
         # Training loop
         for epoch in range(start_epoch, self.config.num_epochs):
             logger.info(f"\nEpoch {epoch+1}/{self.config.num_epochs}")
@@ -388,6 +458,15 @@ class TRMTrainer:
             # Validate
             val_loss, val_preds, val_labels_np = self._validate_epoch(val_loader)
             val_metrics = self._compute_metrics(val_preds, val_labels_np)
+            
+            # Track best metrics
+            if train_metrics['accuracy'] > self.best_train_accuracy:
+                self.best_train_accuracy = train_metrics['accuracy']
+            
+            if val_metrics['accuracy'] > self.best_val_accuracy:
+                self.best_val_accuracy = val_metrics['accuracy']
+                self.best_precision = val_metrics['precision']
+                self.best_recall = val_metrics['recall']
             
             # Create metrics object
             metrics = TrainingMetrics(
@@ -436,7 +515,12 @@ class TRMTrainer:
                 )
                 break
         
+        # Record training end time
+        training_end_time = time.time()
+        self.training_duration_seconds = training_end_time - training_start_time
+        
         logger.info(f"Training completed. Best val loss: {self.best_val_loss:.4f}")
+        logger.info(f"Total training time: {self.training_duration_seconds:.2f} seconds ({self.training_duration_seconds/60:.2f} minutes)")
         return self.training_history
     
     def save_metrics_to_file(self, filepath: str):
@@ -456,7 +540,7 @@ class TRMTrainer:
             logger.warning("No best checkpoint found")
     
     def get_training_summary(self) -> Dict[str, Any]:
-        """Get summary of training"""
+        """Get summary of training with performance metrics"""
         if not self.training_history:
             return {"error": "No training history"}
         
@@ -465,14 +549,51 @@ class TRMTrainer:
             key=lambda m: m.val_loss if m.val_loss else float('inf')
         )
         
+        # Calculate overfitting indicator
+        overfitting_indicator = round(self.best_train_accuracy - self.best_val_accuracy, 4)
+        
+        # Calculate class balance ratio
+        if self.train_fail_count > 0:
+            balance_ratio = round(self.train_pass_count / self.train_fail_count, 2)
+        else:
+            balance_ratio = 0
+        
+        # Early stopping info
+        early_stopping_triggered = self.epochs_without_improvement > 0
+        
         return {
+            # Basic training info
             "total_epochs": len(self.training_history),
             "best_epoch": best_epoch.epoch,
+            
+            # Loss metrics
             "best_val_loss": round(best_epoch.val_loss, 4) if best_epoch.val_loss else None,
-            "best_val_accuracy": round(best_epoch.val_accuracy, 4) if best_epoch.val_accuracy else None,
-            "best_val_f1": round(best_epoch.val_f1, 4) if best_epoch.val_f1 else None,
             "final_train_loss": round(self.training_history[-1].loss, 4),
             "final_val_loss": round(self.training_history[-1].val_loss, 4) if self.training_history[-1].val_loss else None,
+            
+            # Accuracy metrics (5 essential metrics)
+            "best_train_accuracy": round(self.best_train_accuracy, 4),  # Essential metric #4
+            "best_val_accuracy": round(self.best_val_accuracy, 4),
+            "overfitting_indicator": overfitting_indicator,  # Essential metric #1
+            
+            # Precision & Recall (Essential metric #3)
+            "best_precision": round(self.best_precision, 4),
+            "best_recall": round(self.best_recall, 4),
+            "best_val_f1": round(best_epoch.val_f1, 4) if best_epoch.val_f1 else None,
+            
+            # Class distribution (Essential metric #2)
+            "train_fail_count": self.train_fail_count,
+            "train_pass_count": self.train_pass_count,
+            "balance_ratio": balance_ratio,
+            
+            # Early stopping info (Essential metric #5)
+            "early_stopping_triggered": early_stopping_triggered,
+            "epochs_without_improvement": self.epochs_without_improvement,
+            
+            # Training duration
+            "training_duration_seconds": round(self.training_duration_seconds, 2),
+            "training_duration_minutes": round(self.training_duration_seconds / 60, 2),
+            
             "timestamp": datetime.now().isoformat()
         }
 

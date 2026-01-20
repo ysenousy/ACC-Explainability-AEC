@@ -3,7 +3,7 @@ import { CheckCircle, BookOpen, Plus, AlertCircle, AlertTriangle, Info, External
 import RuleCatalogueModal from './RuleCatalogueModal';
 import RuleManagementPanel from './RuleManagementPanel';
 
-function RuleLayerView({ graph }) {
+function RuleLayerView({ graph, onRulesUpdated }) {
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showManagement, setShowManagement] = useState(false);
   const [confirmedRules, setConfirmedRules] = useState([]);
@@ -11,6 +11,9 @@ function RuleLayerView({ graph }) {
 
   const handleConfirmRules = (rules) => {
     setConfirmedRules(rules);
+    if (onRulesUpdated) {
+      onRulesUpdated(rules);
+    }
     setShowCatalogue(false);
     // Don't close management panel here - let user control it
   };
@@ -19,6 +22,9 @@ function RuleLayerView({ graph }) {
     // When rules are saved, refresh the confirmed rules display
     if (updatedRules && Array.isArray(updatedRules)) {
       setConfirmedRules(updatedRules);
+      if (onRulesUpdated) {
+        onRulesUpdated(updatedRules);
+      }
     }
     // Trigger a refresh by incrementing the refresh counter
     setRefreshTrigger(prev => prev + 1);

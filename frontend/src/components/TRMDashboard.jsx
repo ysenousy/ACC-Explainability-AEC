@@ -46,9 +46,10 @@ const TRMDashboard = () => {
     try {
       const response = await fetch('/api/trm/versions');
       const data = await response.json();
-      setVersions(data.versions);
+      setVersions(data.versions || []);
     } catch (error) {
       console.error('Error fetching versions:', error);
+      setVersions([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -58,12 +59,13 @@ const TRMDashboard = () => {
     try {
       const response = await fetch('/api/trm/versions/best');
       const data = await response.json();
-      if (data.version) {
+      if (data && data.version) {
         setBestVersion(data.version.version_id);
         setBestVersionData(data.version);
       }
     } catch (error) {
       console.error('Error fetching best version:', error);
+      // Best version is optional, so don't error out
     }
   };
 
@@ -72,10 +74,12 @@ const TRMDashboard = () => {
     try {
       const response = await fetch(`/api/trm/versions/${versionId}`);
       const data = await response.json();
-      setSelectedVersion(data.version);
-      setTrainingHistory(data.training_history);
+      setSelectedVersion(data.version || null);
+      setTrainingHistory(data.training_history || []);
     } catch (error) {
       console.error('Error fetching version detail:', error);
+      setSelectedVersion(null);
+      setTrainingHistory([]);
     } finally {
       setLoading(false);
     }
@@ -103,10 +107,11 @@ const TRMDashboard = () => {
         body: JSON.stringify({ version_ids: selectedForComparison })
       });
       const data = await response.json();
-      setComparison(data);
+      setComparison(data || {});
       setActiveTab('comparison');
     } catch (error) {
       console.error('Error comparing versions:', error);
+      setComparison({});
     } finally {
       setLoading(false);
     }
@@ -262,7 +267,18 @@ const TRMDashboard = () => {
         })
       });
 
-      const trainData = await trainResponse.json();
+      // Better error handling for response parsing
+      let trainData;
+      try {
+        trainData = await trainResponse.json();
+      } catch (parseErr) {
+        // If response is not JSON, it's likely a proxy error or server restart
+        const responseText = await trainResponse.text();
+        console.error('Failed to parse response as JSON:', parseErr);
+        console.error('Response text:', responseText);
+        throw new Error(`Server error or restart during training. Please check backend logs. Response: ${responseText.substring(0, 100)}`);
+      }
+      
       console.log('Train response status:', trainResponse.status);
       console.log('Train response data:', trainData);
       
@@ -492,26 +508,172 @@ const TRMDashboard = () => {
           {/* Performance Metrics Cards */}
           <div className="workflow-section">
             <h3>Performance Metrics</h3>
-            <div className="workflow-steps">
+            
+            {/* Key Metrics Row */}
+            <div className="workflow-steps" style={{ marginBottom: '1.5rem' }}>
               <div className="step">
-                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Accuracy</div>
+                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Val Accuracy</div>
                 <div style={{ color: '#10b981', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
                   {(selectedVersion.performance_metrics?.best_val_accuracy * 100).toFixed(2)}%
                 </div>
               </div>
               <div className="step">
-                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Loss</div>
+                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Train Accuracy</div>
+                <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
+                  {(selectedVersion.performance_metrics?.best_train_accuracy * 100).toFixed(2)}%
+                </div>
+              </div>
+              <div className="step">
+                <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Val Loss</div>
                 <div style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
                   {selectedVersion.performance_metrics?.best_val_loss?.toFixed(4)}
                 </div>
               </div>
               <div className="step">
                 <div style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0 0 0.5rem 0' }}>Training Time</div>
-                <div style={{ color: '#3b82f6', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
-                  {(selectedVersion.training_duration_seconds / 60).toFixed(1)}m
+                <div style={{ color: '#8b5cf6', fontSize: '2rem', fontWeight: '700', margin: 0 }}>
+                  {selectedVersion.performance_metrics?.training_duration_minutes?.toFixed(2)}m
                 </div>
               </div>
             </div>
+
+            {/* Detailed Metrics Table */}
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              background: 'white',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              overflow: 'hidden'
+            }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Metric</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Value</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Accuracy Metrics */}
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Precision</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#06b6d4' }}>
+                    {(selectedVersion.performance_metrics?.best_precision * 100).toFixed(2)}%
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    True positives / (true positives + false positives)
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Recall</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#06b6d4' }}>
+                    {(selectedVersion.performance_metrics?.best_recall * 100).toFixed(2)}%
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    True positives / (true positives + false negatives)
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>F1 Score</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#06b6d4' }}>
+                    {selectedVersion.performance_metrics?.best_val_f1?.toFixed(4)}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Harmonic mean of precision and recall
+                  </td>
+                </tr>
+
+                {/* Overfitting */}
+                <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#fafafa' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Overfitting Indicator</td>
+                  <td style={{ 
+                    padding: '1rem', 
+                    fontSize: '1.125rem', 
+                    fontWeight: '700', 
+                    color: selectedVersion.performance_metrics?.overfitting_indicator > 0.1 ? '#ef4444' : '#10b981'
+                  }}>
+                    {(selectedVersion.performance_metrics?.overfitting_indicator * 100).toFixed(2)}%
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Train accuracy - Validation accuracy (lower is better)
+                  </td>
+                </tr>
+
+                {/* Class Distribution */}
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>FAIL Samples</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#ef4444' }}>
+                    {selectedVersion.performance_metrics?.train_fail_count}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Number of compliance failures in training set
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>PASS Samples</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#10b981' }}>
+                    {selectedVersion.performance_metrics?.train_pass_count}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Number of compliance passes in training set
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Balance Ratio</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#8b5cf6' }}>
+                    {selectedVersion.performance_metrics?.balance_ratio?.toFixed(2)}:1
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Pass samples / Fail samples (class balance)
+                  </td>
+                </tr>
+
+                {/* Training Process */}
+                <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#fafafa' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Early Stopping</td>
+                  <td style={{ 
+                    padding: '1rem', 
+                    fontSize: '1.125rem', 
+                    fontWeight: '700', 
+                    color: selectedVersion.performance_metrics?.early_stopping_triggered ? '#3b82f6' : '#6b7280'
+                  }}>
+                    {selectedVersion.performance_metrics?.early_stopping_triggered ? '✓ Yes' : '✗ No'}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Training stopped early due to no improvement
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Epochs Without Improvement</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#8b5cf6' }}>
+                    {selectedVersion.performance_metrics?.epochs_without_improvement || 0}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Epochs since best validation loss
+                  </td>
+                </tr>
+
+                {/* Loss Metrics */}
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Final Train Loss</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#f59e0b' }}>
+                    {selectedVersion.performance_metrics?.final_train_loss?.toFixed(4)}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Training loss at last epoch
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>Final Val Loss</td>
+                  <td style={{ padding: '1rem', fontSize: '1.125rem', fontWeight: '700', color: '#f59e0b' }}>
+                    {selectedVersion.performance_metrics?.final_val_loss?.toFixed(4)}
+                  </td>
+                  <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                    Validation loss at last epoch
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           
           <div className="workflow-section">
@@ -590,23 +752,23 @@ const TRMDashboard = () => {
             </div>
           </div>
           
-          {Object.keys(comparison.metric_differences).length > 0 && (
+          {comparison && Object.keys(comparison.metric_differences || {}).length > 0 && (
             <div className="workflow-section">
               <h3>Metric Differences</h3>
               <pre style={{ background: 'white', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid #e5e7eb' }}>
                 {JSON.stringify(comparison.metric_differences, null, 2)}
               </pre>
             </div>
-          )}
+          )}}
           
-          {Object.keys(comparison.config_differences).length > 0 && (
+          {comparison && Object.keys(comparison.config_differences || {}).length > 0 && (
             <div className="workflow-section">
               <h3>Config Differences</h3>
               <pre style={{ background: 'white', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid #e5e7eb' }}>
                 {JSON.stringify(comparison.config_differences, null, 2)}
               </pre>
             </div>
-          )}
+          )}}
         </div>
       )}
 

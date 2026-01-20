@@ -381,6 +381,46 @@ class ReasoningService {
       throw err;
     }
   }
+
+  /**
+   * Get AI-powered explanation using TRM model
+   * 
+   * @param {Object} data - Contains element, failure, and rule
+   * @returns {Object} AI explanation with prediction, confidence, and reasoning steps
+   */
+  async explainWithAI(data) {
+    try {
+      console.log('explainWithAI request:', JSON.stringify(data, null, 2));
+      
+      const response = await fetch(`${API_BASE}/api/ai-assistant/explain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      console.log('explainWithAI response status:', response.status);
+      console.log('explainWithAI response headers:', {
+        'content-type': response.headers.get('content-type'),
+        'content-length': response.headers.get('content-length')
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('explainWithAI HTTP error:', response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('explainWithAI result:', result);
+      return result;
+    } catch (error) {
+      console.error('AI explanation error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to get AI explanation'
+      };
+    }
+  }
 }
 
 export default new ReasoningService();

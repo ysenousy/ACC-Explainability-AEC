@@ -34,6 +34,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'reasoning-impact', label: 'Impact Assessment', icon: BarChart3, description: 'Quantifies scope and severity of failures' },
       { id: 'reasoning-fix', label: 'How To Fix', icon: Settings, description: 'Provides tiered recommendations' },
       { id: 'trm-model', label: 'Train Model', icon: Brain, description: 'Manage model versions and training history' },
+      { id: 'ai-assistant', label: 'AI Assistant', icon: Brain, description: 'Get AI-powered explanations using TRM model' },
     ],
   };
 

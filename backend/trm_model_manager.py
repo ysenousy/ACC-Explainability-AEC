@@ -322,6 +322,48 @@ class ModelVersionManager:
             "exported_at": datetime.utcnow().isoformat()
         }
     
+    def get_all_versions(self) -> List[Dict[str, Any]]:
+        """
+        Get all available versions (alias for list_versions with no limit)
+        
+        Returns:
+            List of all version metadata dicts
+        """
+        versions = self._load_versions()
+        return sorted(
+            versions.values(),
+            key=lambda v: v['created_at'],
+            reverse=True
+        )
+    
+    def activate_version(self, version_id: str) -> bool:
+        """
+        Activate a specific model version (mark as active for inference)
+        
+        Args:
+            version_id: Version ID to activate
+        
+        Returns:
+            Success boolean
+        """
+        versions = self._load_versions()
+        
+        if version_id not in versions:
+            logger.warning(f"Version {version_id} not found")
+            return False
+        
+        # Mark this version as active
+        versions[version_id]['is_active'] = True
+        
+        # Deactivate others
+        for v in versions.values():
+            if v['version_id'] != version_id:
+                v['is_active'] = False
+        
+        self._save_versions(versions)
+        logger.info(f"Activated version {version_id}")
+        return True
+    
     def _load_versions(self) -> Dict[str, Any]:
         """Load versions manifest"""
         if not self.versions_file.exists():

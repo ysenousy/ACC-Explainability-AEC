@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 
-function RuleCheckView({ graph }) {
+function RuleCheckView({ graph, onResultsUpdated }) {
   const [complianceResults, setComplianceResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -66,6 +66,9 @@ function RuleCheckView({ graph }) {
           const data = await response.json();
           if (data.success) {
             setComplianceResults(data.compliance);
+            if (onResultsUpdated) {
+              onResultsUpdated(data.compliance);
+            }
           } else {
             setError(data.error || 'Failed to check compliance');
           }
@@ -295,9 +298,9 @@ function RuleCheckView({ graph }) {
             )}
 
             {!loading && complianceResults && (
-          <>
-            {/* Summary Cards */}
-            <div style={{
+              <>
+                {/* Summary Cards */}
+                <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
               gap: '1rem',
@@ -647,8 +650,9 @@ function RuleCheckView({ graph }) {
                 ))
               )}
             </div>
-          </>
-        )}
+              </>
+            )}
+
           </>
         )}
       </div>

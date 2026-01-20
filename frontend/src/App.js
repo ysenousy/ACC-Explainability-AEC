@@ -18,6 +18,7 @@ import ResultsView from './components/ResultsView';
 import ComplianceReportView from './components/ComplianceReportView';
 import UnifiedConfigurationView from './components/UnifiedConfigurationView';
 import TRMDashboard from './components/TRMDashboard';
+import AIAssistantView from './components/AIAssistantView';
 import './App.css';
 
 function App() {
@@ -35,6 +36,10 @@ function App() {
   
   // Stage 3: Graph built (ready to explore)
   const [currentGraph, setCurrentGraph] = useState(null);
+  
+  // Compliance and Rules data for AI Assistant
+  const [complianceResults, setComplianceResults] = useState(null);
+  const [rulesList, setRulesList] = useState(null);
   
   // Loading states
   const [loading, setLoading] = useState(false);
@@ -280,13 +285,14 @@ function App() {
               {activeLayer === 'model-visualization' && <ModelVisualizationView graph={currentGraph} />}
               {activeLayer === 'export' && <ExportView graph={currentGraph} />}
               {activeLayer === 'validation' && <DataValidationView graph={currentGraph} />}
-              {activeLayer === 'rule-check' && <RuleCheckView graph={currentGraph} />}
-              {activeLayer === 'rule-layer' && <RuleLayerView graph={currentGraph} />}
+              {activeLayer === 'rule-check' && <RuleCheckView graph={currentGraph} onResultsUpdated={setComplianceResults} />}
+              {activeLayer === 'rule-layer' && <RuleLayerView graph={currentGraph} onRulesUpdated={setRulesList} />}
               {activeLayer === 'rule-config' && <UnifiedConfigurationView graph={currentGraph} />}
               {(activeLayer === 'reasoning-why' || activeLayer === 'reasoning-impact' || activeLayer === 'reasoning-fix') && (
                 <ReasoningView graph={currentGraph} activeTab={activeLayer.replace('reasoning-', '')} />
               )}
               {activeLayer === 'trm-model' && <TRMDashboard />}
+              {activeLayer === 'ai-assistant' && <AIAssistantView currentGraph={currentGraph} complianceResults={complianceResults} rulesList={rulesList} />}
               {activeLayer === 'results' && <ResultsView graph={currentGraph} />}
               {activeLayer === 'compliance-report' && <ComplianceReportView graph={currentGraph} />}
             </div>

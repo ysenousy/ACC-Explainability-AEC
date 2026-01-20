@@ -26,6 +26,7 @@ from backend.rule_config_manager import (
     export_rules,
 )
 from reasoning_layer.reasoning_engine import ReasoningEngine
+from reasoning_layer.ai_assistant import AIAssistant
 from backend.trm_api import register_trm_endpoints
 from backend.trm_model_manager import ModelVersionManager
 from backend.trm_model_management_api import register_model_management_endpoints
@@ -38,7 +39,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+# Enable CORS for React frontend with permissive configuration
+CORS(app, 
+     supports_credentials=True,
+     allow_headers=['Content-Type', 'Authorization'],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+)
 
 # Custom JSON provider to handle UTF-8 properly
 class UTF8JSONProvider(DefaultJSONProvider):
@@ -85,6 +91,15 @@ reasoning_engine = ReasoningEngine(
 
 # Store reasoning engine in app config so other blueprints can access it
 app.config["reasoning_engine"] = reasoning_engine
+
+# Initialize AI Assistant for TRM-based explanations
+try:
+    ai_assistant = AIAssistant()
+    app.config["ai_assistant"] = ai_assistant
+    logger.info("AI Assistant initialized successfully")
+except Exception as e:
+    logger.warning(f"AI Assistant initialization failed: {e}")
+    ai_assistant = None
 
 # Track if rules have been imported in this session
 rules_imported_in_session = False
@@ -3561,6 +3576,107 @@ def server_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 
+# ==================== AI ASSISTANT ENDPOINT ====================
+
+@app.route("/api/ai-assistant/explain", methods=["POST"])
+def ai_explain():
+    """
+    AI-powered explanation endpoint using TRM model.
+    
+    Generates explanations for compliance failures using the trained
+    TinyRecursiveReasoner model with confidence scores and reasoning traces.
+    
+    Request body:
+    {
+        "element": {...},
+        "failure": {...},
+        "rule": {...}
+    }
+    
+    Response:
+    {
+        "success": bool,
+        "prediction": "PASS" or "FAIL",
+        "confidence": float (0-1),
+        "explanation": str,
+        "reasoning_steps": [str],
+        "steps_taken": int,
+        "converged": bool,
+        "model_version": str
+    }
+    """
+    try:
+        # Check if AI Assistant is available
+        ai_assistant = app.config.get("ai_assistant")
+        if not ai_assistant:
+            logger.error("AI Assistant not configured")
+            return jsonify({
+                "success": False,
+                "error": "AI Assistant not available"
+            }), 503
+        
+        # Get request data
+        data = request.get_json()
+        if not data:
+            logger.error("AI explain endpoint: empty request body")
+            return jsonify({
+                "success": False,
+                "error": "Request body is empty"
+            }), 400
+        
+        # Extract element, failure, rule from request
+        element = data.get("element")
+        failure = data.get("failure")
+        rule = data.get("rule")
+        
+        logger.info(f"AI explain request: element={element is not None}, failure={failure is not None}, rule={rule is not None}")
+        
+        if not all([element, failure, rule]):
+            missing = []
+            if not element: missing.append("element")
+            if not failure: missing.append("failure")
+            if not rule: missing.append("rule")
+            logger.error(f"AI explain endpoint: Missing required fields: {missing}")
+            return jsonify({
+                "success": False,
+                "error": f"Missing required fields: {', '.join(missing)}"
+            }), 400
+        
+        # Generate AI explanation
+        logger.info("Calling ai_assistant.explain_with_ai...")
+        result = ai_assistant.explain_with_ai(
+            element=element,
+            failure=failure,
+            rule=rule
+        )
+        
+        logger.info(f"AI explain result: success={result.get('success')}")
+        
+        # Ensure all fields are JSON serializable
+        if result.get("success"):
+            # Make sure reasoning_steps is a list of strings
+            if "reasoning_steps" in result:
+                result["reasoning_steps"] = [str(s) for s in result.get("reasoning_steps", [])]
+            result["confidence"] = float(result.get("confidence", 0))
+            result["steps_taken"] = int(result.get("steps_taken", 0))
+            result["converged"] = bool(result.get("converged", False))
+        
+        # Return result
+        status_code = 200 if result.get("success") else 400
+        logger.info(f"AI explain endpoint returning: status={status_code}, success={result.get('success')}")
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        logger.exception(f"AI explain endpoint error: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# ==================== END AI ASSISTANT ENDPOINT ====================
+
+
 # Register TRM API endpoints
 from backend.trm_model_manager import ModelVersionManager
 model_version_manager = ModelVersionManager(Path("backend/model_versions"))
@@ -3578,4 +3694,5 @@ app.register_blueprint(rules_sync_bp)
 
 if __name__ == "__main__":
     logger.info("Starting IFC Explorer API server...")
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # Note: use_reloader=False prevents Werkzeug from restarting during long-running requests like training
+    app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)
