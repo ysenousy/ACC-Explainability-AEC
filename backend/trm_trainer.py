@@ -459,6 +459,12 @@ class TRMTrainer:
             val_loss, val_preds, val_labels_np = self._validate_epoch(val_loader)
             val_metrics = self._compute_metrics(val_preds, val_labels_np)
             
+            # DEBUG: Check predictions distribution
+            unique_train_preds, train_pred_counts = np.unique(train_preds, return_counts=True)
+            unique_val_preds, val_pred_counts = np.unique(val_preds, return_counts=True)
+            logger.debug(f"Train predictions distribution: {dict(zip(unique_train_preds, train_pred_counts))}")
+            logger.debug(f"Val predictions distribution: {dict(zip(unique_val_preds, val_pred_counts))}")
+            
             # Track best metrics
             if train_metrics['accuracy'] > self.best_train_accuracy:
                 self.best_train_accuracy = train_metrics['accuracy']
@@ -486,6 +492,14 @@ class TRMTrainer:
             
             # Logging
             if self.config.verbose:
+                logger.info(
+                    f"Train Loss: {train_loss:.4f}, Acc: {train_metrics['accuracy']:.4f}, "
+                    f"Precision: {train_metrics['precision']:.4f}, Recall: {train_metrics['recall']:.4f}, "
+                    f"F1: {train_metrics['f1']:.4f} | "
+                    f"Val Loss: {val_loss:.4f}, Acc: {val_metrics['accuracy']:.4f}, "
+                    f"F1: {val_metrics['f1']:.4f}"
+                )
+            else:
                 logger.info(
                     f"Train Loss: {train_loss:.4f}, Acc: {train_metrics['accuracy']:.4f}, "
                     f"F1: {train_metrics['f1']:.4f} | "

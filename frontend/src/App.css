@@ -693,6 +693,10 @@ label {
   border-top: 3px solid #8b5cf6;
 }
 
+.sidebar-group.sidebar-provenance {
+  border-top: 3px solid #f59e0b;
+}
+
 .sidebar-group-header {
   display: flex;
   align-items: center;

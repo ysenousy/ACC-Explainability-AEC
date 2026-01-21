@@ -62,6 +62,7 @@ class AIAssistant:
         """
         try:
             # Extract features for TRM
+            # Note: Feature extraction now handles missing data gracefully with sensible defaults
             features = self._extract_features(element, failure, rule)
             
             if features is None:
@@ -118,18 +119,49 @@ class AIAssistant:
         """
         try:
             # Reuse existing feature extraction from trm_data_extractor
-            from backend.trm_data_extractor import TRMDataExtractor
+            import sys
+            import os
+            import torch
             
-            extractor = TRMDataExtractor()
-            features = extractor.extract_features(element, failure, rule)
+            # Add parent directory to path to find backend module
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if project_root not in sys.path:
+                sys.path.insert(0, project_root)
             
-            return features
+            from backend.trm_data_extractor import ComplianceResultToTRMSample
             
-        except ImportError:
-            self.logger.warning("TRMDataExtractor not available, using fallback feature extraction")
+            # Prepare compliance result dict
+            compliance_result = {
+                "element_data": element,
+                "rule_data": rule,
+                "compliance_result": failure,
+                "element_guid": element.get("guid", "unknown"),
+                "rule_id": rule.get("id", rule.get("name", "unknown"))
+            }
+            
+            converter = ComplianceResultToTRMSample()
+            sample = converter.convert(compliance_result)
+            
+            # Get features from sample and combine into 320-dim vector
+            element_features = sample.get("element_features", [])
+            rule_features = sample.get("rule_features", [])
+            context_features = sample.get("context_features", [])
+            
+            # Combine into single 320-dim vector
+            all_features = element_features + rule_features + context_features
+            
+            # Pad/trim to exactly 320 dimensions
+            import numpy as np
+            features_array = np.zeros(320, dtype=np.float32)
+            features_array[:len(all_features)] = all_features[:320]
+            
+            return torch.from_numpy(features_array).float()
+            
+        except ImportError as ie:
+            self.logger.warning(f"TRM feature extraction not available ({ie}), using fallback feature extraction")
             return self._fallback_extract_features(element, failure, rule)
         except Exception as e:
-            self.logger.error(f"Feature extraction error: {e}")
+            self.logger.error(f"Feature extraction error: {e}", exc_info=True)
             return None
     
     def _fallback_extract_features(self,

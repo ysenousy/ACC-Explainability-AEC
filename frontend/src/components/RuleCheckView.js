@@ -191,7 +191,10 @@ function RuleCheckView({ graph, onResultsUpdated }) {
     return filtered;
   };
 
-  const filteredRules = filterRules(complianceResults?.rules || []);
+  const filteredRules = filterRules(complianceResults?.rules || []).map(rule => ({
+    ...rule,
+    pass_rate: rule.pass_rate !== undefined ? rule.pass_rate : (rule.passed && rule.components_evaluated) ? (rule.passed / rule.components_evaluated * 100) : 0
+  }));
 
   const toggleRuleExpanded = (ruleId) => {
     setExpandedRules(prev => ({

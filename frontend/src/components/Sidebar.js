@@ -6,6 +6,7 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
     dataLayer: true,
     ruleLayer: true,
     reasoningLayer: true,
+    provenanceLayer: true,
   });
 
   const toggleGroup = (group) => {
@@ -36,12 +37,18 @@ function Sidebar({ currentGraph, onLayerSelect, activeLayer }) {
       { id: 'trm-model', label: 'Train Model', icon: Brain, description: 'Manage model versions and training history' },
       { id: 'ai-assistant', label: 'AI Assistant', icon: Brain, description: 'Get AI-powered explanations using TRM model' },
     ],
+    provenanceLayer: [
+      { id: 'provenance-tracking', label: 'Provenance Tracking', icon: Network, description: 'Track data lineage and origins' },
+      { id: 'audit-trail', label: 'Audit Trail', icon: FileText, description: 'View complete audit history' },
+      { id: 'data-lineage', label: 'Data Lineage', icon: Database, description: 'Visualize data transformations' },
+    ],
   };
 
   const groups = [
     { key: 'dataLayer', label: '📊 Data Layer', color: 'sidebar-model' },
     { key: 'ruleLayer', label: '✅ Rules Layer', color: 'sidebar-compliance' },
     { key: 'reasoningLayer', label: '🧠 Reasoning Layer', color: 'sidebar-reasoning' },
+    { key: 'provenanceLayer', label: '🔍 Provenance Layer', color: 'sidebar-provenance' },
   ];
 
   const handleLayerClick = (layerId) => {

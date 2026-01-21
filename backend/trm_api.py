@@ -62,6 +62,18 @@ class TRMSystem:
         self.dataset_path = Path("data/trm_incremental_data.json")
         self.model_checkpoint_dir = Path("checkpoints/trm")
         
+        # Load trained checkpoint if it exists
+        best_checkpoint = self.model_checkpoint_dir / "checkpoint_best.pt"
+        if best_checkpoint.exists():
+            try:
+                checkpoint = torch.load(best_checkpoint, map_location=self.device)
+                self.model.load_state_dict(checkpoint['model_state_dict'])
+                logger.info(f"Loaded trained model from {best_checkpoint}")
+            except Exception as e:
+                logger.warning(f"Failed to load checkpoint: {e}. Using fresh model.")
+        else:
+            logger.info("No trained checkpoint found. Using fresh model.")
+        
         logger.info(f"TRM System initialized on device: {self.device}")
     
     def reset_model(self):

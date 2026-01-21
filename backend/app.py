@@ -3631,16 +3631,25 @@ def ai_explain():
         
         logger.info(f"AI explain request: element={element is not None}, failure={failure is not None}, rule={rule is not None}")
         
-        if not all([element, failure, rule]):
+        # Be lenient: allow None/empty values since AI feature extraction handles missing data
+        # Only require that the keys exist in the request
+        if "element" not in data or "failure" not in data or "rule" not in data:
             missing = []
-            if not element: missing.append("element")
-            if not failure: missing.append("failure")
-            if not rule: missing.append("rule")
+            if "element" not in data: missing.append("element")
+            if "failure" not in data: missing.append("failure")
+            if "rule" not in data: missing.append("rule")
             logger.error(f"AI explain endpoint: Missing required fields: {missing}")
             return jsonify({
                 "success": False,
                 "error": f"Missing required fields: {', '.join(missing)}"
             }), 400
+        
+        # Normalize None values to empty dicts for robust handling
+        element = element or {}
+        failure = failure or {}
+        rule = rule or {}
+        
+        logger.info(f"AI explain - normalized: element keys={len(element)}, failure keys={len(failure)}, rule keys={len(rule)}")
         
         # Generate AI explanation
         logger.info("Calling ai_assistant.explain_with_ai...")

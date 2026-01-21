@@ -310,5 +310,395 @@
     "description": "Training with 411 samples, 10 epochs",
     "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
     "parent_version": null
+  },
+  "v9.0": {
+    "version_id": "v9.0",
+    "created_at": "2026-01-21T11:59:05.145667",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.6713,
+      "final_train_loss": 0.7037,
+      "final_val_loss": 0.6934,
+      "best_train_accuracy": 0.5328,
+      "best_val_accuracy": 0.5882,
+      "overfitting_indicator": -0.0554,
+      "best_precision": 0.5882,
+      "best_recall": 1.0,
+      "best_val_f1": 0.7407,
+      "train_fail_count": 185,
+      "train_pass_count": 226,
+      "balance_ratio": 1.22,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 7,
+      "training_duration_seconds": 6.19,
+      "training_duration_minutes": 0.1
+    },
+    "dataset_stats": {
+      "total_samples": 514,
+      "train_samples": 411,
+      "val_samples": 51,
+      "test_samples": 52
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 411 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v10.0": {
+    "version_id": "v10.0",
+    "created_at": "2026-01-21T12:05:16.841065",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.6714,
+      "final_train_loss": 0.7242,
+      "final_val_loss": 0.683,
+      "best_train_accuracy": 0.5328,
+      "best_val_accuracy": 0.5882,
+      "overfitting_indicator": -0.0554,
+      "best_precision": 0.5882,
+      "best_recall": 1.0,
+      "best_val_f1": 0.7407,
+      "train_fail_count": 185,
+      "train_pass_count": 226,
+      "balance_ratio": 1.22,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 2,
+      "training_duration_seconds": 6.28,
+      "training_duration_minutes": 0.1
+    },
+    "dataset_stats": {
+      "total_samples": 514,
+      "train_samples": 411,
+      "val_samples": 51,
+      "test_samples": 52
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 411 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v11.0": {
+    "version_id": "v11.0",
+    "created_at": "2026-01-21T12:10:53.755882",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.6713,
+      "final_train_loss": 0.7083,
+      "final_val_loss": 0.6748,
+      "best_train_accuracy": 0.5304,
+      "best_val_accuracy": 0.5882,
+      "overfitting_indicator": -0.0578,
+      "best_precision": 0.5882,
+      "best_recall": 1.0,
+      "best_val_f1": 0.7407,
+      "train_fail_count": 185,
+      "train_pass_count": 226,
+      "balance_ratio": 1.22,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 9,
+      "training_duration_seconds": 6.12,
+      "training_duration_minutes": 0.1
+    },
+    "dataset_stats": {
+      "total_samples": 514,
+      "train_samples": 411,
+      "val_samples": 51,
+      "test_samples": 52
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 411 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v12.0": {
+    "version_id": "v12.0",
+    "created_at": "2026-01-21T12:17:24.595283",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.6768,
+      "final_train_loss": 0.7173,
+      "final_val_loss": 0.7276,
+      "best_train_accuracy": 0.545,
+      "best_val_accuracy": 0.5882,
+      "overfitting_indicator": -0.0432,
+      "best_precision": 0.5882,
+      "best_recall": 1.0,
+      "best_val_f1": 0.7407,
+      "train_fail_count": 185,
+      "train_pass_count": 226,
+      "balance_ratio": 1.22,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 2,
+      "training_duration_seconds": 6.06,
+      "training_duration_minutes": 0.1
+    },
+    "dataset_stats": {
+      "total_samples": 514,
+      "train_samples": 411,
+      "val_samples": 51,
+      "test_samples": 52
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 411 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v13.0": {
+    "version_id": "v13.0",
+    "created_at": "2026-01-21T16:28:13.301665",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.0023,
+      "final_train_loss": 0.1181,
+      "final_val_loss": 0.0023,
+      "best_train_accuracy": 0.9564,
+      "best_val_accuracy": 1.0,
+      "overfitting_indicator": -0.0436,
+      "best_precision": 1.0,
+      "best_recall": 1.0,
+      "best_val_f1": 1.0,
+      "train_fail_count": 163,
+      "train_pass_count": 227,
+      "balance_ratio": 1.39,
+      "early_stopping_triggered": false,
+      "epochs_without_improvement": 0,
+      "training_duration_seconds": 6.11,
+      "training_duration_minutes": 0.1
+    },
+    "dataset_stats": {
+      "total_samples": 488,
+      "train_samples": 390,
+      "val_samples": 48,
+      "test_samples": 50
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 390 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v14.0": {
+    "version_id": "v14.0",
+    "created_at": "2026-01-21T16:31:58.476450",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.0,
+      "final_train_loss": 0.0537,
+      "final_val_loss": 0.0,
+      "best_train_accuracy": 0.9846,
+      "best_val_accuracy": 1.0,
+      "overfitting_indicator": -0.0154,
+      "best_precision": 1.0,
+      "best_recall": 1.0,
+      "best_val_f1": 1.0,
+      "train_fail_count": 163,
+      "train_pass_count": 227,
+      "balance_ratio": 1.39,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 6,
+      "training_duration_seconds": 5.62,
+      "training_duration_minutes": 0.09
+    },
+    "dataset_stats": {
+      "total_samples": 488,
+      "train_samples": 390,
+      "val_samples": 48,
+      "test_samples": 50
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 390 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v15.0": {
+    "version_id": "v15.0",
+    "created_at": "2026-01-21T16:33:59.193506",
+    "training_config": {
+      "epochs": 20,
+      "learning_rate": 0.001,
+      "batch_size": 32,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.0,
+      "final_train_loss": 0.0015,
+      "final_val_loss": 0.0,
+      "best_train_accuracy": 1.0,
+      "best_val_accuracy": 1.0,
+      "overfitting_indicator": 0.0,
+      "best_precision": 1.0,
+      "best_recall": 1.0,
+      "best_val_f1": 1.0,
+      "train_fail_count": 163,
+      "train_pass_count": 227,
+      "balance_ratio": 1.39,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 10,
+      "training_duration_seconds": 5.62,
+      "training_duration_minutes": 0.09
+    },
+    "dataset_stats": {
+      "total_samples": 488,
+      "train_samples": 390,
+      "val_samples": 48,
+      "test_samples": 50
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 390 samples, 20 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v16.0": {
+    "version_id": "v16.0",
+    "created_at": "2026-01-21T17:10:07.236071",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.5502,
+      "final_train_loss": 0.6704,
+      "final_val_loss": 0.558,
+      "best_train_accuracy": 0.6444,
+      "best_val_accuracy": 0.7273,
+      "overfitting_indicator": -0.0828,
+      "best_precision": 1.0,
+      "best_recall": 0.25,
+      "best_val_f1": 0.3333,
+      "train_fail_count": 46,
+      "train_pass_count": 44,
+      "balance_ratio": 0.96,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 4,
+      "training_duration_seconds": 2.06,
+      "training_duration_minutes": 0.03
+    },
+    "dataset_stats": {
+      "total_samples": 113,
+      "train_samples": 90,
+      "val_samples": 11,
+      "test_samples": 12
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 90 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v17.0": {
+    "version_id": "v17.0",
+    "created_at": "2026-01-21T17:23:04.265329",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.614,
+      "final_train_loss": 0.7501,
+      "final_val_loss": 0.614,
+      "best_train_accuracy": 0.6947,
+      "best_val_accuracy": 0.7273,
+      "overfitting_indicator": -0.0325,
+      "best_precision": 0.625,
+      "best_recall": 1.0,
+      "best_val_f1": 0.6667,
+      "train_fail_count": 30,
+      "train_pass_count": 65,
+      "balance_ratio": 2.17,
+      "early_stopping_triggered": false,
+      "epochs_without_improvement": 0,
+      "training_duration_seconds": 2.39,
+      "training_duration_minutes": 0.04
+    },
+    "dataset_stats": {
+      "total_samples": 119,
+      "train_samples": 95,
+      "val_samples": 11,
+      "test_samples": 13
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 95 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
+  },
+  "v18.0": {
+    "version_id": "v18.0",
+    "created_at": "2026-01-21T17:31:05.187540",
+    "training_config": {
+      "epochs": 10,
+      "learning_rate": 0.001,
+      "batch_size": 16,
+      "resume": false
+    },
+    "performance_metrics": {
+      "best_val_loss": 0.5801,
+      "final_train_loss": 0.7347,
+      "final_val_loss": 0.6069,
+      "best_train_accuracy": 0.7158,
+      "best_val_accuracy": 0.7273,
+      "overfitting_indicator": -0.0115,
+      "best_precision": 0.625,
+      "best_recall": 1.0,
+      "best_val_f1": 0.6667,
+      "train_fail_count": 30,
+      "train_pass_count": 65,
+      "balance_ratio": 2.17,
+      "early_stopping_triggered": true,
+      "epochs_without_improvement": 8,
+      "training_duration_seconds": 2.12,
+      "training_duration_minutes": 0.04
+    },
+    "dataset_stats": {
+      "total_samples": 119,
+      "train_samples": 95,
+      "val_samples": 11,
+      "test_samples": 13
+    },
+    "training_duration_seconds": 0.0,
+    "is_best": false,
+    "description": "Training with 95 samples, 10 epochs",
+    "checkpoint_path": "checkpoints\\trm\\checkpoint_best.pt",
+    "parent_version": null
   }
 }
