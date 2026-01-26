@@ -34,6 +34,11 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 from reasoning_layer.tiny_recursive_reasoner import TinyComplianceNetwork, TRMResult
 from backend.trm_data_extractor import IncrementalDatasetManager
+from backend.guid_fragility_fix import (
+    TrainingDataQualityValidator,
+    TrainingDataQualityError,
+    FeatureExtractionMetrics
+)
 
 logger = logging.getLogger(__name__)
 
@@ -371,6 +376,9 @@ class TRMTrainer:
         """
         Train model on provided data
         
+        CRITICAL: Includes pre-training validation to detect GUID fragility
+        (70% accuracy bug reintroduction via silent defaults)
+        
         Args:
             train_samples: Training feature dicts
             train_labels: Training labels
@@ -380,7 +388,51 @@ class TRMTrainer:
         
         Returns:
             List of TrainingMetrics for each epoch
+        
+        Raises:
+            TrainingDataQualityError: If data quality check fails
         """
+        # ========================================================================
+        # GUID FRAGILITY DETECTION - Prevent 70% accuracy bug (CRITICAL)
+        # ========================================================================
+        logger.info("\n" + "="*80)
+        logger.info("VALIDATING TRAINING DATA QUALITY (GUID Fragility Check)")
+        logger.info("="*80)
+        
+        try:
+            validation_report = TrainingDataQualityValidator.validate_dataset_before_training(
+                training_data_path="<training_in_progress>",
+                training_samples=train_samples,
+                abort_on_failure=True  # ABORT if >20% features are defaulted
+            )
+            logger.info(f"✅ Training data quality validated successfully")
+        
+        except TrainingDataQualityError as e:
+            logger.error("\n" + "="*80)
+            logger.error("❌ TRAINING ABORTED - DATA QUALITY FAILURE")
+            logger.error("="*80)
+            logger.error(f"Error: {str(e)}")
+            logger.error("")
+            logger.error("This dataset contains too many default-filled features.")
+            logger.error("This would reintroduce the 70% accuracy bug silently.")
+            logger.error("")
+            logger.error("Possible causes:")
+            logger.error("  1. GUID matching failed during graph enrichment")
+            logger.error("  2. Graph parameter not provided to compliance check")
+            logger.error("  3. IFC file parsing failed (no element dimensions extracted)")
+            logger.error("")
+            logger.error("Recovery steps:")
+            logger.error("  1. Verify GUID matching in graph enrichment API")
+            logger.error("  2. Check that compliance checks include graph parameter")
+            logger.error("  3. Rerun compliance checks on well-formed IFC files")
+            logger.error("  4. Verify no cached results from previous failed checks")
+            logger.error("="*80 + "\n")
+            raise
+        
+        # ========================================================================
+        # Data quality validated. Proceed with training.
+        # ========================================================================
+        
         if self.optimizer is None:
             self._setup_optimizer()
         

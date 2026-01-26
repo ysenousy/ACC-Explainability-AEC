@@ -282,6 +282,25 @@ const TRMDashboard = () => {
       console.log('Train response status:', trainResponse.status);
       console.log('Train response data:', trainData);
       
+      // Check for data quality validation failure (GUID fragility fix)
+      if (trainData.validation_failed) {
+        const report = trainData.validation_report;
+        const errorMsg = (
+          `❌ TRAINING ABORTED - DATA QUALITY FAILURE\n\n` +
+          `Defaulted Features: ${report.metrics.defaulted_percentage.toFixed(1)}%\n` +
+          `Threshold: 20%\n\n` +
+          `This indicates excessive defaults in training data, which can\n` +
+          `reintroduce the 70% accuracy bug.\n\n` +
+          `Recovery Steps:\n` +
+          `1. Verify GUID matching in graph enrichment\n` +
+          `2. Ensure compliance checks include graph parameter\n` +
+          `3. Rerun compliance checks on well-formed IFC files\n` +
+          `4. Regenerate training data from fresh results\n` +
+          `5. Retry training`
+        );
+        throw new Error(errorMsg);
+      }
+      
       if (!trainData.success) {
         throw new Error(trainData.error || 'Training failed');
       }
@@ -295,7 +314,11 @@ const TRMDashboard = () => {
       alert(`✅ Model Training Completed!\n\nVersion: ${trainData.metrics?.version_id || 'v1.0'}\nEpochs: ${trainData.epochs_trained}\nBest Loss: ${trainData.best_loss?.toFixed(4) || 'N/A'}`);
     } catch (err) {
       console.error('Error training model:', err);
-      alert('❌ Failed to train model:\n' + err.message);
+      // Check if error message is already formatted (from our validation)
+      const errorMsg = err.message.includes('GUID') || err.message.includes('ABORTED') 
+        ? err.message
+        : '❌ Failed to train model:\n' + err.message;
+      alert(errorMsg);
     } finally {
       setTraining(false);
     }

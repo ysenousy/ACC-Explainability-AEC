@@ -26,6 +26,7 @@ import torch
 
 from backend.trm_data_extractor import ComplianceResultToTRMSample, IncrementalDatasetManager
 from backend.trm_trainer import TRMTrainer, TrainingConfig, create_trainer
+from backend.guid_fragility_fix import TrainingDataQualityError
 from reasoning_layer.tiny_recursive_reasoner import TinyComplianceNetwork, TRMResult
 
 logger = logging.getLogger(__name__)
@@ -915,6 +916,25 @@ def train_model():
             "epoch_results": epoch_results,  # Full epoch-by-epoch results
             "version_id": version_id
         }), 200
+    
+    except TrainingDataQualityError as e:
+        # Handle GUID fragility validation failure
+        logger.error(f"Training rejected due to data quality: {e}")
+        
+        # Extract validation metrics from the error
+        validation_metrics = getattr(e, 'validation_metrics', {})
+        validation_report = getattr(e, 'validation_report', {})
+        
+        return jsonify({
+            "success": False,
+            "validation_failed": True,
+            "error": str(e),
+            "validation_report": {
+                "metrics": validation_metrics,
+                "message": "Dataset contains excessive defaults which would reintroduce the 70% accuracy bug",
+                "threshold_percent": 20.0
+            }
+        }), 400
     
     except Exception as e:
         logger.error(f"Error training model: {e}")
