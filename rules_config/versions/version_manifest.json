@@ -1,6 +1,6 @@
 {
-  "current_version": 21,
-  "total_versions": 22,
+  "current_version": 22,
+  "total_versions": 23,
   "versions": [
     {
       "version_id": 0,
@@ -495,6 +495,29 @@
         "IBC_CORRIDOR_MIN_WIDTH"
       ],
       "modifications": []
+    },
+    {
+      "version_id": 22,
+      "label": "User Modifications #22",
+      "created_at": "2026-01-26T17:13:30.298258+00:00",
+      "created_by": "user",
+      "description": "Deleted rule: IBC_CORRIDOR_MIN_WIDTH",
+      "num_rules": 12,
+      "rule_ids": [
+        "ADA_DOOR_MIN_CLEAR_WIDTH",
+        "IBC_FIRE_EXIT_DOOR_HEIGHT",
+        "IBC_STAIR_MIN_WIDTH",
+        "IRC_BEDROOM_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_AREA",
+        "IRC_EGRESS_WINDOW_MIN_HEIGHT",
+        "IRC_EGRESS_WINDOW_MIN_WIDTH",
+        "UK_DOOR_WIDTH_ACCESSIBLE",
+        "CA_DOOR_WIDTH_ACCESSIBLE",
+        "IBC_WALL_FIRE_PARTITION_MIN_RATING",
+        "IBC_HORIZONTAL_ASSEMBLY_DWELLING_SEPARATION_MIN_RATING",
+        "IBC_COLUMN_FIRE_PROTECTED_MIN_RATING"
+      ],
+      "modifications": []
     }
   ],
   "version_history": [
@@ -643,6 +666,13 @@
       "action": "create_version",
       "version_id": 21,
       "description": "Deleted rule: ADA_DOOR_ACCESSIBILITY_HEIGHT",
+      "created_by": "user"
+    },
+    {
+      "timestamp": "2026-01-26T17:13:30.298258+00:00",
+      "action": "create_version",
+      "version_id": 22,
+      "description": "Deleted rule: IBC_CORRIDOR_MIN_WIDTH",
       "created_by": "user"
     }
   ]
