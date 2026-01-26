@@ -1,7 +1,5 @@
 # ACC-Explainability-AEC
 
-**Architectural Compliance Checker with Explainability for Architectural Energy Code Compliance**
-
 A comprehensive system for checking architectural energy code compliance in BIM (Building Information Modeling) using a layered architecture that combines data extraction, rule-based checking, and AI-driven reasoning with explainable outputs.
 
 ---
