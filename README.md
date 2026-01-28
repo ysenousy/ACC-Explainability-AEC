@@ -402,9 +402,8 @@ To contribute:
 ## 👥 Contact & Support
 
 For questions or issues:
-- Check existing GitHub issues
-- Review the troubleshooting section above
-- Contact the development team
+Dr. Youssef Senousy
+Mail: youssef.senousy@mail.bcu.ac.eg
 
 
 
