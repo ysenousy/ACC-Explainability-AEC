@@ -72,10 +72,10 @@ Generates intelligent explanations and recommendations:
 - `reasoning_layer/recommendation_engine.py` - Generates fixes
 - `reasoning_layer/ai_assistant.py` - AI-powered insights
 
-### TRM (Trained Recognition Model)
+### TRM (Tiny Recursive Model)
 ![TRM Model](TRM-Model.png)
 
-Machine learning model for compliance prediction:
+Deep learning model for compliance prediction:
 - Trained on 119+ diverse building samples
 - Binary compliance classification
 - Confidence scoring via softmax
