@@ -209,7 +209,7 @@ Modify `data_layer/extraction_config.json` to control:
 
 ### Model Training
 
-Configure training in backend API:
+Configure training in the backend API:
 
 ```bash
 curl -X POST http://localhost:5000/api/trm/train \
@@ -399,13 +399,6 @@ To contribute:
 4. Submit a pull request
 
 ---
-
-## 📄 License
-
-[Add your license information here]
-
----
-
 ## 👥 Contact & Support
 
 For questions or issues:
@@ -413,16 +406,7 @@ For questions or issues:
 - Review the troubleshooting section above
 - Contact the development team
 
----
 
-## 🎯 Roadmap
-
-- [ ] Support for additional BIM formats (gbXML, BuildingSMART)
-- [ ] Real-time compliance monitoring
-- [ ] Enhanced explainability with SHAP values
-- [ ] Multi-building portfolio analysis
-- [ ] Integration with energy simulation tools
-- [ ] Mobile app for on-site compliance review
 
 ---
 
