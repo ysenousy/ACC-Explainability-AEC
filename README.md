@@ -402,8 +402,7 @@ To contribute:
 ## 👥 Contact & Support
 
 For questions or issues:
-Dr. Youssef Senousy
-Mail: youssef.senousy@mail.bcu.ac.eg
+Dr. Youssef Senousy, Mail: youssef.senousy@mail.bcu.ac.uk
 
 
 
