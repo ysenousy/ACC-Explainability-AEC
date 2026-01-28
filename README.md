@@ -1,5 +1,9 @@
 # ACC-Explainability-AEC
 
+## 📊 Explainability Framework
+
+![CFW Explainability](CFW_Explainability.png)
+
 A comprehensive system for checking architectural code compliance in BIM (Building Information Modeling) using a layered architecture that combines data extraction, rule-based checking, and AI-driven reasoning with explainable outputs.
 
 ---
@@ -249,10 +253,6 @@ python backend/unified_compliance_engine.py \
 ```
 
 ---
-
-## 📊 Explainability Framework
-
-![CFW Explainability](CFW_Explainability.png)
 
 The system provides multi-level explanations:
 
